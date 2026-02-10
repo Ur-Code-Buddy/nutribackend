@@ -1,0 +1,141 @@
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { Order, OrderStatus } from './entities/order.entity';
+import { OrderItem } from './entities/order-item.entity';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { FoodItem } from '../food-items/entities/food-item.entity';
+import { FoodItemAvailability } from '../food-items/entities/food-item-availability.entity';
+
+@Injectable()
+export class OrdersService {
+  constructor(
+    @InjectRepository(Order)
+    private ordersRepo: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private orderItemRepo: Repository<OrderItem>,
+    @InjectRepository(FoodItem)
+    private foodItemRepo: Repository<FoodItem>,
+    @InjectQueue('orders')
+    private ordersQueue: Queue,
+  ) { }
+
+  async create(clientId: string, dto: CreateOrderDto) {
+    // 1. Validate "Next Day"
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const scheduledDate = new Date(dto.scheduled_for);
+
+    const isNextDay =
+      tomorrow.getFullYear() === scheduledDate.getFullYear() &&
+      tomorrow.getMonth() === scheduledDate.getMonth() &&
+      tomorrow.getDate() === scheduledDate.getDate();
+
+    if (!isNextDay) {
+      throw new BadRequestException('Orders must be placed for exactly the next day.');
+    }
+
+    // 2. Validate Items & Availability
+    const orderItems: OrderItem[] = [];
+    let totalPrice = 0;
+
+    for (const itemDto of dto.items) {
+      const foodItem = await this.foodItemRepo.findOne({
+        where: { id: itemDto.food_item_id, kitchen_id: dto.kitchen_id },
+        relations: ['availability'],
+      });
+
+      if (!foodItem) {
+        throw new BadRequestException(`Food item ${itemDto.food_item_id} not found or not from this kitchen.`);
+      }
+
+      if (!foodItem.active) {
+        throw new BadRequestException(`${foodItem.name} is inactive.`);
+      }
+
+      // Check specific availability
+      const availability = foodItem.availability?.find(a => a.date === dto.scheduled_for);
+      if (availability && !availability.is_available) {
+        throw new BadRequestException(`${foodItem.name} is unavailable for ${dto.scheduled_for}.`);
+      }
+
+      // Check daily max orders (simple check, concurrency could be an issue but ignored for now)
+      // Count sold quantity for this item on this date
+      const sold = await this.orderItemRepo
+        .createQueryBuilder('oi')
+        .leftJoin('oi.order', 'o')
+        .where('oi.food_item_id = :itemId', { itemId: foodItem.id })
+        .andWhere('o.scheduled_for = :date', { date: dto.scheduled_for })
+        .andWhere('o.status != :status', { status: OrderStatus.REJECTED })
+        .select('SUM(oi.quantity)', 'sum')
+        .getRawOne();
+
+      const currentSold = parseInt(sold?.sum || '0', 10);
+      if (currentSold + itemDto.quantity > foodItem.max_daily_orders) {
+        throw new BadRequestException(`${foodItem.name} sold out for ${dto.scheduled_for}.`);
+      }
+
+      const orderItem = new OrderItem();
+      orderItem.food_item = foodItem;
+      orderItem.quantity = itemDto.quantity;
+      orderItem.snapshot_price = foodItem.price;
+      orderItems.push(orderItem);
+    }
+
+    // 3. Create Order
+    const order = this.ordersRepo.create({
+      client_id: clientId,
+      kitchen_id: dto.kitchen_id,
+      scheduled_for: dto.scheduled_for,
+      status: OrderStatus.PENDING,
+      items: orderItems,
+    });
+
+    const savedOrder = await this.ordersRepo.save(order);
+
+    // 4. Trigger Auto-Reject Job (10 mins)
+    await this.ordersQueue.add(
+      'order-timeout',
+      { orderId: savedOrder.id },
+      { delay: 10 * 60 * 1000, jobId: `timeout-${savedOrder.id}` }, // Fixed jobId for idempotency/tracking
+    );
+
+    return savedOrder;
+  }
+
+  findAll(userId: string, role: string) {
+    if (role === 'KITCHEN_OWNER') {
+      // Find kitchen owned by user first (omitted for brevity, assume passed logic handles it or we join)
+      // For simplicity: filtering logic should be robust
+      return this.ordersRepo.find({
+        where: { kitchen: { owner_id: userId } },
+        relations: ['items', 'items.food_item', 'client'],
+      });
+    }
+    return this.ordersRepo.find({
+      where: { client_id: userId },
+      relations: ['items', 'items.food_item', 'kitchen'],
+    });
+  }
+
+  async findOne(id: string) {
+    return this.ordersRepo.findOne({
+      where: { id },
+      relations: ['items', 'items.food_item'],
+    });
+  }
+
+  async updateStatus(id: string, status: OrderStatus) {
+    const order = await this.findOne(id);
+    if (!order) throw new NotFoundException('Order not found');
+
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException('Order status cannot be changed once processed.');
+    }
+
+    order.status = status;
+    return this.ordersRepo.save(order);
+  }
+}

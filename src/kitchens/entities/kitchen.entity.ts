@@ -1,0 +1,46 @@
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import { FoodItem } from '../../food-items/entities/food-item.entity';
+
+@Entity('kitchens')
+export class Kitchen {
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
+
+    @Column({ unique: true })
+    owner_id: string;
+
+    @OneToOne(() => User)
+    @JoinColumn({ name: 'owner_id' })
+    owner: User;
+
+    @Column()
+    name: string;
+
+    @Column('jsonb', { nullable: true })
+    details: {
+        address: string;
+        phone: string;
+        email: string;
+        description?: string;
+    };
+
+    @Column('jsonb', { nullable: true })
+    operating_hours: {
+        open: string;
+        close: string;
+        days_off: number[]; // 0-6 (Sun-Sat)
+    };
+
+    @Column({ nullable: true })
+    image_url: string;
+
+    @OneToMany(() => FoodItem, (item) => item.kitchen)
+    food_items: FoodItem[];
+
+    @CreateDateColumn()
+    created_at: Date;
+
+    @UpdateDateColumn()
+    updated_at: Date;
+}
