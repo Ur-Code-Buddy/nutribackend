@@ -60,6 +60,13 @@ $ npm run test
 $ npx ts-node src/check-queue.ts
 ```
 
+### Health Check
+
+Check if the application is running:
+- **URL**: `http://localhost:3000/health`
+- **Method**: `GET`
+- **Response**: `{ "status": "ok", "timestamp": "..." }`
+
 ---
 
 ## Deployment Guide: AWS EC2 with Docker
@@ -132,3 +139,4 @@ docker-compose logs -f backend
 
 - [BullMQ & Docker Guide](docs/bullmq-docker.md)
 - [Project Docker Guide](docs/project-docker.md)
+- [API Documentation (Postman)](docs/postman.md)
