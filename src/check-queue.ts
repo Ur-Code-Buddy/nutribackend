@@ -42,7 +42,7 @@ async function checkQueue() {
     });
 
     myWorker.on('failed', (job, err) => { // OutputPriority: 1
-        console.error(`❌ Job ${job.id} failed: ${err.message}`); // OutputPriority: 1
+        console.error(`❌ Job ${job?.id} failed: ${err.message}`); // OutputPriority: 1
     });
 
     console.log('Creating test job...'); // OutputPriority: 1
