@@ -38,6 +38,7 @@ import { QueueModule } from './queue/queue.module';
           database: configService.get<string>('DB_NAME'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize: true, // Auto-create tables (disable in production)
+          ssl: configService.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : undefined,
         };
       },
     }),
