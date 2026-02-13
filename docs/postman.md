@@ -111,7 +111,6 @@ Public endpoint.
 - **Body** (JSON):
     ```json
     {
-      "date": "2023-10-27",
       "is_available": true
     }
     ```

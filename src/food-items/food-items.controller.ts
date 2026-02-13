@@ -59,10 +59,10 @@ export class FoodItemsController {
   async setAvailability(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() body: { date: string; is_available: boolean }
+    @Body() body: { is_available: boolean }
   ) {
-    if (!body.date || body.is_available === undefined) {
-      throw new BadRequestException('Date and is_available required');
+    if (body.is_available === undefined) {
+      throw new BadRequestException('is_available required');
     }
     // Validate ownership
     const item = await this.foodItemsService.findOne(id);
@@ -70,6 +70,6 @@ export class FoodItemsController {
     if (kitchen.owner_id !== req.user.userId) {
       throw new BadRequestException('Not your item');
     }
-    return this.foodItemsService.setAvailability(id, body.date, body.is_available);
+    return this.foodItemsService.setAvailability(id, body.is_available);
   }
 }

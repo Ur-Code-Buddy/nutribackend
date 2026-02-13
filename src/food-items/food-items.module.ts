@@ -9,7 +9,7 @@ import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([FoodItem, FoodItemAvailability]),
+    TypeOrmModule.forFeature([FoodItem]),
     KitchensModule,
     CommonModule,
   ],

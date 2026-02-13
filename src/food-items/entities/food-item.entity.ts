@@ -32,6 +32,9 @@ export class FoodItem {
     @Column({ default: true })
     active: boolean;
 
+    @Column({ default: true })
+    is_available: boolean;
+
     @OneToMany(() => FoodItemAvailability, (avail) => avail.food_item)
     availability: FoodItemAvailability[];
 

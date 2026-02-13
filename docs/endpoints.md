@@ -113,12 +113,11 @@ Partial of Create Menu Item body.
 **PATCH** `/menu-items/:id/availability`
 **Role Required:** `KITCHEN_OWNER`
 
-Sets the availability of a specific item for a specific date.
+Sets the availability of a specific item indefinitely.
 
 **Request Body:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `date` | string | Yes | Date in `YYYY-MM-DD` format. |
 | `is_available` | boolean | Yes | `true` if available, `false` otherwise. |
 
 ---
