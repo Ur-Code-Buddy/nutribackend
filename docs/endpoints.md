@@ -1,7 +1,7 @@
 # API Endpoints Documentation
 
 ## Base URL
-All endpoints are relative to the base URL of the deployed application (e.g., `https://backend.v1.nutritiffin.com`).
+All endpoints are relative to the base URL of the deployed application (e.g., `http://localhost:3000` or production URL).
 
 ---
 
@@ -15,9 +15,30 @@ Creates a new user account.
 **Request Body:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `username` | string | Yes | Unique username for login. |
+| `username` | string | Yes | Unique username. |
 | `password` | string | Yes | Password (min 6 characters). |
 | `role` | enum | Yes | User role. Values: `CLIENT`, `KITCHEN_OWNER`. |
+
+**Example Request:**
+```json
+{
+  "username": "john_doe",
+  "password": "securepassword123",
+  "role": "CLIENT"
+}
+```
+
+**Response (201 Created):**
+Returns the created user object.
+```json
+{
+  "id": "uuid-string",
+  "username": "john_doe",
+  "role": "CLIENT",
+  "created_at": "2023-10-27T10:00:00.000Z",
+  "updated_at": "2023-10-27T10:00:00.000Z"
+}
+```
 
 ### Login
 **POST** `/auth/login`
@@ -29,6 +50,26 @@ Authenticates a user and returns a JWT token.
 | :--- | :--- | :--- | :--- |
 | `username` | string | Yes | Registered username. |
 | `password` | string | Yes | User password. |
+
+**Example Request:**
+```json
+{
+  "username": "john_doe",
+  "password": "securepassword123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR...",
+  "user": {
+    "id": "uuid-string",
+    "username": "john_doe",
+    "role": "CLIENT"
+  }
+}
+```
 
 ---
 
@@ -44,21 +85,81 @@ Creates a new kitchen profile for the authenticated user.
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `name` | string | Yes | Name of the kitchen. |
-| `details` | object | No | Additional details about the kitchen. |
+| `details` | object | No | Additional details like address, phone, etc. |
 | `operating_hours` | object | No | Operating hours configuration. |
 | `image_url` | string | No | URL to the kitchen's cover image. |
 
-**Note:** `owner_id` is automatically set from the authenticated user's token.
+**Example Request:**
+```json
+{
+  "name": "Mama's Kitchen",
+  "details": {
+    "address": "123 Main St",
+    "phone": "555-0199",
+    "description": "Authentic home-cooked meals."
+  },
+  "operating_hours": {
+    "open": "09:00",
+    "close": "21:00",
+    "days_off": [0, 6]
+  },
+  "image_url": "https://example.com/kitchen.jpg"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "kitchen-uuid",
+  "owner_id": "user-uuid",
+  "name": "Mama's Kitchen",
+  "details": {
+    "address": "123 Main St",
+    "phone": "555-0199",
+    "description": "Authentic home-cooked meals."
+  },
+  "operating_hours": {
+    "open": "09:00",
+    "close": "21:00",
+    "days_off": [0, 6]
+  },
+  "image_url": "https://example.com/kitchen.jpg",
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
 
 ### Get All Kitchens
 **GET** `/kitchens`
 
-Retrieves a list of all kitchens.
+Retrieves a list of all kitchens. Public endpoint.
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "kitchen-uuid",
+    "name": "Mama's Kitchen",
+    "owner_id": "user-uuid",
+    ...
+  },
+  ...
+]
+```
 
 ### Get Kitchen by ID
 **GET** `/kitchens/:id`
 
 Retrieves details of a specific kitchen.
+
+**Response (200 OK):**
+```json
+{
+  "id": "kitchen-uuid",
+  "name": "Mama's Kitchen",
+  ...
+}
+```
 
 ### Update Kitchen
 **PATCH** `/kitchens/:id`
@@ -67,7 +168,19 @@ Retrieves details of a specific kitchen.
 Updates an existing kitchen profile. User must be the owner.
 
 **Request Body:**
-Partial of Create Kitchen body. Provide only fields to update.
+Partial of Create Kitchen body.
+
+**Example Request:**
+```json
+{
+  "details": {
+    "description": "Updated description."
+  }
+}
+```
+
+**Response (200 OK):**
+Returns the updated kitchen object.
 
 ---
 
@@ -86,45 +199,89 @@ Adds a new food item to the user's kitchen menu.
 | `price` | number | Yes | Price of the dish. |
 | `description` | string | No | Description of the dish. |
 | `image_url` | string | No | URL to the dish image. |
-| `max_daily_orders` | number | No | Maximum number of orders allowed per day. |
+| `max_daily_orders` | number | No | Maximum number of orders allowed per day (default 100). |
 
-**Note:** `kitchen_id` is automatically determined based on the authenticated user's kitchen.
+**Example Request:**
+```json
+{
+  "name": "Chicken Curry",
+  "price": 12.99,
+  "description": "Spicy and delicious.",
+  "image_url": "https://example.com/curry.jpg",
+  "max_daily_orders": 50
+}
+```
 
-### Get My Layout Items
+**Response (201 Created):**
+```json
+{
+  "id": "item-uuid",
+  "kitchen_id": "kitchen-uuid",
+  "name": "Chicken Curry",
+  "price": 12.99,
+  "is_available": true,
+  "active": true,
+  ...
+}
+```
+
+### Get My Items
 **GET** `/menu-items/my-items`
 **Role Required:** `KITCHEN_OWNER`
 
 Retrieves all menu items for the authenticated kitchen owner.
+
+**Response (200 OK):**
+Array of food item objects.
 
 ### Get Menu Items by Kitchen
 **GET** `/menu-items/kitchen/:kitchenId`
 
 Retrieves all menu items for a specific kitchen.
 
+**Response (200 OK):**
+Array of food item objects.
+
 ### Get Menu Item by ID
 **GET** `/menu-items/:id`
 
 Retrieves details of a specific menu item.
 
+**Response (200 OK):**
+Single food item object.
+
 ### Update Menu Item
 **PATCH** `/menu-items/:id`
 **Role Required:** `KITCHEN_OWNER`
 
-Updates a menu item. User must own the associated kitchen.
+Updates a menu item.
 
 **Request Body:**
 Partial of Create Menu Item body.
+
+**Response (200 OK):**
+Updated food item object.
 
 ### Set Menu Item Availability
 **PATCH** `/menu-items/:id/availability`
 **Role Required:** `KITCHEN_OWNER`
 
-Sets the availability of a specific item indefinitely.
+Sets the availability of a specific item.
 
 **Request Body:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `is_available` | boolean | Yes | `true` if available, `false` otherwise. |
+
+**Example Request:**
+```json
+{
+  "is_available": false
+}
+```
+
+**Response (200 OK):**
+Updated food item object.
 
 ---
 
@@ -140,26 +297,44 @@ Places a new order.
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `kitchen_id` | string | Yes | ID of the kitchen to order from. |
-| `scheduled_for` | string | Yes | Date for the order in `YYYY-MM-DD` (ISO 8601) format. |
+| `scheduled_for` | string | Yes | Date for the order in `YYYY-MM-DD` format. |
 | `items` | array | Yes | List of items to order. |
 
-**Items Array Schema:**
+**Item Object:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `food_item_id` | string | Yes | ID of the menu item. |
 | `quantity` | number | Yes | Quantity to order (min 1). |
 
-**Example Body:**
+**Example Request:**
 ```json
 {
-  "kitchen_id": "uuid-of-kitchen",
-  "scheduled_for": "2023-10-27",
+  "kitchen_id": "kitchen-uuid",
+  "scheduled_for": "2023-11-01",
   "items": [
     {
-      "food_item_id": "uuid-of-item",
+      "food_item_id": "item-uuid-1",
       "quantity": 2
+    },
+    {
+      "food_item_id": "item-uuid-2",
+      "quantity": 1
     }
   ]
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "order-uuid",
+  "client_id": "user-uuid",
+  "kitchen_id": "kitchen-uuid",
+  "status": "PENDING",
+  "scheduled_for": "2023-11-01",
+  "items": [ ... ],
+  "created_at": "...",
+  "updated_at": "..."
 }
 ```
 
@@ -168,10 +343,16 @@ Places a new order.
 
 Retrieves all orders for the authenticated user (Client or Kitchen Owner).
 
+**Response (200 OK):**
+Array of order objects.
+
 ### Get Order by ID
 **GET** `/orders/:id`
 
 Retrieves details of a specific order.
+
+**Response (200 OK):**
+Single order object.
 
 ### Accept Order
 **PATCH** `/orders/:id/accept`
@@ -179,11 +360,23 @@ Retrieves details of a specific order.
 
 Marks an order as `ACCEPTED`.
 
+**Request Body:**
+None (empty).
+
+**Response (200 OK):**
+Updates order status to `ACCEPTED`.
+
 ### Reject Order
 **PATCH** `/orders/:id/reject`
 **Role Required:** `KITCHEN_OWNER`
 
 Marks an order as `REJECTED`.
+
+**Request Body:**
+None (empty).
+
+**Response (200 OK):**
+Updates order status to `REJECTED`.
 
 ---
 
@@ -193,7 +386,14 @@ Marks an order as `REJECTED`.
 **GET** `/health`
 
 Returns the API health status.
-**Response:** `{ "status": "ok", "timestamp": "..." }`
+
+**Response (200 OK):**
+```json
+{
+  "status": "ok",
+  "timestamp": "2023-10-27T12:00:00.000Z"
+}
+```
 
 ### Root
 **GET** `/`
