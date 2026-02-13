@@ -20,6 +20,7 @@ services:
       - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - CURRENT_VERSION=${CURRENT_VERSION}
     depends_on:
       - redis
     networks:
