@@ -90,6 +90,12 @@ Adds a new food item to the user's kitchen menu.
 
 **Note:** `kitchen_id` is automatically determined based on the authenticated user's kitchen.
 
+### Get My Layout Items
+**GET** `/menu-items/my-items`
+**Role Required:** `KITCHEN_OWNER`
+
+Retrieves all menu items for the authenticated kitchen owner.
+
 ### Get Menu Items by Kitchen
 **GET** `/menu-items/kitchen/:kitchenId`
 

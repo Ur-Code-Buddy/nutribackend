@@ -107,6 +107,9 @@ Public endpoint.
 #### List Items by Kitchen (`GET /menu-items/kitchen/:kitchenId`)
 Public endpoint.
 
+#### List My Items (`GET /menu-items/my-items`)
+*Requires `kitchen_owner` role. Returns items for your kitchen.*
+
 #### Update Item Availability (`PATCH /menu-items/:id/availability`)
 - **Body** (JSON):
     ```json
