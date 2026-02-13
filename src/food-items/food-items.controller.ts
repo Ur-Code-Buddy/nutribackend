@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, BadRequestException, NotFoundException } from '@nestjs/common';
 import { FoodItemsService } from './food-items.service';
 import { CreateFoodItemDto } from './dto/create-food-item.dto';
 import { UpdateFoodItemDto } from './dto/update-food-item.dto';
@@ -27,6 +27,17 @@ export class FoodItemsController {
     }
     createFoodItemDto.kitchen_id = kitchen.id;
     return this.foodItemsService.create(createFoodItemDto);
+  }
+
+  @Get('my-items')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.KITCHEN_OWNER)
+  async getMyItems(@Request() req: any) {
+    const kitchen = await this.kitchensService.findByOwner(req.user.userId);
+    if (!kitchen) {
+      throw new NotFoundException('Kitchen not found for this user');
+    }
+    return this.foodItemsService.findAllByKitchen(kitchen.id);
   }
 
   @Get('kitchen/:kitchenId')
