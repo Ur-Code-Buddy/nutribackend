@@ -57,6 +57,7 @@ export class AuthService {
                 registerDto.name,
                 registerDto.email,
                 registerDto.phone_number,
+                registerDto.address,
             );
         } catch (error) {
             if (error.code === '23505') { // Postgres unique_violation

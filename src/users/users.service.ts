@@ -18,6 +18,7 @@ export class UsersService {
         name: string,
         email: string,
         phoneNumber: string,
+        address: string,
     ): Promise<User> {
         const user = this.usersRepository.create({
             username,
@@ -26,6 +27,7 @@ export class UsersService {
             name,
             email,
             phone_number: phoneNumber,
+            address,
         });
         return this.usersRepository.save(user);
     }

@@ -20,6 +20,10 @@ export class RegisterDto {
 
     @IsString()
     @IsNotEmpty()
+    address: string;
+
+    @IsString()
+    @IsNotEmpty()
     @MinLength(6)
     password: string;
 

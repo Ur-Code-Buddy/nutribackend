@@ -19,6 +19,9 @@ export class User {
     phone_number: string;
 
     @Column()
+    address: string;
+
+    @Column()
     password_hash: string;
 
     @Column({
