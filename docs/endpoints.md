@@ -1,7 +1,7 @@
 # API Endpoints Documentation
 
 ## Base URL
-All endpoints are relative to the base URL of the deployed application (e.g., `http://localhost:3000` or production URL).
+All endpoints are relative to the base URL: `https://backend.v1.nutritiffin.com` (or `http://localhost:3000` for local dev).
 
 ---
 
@@ -18,13 +18,19 @@ Creates a new user account.
 | `username` | string | Yes | Unique username. |
 | `password` | string | Yes | Password (min 6 characters). |
 | `role` | enum | Yes | User role. Values: `CLIENT`, `KITCHEN_OWNER`. |
+| `name` | string | Yes | Full name of the user. |
+| `email` | string | Yes | Email address (unique). |
+| `phone_number` | string | Yes | Phone number (unique). |
 
 **Example Request:**
 ```json
 {
   "username": "john_doe",
   "password": "securepassword123",
-  "role": "CLIENT"
+  "role": "CLIENT",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "phone_number": "1234567890"
 }
 ```
 
@@ -88,6 +94,8 @@ Creates a new kitchen profile for the authenticated user.
 | `details` | object | No | Additional details like address, phone, etc. |
 | `operating_hours` | object | No | Operating hours configuration. |
 | `image_url` | string | No | URL to the kitchen's cover image. |
+| `is_active` | boolean | No | Whether the kitchen is active (default: true). |
+| `is_menu_visible` | boolean | No | Whether the menu is visible to users (default: true). |
 
 **Example Request:**
 ```json
@@ -132,7 +140,7 @@ Creates a new kitchen profile for the authenticated user.
 ### Get All Kitchens
 **GET** `/kitchens`
 
-Retrieves a list of all kitchens. Public endpoint.
+Retrieves a list of all active kitchens (`is_active=true`). Public endpoint.
 
 **Response (200 OK):**
 ```json
@@ -377,6 +385,26 @@ None (empty).
 
 **Response (200 OK):**
 Updates order status to `REJECTED`.
+
+---
+
+## Uploads (`/upload-image`)
+
+### Upload Image
+**POST** `/upload-image`
+
+Uploads an image file to S3 and returns the public URL.
+
+**Request:**
+- **Content-Type**: `multipart/form-data`
+- **Body**: form-data with key `file` containing the image file (jpg/png, max 5MB).
+
+**Response (201 Created):**
+```json
+{
+  "image_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/uuid.jpg"
+}
+```
 
 ---
 

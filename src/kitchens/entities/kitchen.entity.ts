@@ -32,6 +32,12 @@ export class Kitchen {
         days_off: number[]; // 0-6 (Sun-Sat)
     };
 
+    @Column({ default: true })
+    is_active: boolean;
+
+    @Column({ default: true })
+    is_menu_visible: boolean;
+
     @Column({ nullable: true })
     image_url: string;
 

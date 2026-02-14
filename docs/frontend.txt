@@ -1,0 +1,72 @@
+Frontend Integration Guide for NutriTiffin
+============================================
+
+Base URL: https://backend.v1.nutritiffin.com
+
+This document outlines how to integrate with the NutriTiffin backend, focusing on authentication, kitchen management, and image handling.
+
+1. Authentication & User Registration
+-------------------------------------
+- Endpoint: POST /auth/register
+- Fields:
+  - username, password, role ('CLIENT' or 'KITCHEN_OWNER')
+  - name (Full Name)
+  - email (Unique)
+  - phone_number (Unique)
+- Flow:
+  1. Collect all fields.
+  2. Call register endpoint.
+  3. On success, redirect to login.
+
+- Endpoint: POST /auth/login
+- Response: Returns `access_token`.
+- Usage: Store `access_token` (localStorage/cookie) and send it in the `Authorization` header for all protected requests:
+  `Authorization: Bearer <your_token>`
+
+2. Kitchen Management (For Kitchen Owners)
+------------------------------------------
+- Create Kitchen: POST /kitchens
+  - Fields: name, details, operating_hours.
+  - Flags:
+    - `is_active`: Set to `true` to make kitchen visible to public. Set `false` to hide it (e.g., closed for holidays).
+    - `is_menu_visible`: Set to `true` to show menu. `false` hides menu but keeps kitchen profile visible.
+  - Image: See "Image Upload" section below.
+
+- Update Kitchen: PATCH /kitchens/:id
+  - Send only fields that need changing.
+
+3. Image Upload Flow
+--------------------
+Images (Kitchen cover, Menu items) are NOT sent directly in the Create/Update bodies. You must upload them first to get a URL.
+
+- Endpoint: POST /upload-image
+- Type: `multipart/form-data`
+- Key: `file`
+- Max Size: 5MB
+- Formats: JPG, PNG
+
+Step-by-Step Implementation:
+1. User selects an image in your UI.
+2. Frontend sends `POST /upload-image` with the file.
+3. Backend returns `{ "image_url": "https://..." }`.
+4. Frontend takes this `image_url` and sends it in the `create` or `update` request (e.g., as `image_url` field in `POST /kitchens` or `POST /menu-items`).
+
+4. Public Listing (For Clients)
+-------------------------------
+- List Kitchens: GET /kitchens
+  - Returns ONLY active kitchens (`is_active: true`).
+  - Use this to display the main feed.
+
+- View Kitchen: GET /kitchens/:id
+  - Shows details. Check `is_menu_visible` before showing the menu list.
+
+5. Orders
+---------
+- Create Order: POST /orders
+  - Requires `kitchen_id`, `scheduled_for` date, and list of `items`.
+- Track Status: GET /orders (shows status: PENDING, ACCEPTED, REJECTED).
+
+Notes
+-----
+- Handle 401 Unauthorized by redirecting to Login.
+- Handle 409 Conflict (Duplicate Email/Phone) during registration by showing a user-friendly error.

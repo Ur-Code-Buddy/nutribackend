@@ -3,7 +3,7 @@
 This guide details the API endpoints for the NutriTiffin backend. You can use this to manually test the API using Postman or any other API client.
 
 ## Base URL
-`http://localhost:3000` (or your production URL)
+`https://backend.v1.nutritiffin.com` (Production) or `http://localhost:3000` (Local)
 
 ## Authentication
 Most endpoints require a Bearer Token.
@@ -34,7 +34,10 @@ Create a new user.
     {
       "username": "client_user",
       "password": "password123",
-      "role": "CLIENT" 
+      "role": "CLIENT",
+      "name": "Client User",
+      "email": "client@example.com",
+      "phone_number": "9876543210"
     }
     ```
     *Roles: `CLIENT` or `KITCHEN_OWNER`*
@@ -91,7 +94,9 @@ Get access token.
         "close": "21:00",
         "days_off": [0]
       },
-      "image_url": "http://example.com/image.jpg"
+      "image_url": "http://example.com/image.jpg",
+      "is_active": true,
+      "is_menu_visible": true
     }
     ```
 - **Response** (201 Created):
@@ -200,3 +205,16 @@ Returns all orders for the logged-in user (Client or Kitchen Owner).
 *Requires `KITCHEN_OWNER` role.*
 - **Body**: None.
 - **Response**: Order object with status `REJECTED`.
+
+### 5. Uploads
+
+#### Upload Image (`POST /upload-image`)
+Upload an image to get a URL for use in other endpoints.
+- **Body** (form-data):
+    - Key: `file` (type: File) -> Select an image file.
+- **Response**:
+    ```json
+    {
+      "image_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/..."
+    }
+    ```

@@ -12,6 +12,7 @@ import { OrdersModule } from './orders/orders.module';
 import { JobsModule } from './jobs/jobs.module';
 import { CommonModule } from './common/common.module';
 import { QueueModule } from './queue/queue.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { QueueModule } from './queue/queue.module';
     OrdersModule,
     JobsModule,
     CommonModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

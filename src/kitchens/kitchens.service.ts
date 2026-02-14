@@ -24,7 +24,9 @@ export class KitchensService {
   }
 
   findAll() {
-    return this.kitchensRepository.find();
+    return this.kitchensRepository.find({
+      where: { is_active: true },
+    });
   }
 
   async findOne(id: string) {
