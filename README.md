@@ -1,142 +1,150 @@
-# NutriTiffin Backend
+# 🍱 NutriTiffin Backend
 
-Backend service for the NutriTiffin application, built with NestJS.
+> **Robust, Scalable, and Feature-Rich Backend for the NutriTiffin Food Delivery Platform.**
 
-## Features
-
-- **Authentication**: JWT-based auth with Role-Based Access Control (Client, Kitchen Owner, etc.).
-- **Order Management**: Complex ordering logic with rigorous validation.
-- **Background Jobs**: BullMQ for handling asynchronous tasks (e.g., order timeouts, emails).
-- **File Upload**: AWS S3 integration for food images.
-- **Database**: PostgreSQL with TypeORM.
+![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![AWS S3](https://img.shields.io/badge/AWS%20S3-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
 
 ---
 
-## Local Development
+## 📖 Overview
+
+**NutriTiffin Backend** is the powerhouse behind the NutriTiffin application, designed to connect healthy home-cooked meal providers (Kitchens) with health-conscious customers (Clients), and facilitate efficient logistics through Delivery Drivers. Built with **NestJS**, it ensures modularity, scalability, and type safety.
+
+---
+
+## ✨ Key Features
+
+- **🔐 Advanced Authentication**: Secure JWT-based authentication with Role-Based Access Control (RBAC).
+    - Roles: `CLIENT`, `KITCHEN_OWNER`, `DELIVERY_DRIVER`.
+- **🍽️ Kitchen Management**: Comprehensive tools for kitchen owners to manage profiles, operating hours, and active status.
+- **📜 Menu & Inventory**: Flexible menu management with availability toggles, daily order limits, and rich media support.
+- **🛒 Order Processing**: Complex order lifecycle management (Pending -> Accepted -> Out for Delivery -> Delivered).
+- **🚚 Delivery Logistics**: Dedicated dashboard for drivers to view available orders, accept deliveries, and track status.
+- **☁️ Cloud Integration**: Seamless image uploads using **AWS S3**.
+- **⚡ High Performance**: Utilizing **Redis** and **BullMQ** for caching and background job processing.
+- **🗄️ Solid Data Layer**: **PostgreSQL** with **TypeORM** for reliable data persistence and migrations.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [NestJS](https://nestjs.com/) (Node.js)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
+- **ORM**: [TypeORM](https://typeorm.io/)
+- **Caching & Queues**: [Redis](https://redis.io/) & [BullMQ](https://docs.bullmq.io/)
+- **Storage**: [AWS S3](https://aws.amazon.com/s3/)
+- **Containerization**: [Docker](https://www.docker.com/) & Docker Compose
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (v18+)
-- Docker & Docker Compose (for Redis/DB)
-- PostgreSQL (if running locally without Docker)
+Ensure you have the following installed:
+- **Node.js** (v18+)
+- **Docker** & **Docker Compose**
+- **PostgreSQL** (if running locally without Docker)
 
 ### Installation
 
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/Ur-Code-Buddy/nutribackend.git
+    cd nutribackend
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Setup:**
+    Duplicate `.env.example` to `.env` and fill in your credentials.
+    ```bash
+    cp .env.example .env
+    ```
+
+### Running the Application
+
+#### Option 1: Docker (Recommended 🐳)
+Start the entire stack (Backend + Redis + Postgres) with one command:
 ```bash
-$ npm install
+docker-compose up --build
 ```
 
-### Running the App
+#### Option 2: Local Development 💻
+1.  Ensure **Redis** and **PostgreSQL** are running.
+2.  Start the server:
+    ```bash
+    # Development mode
+    npm run start:dev
 
-**Option 1: Docker (Recommended)**
-
-Start the backend and Redis service together:
-
-```bash
-$ docker-compose up --build
-```
-
-**Option 2: Manual**
-
-1. Ensure Redis and PostgreSQL are running.
-2. Configure `.env` (see `.env.example`).
-3. Start the server:
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-```
-
-### Testing
-
-```bash
-# unit tests
-$ npm run test
-
-# queue verification
-$ npx ts-node src/check-queue.ts
-```
-
-### Health Check
-
-Check if the application is running:
-- **URL**: `http://localhost:3000/health`
-- **Method**: `GET`
-- **Response**: `{ "status": "ok", "timestamp": "..." }`
+    # Production mode
+    npm run start:prod
+    ```
 
 ---
 
-## Deployment Guide: AWS EC2 with Docker
+## 📚 Documentation
 
-This guide explains how to deploy the backend to an AWS EC2 instance.
+Detailed documentation is available in the `docs/` directory:
 
-### 1. Launch EC2 Instance
-- **AMI**: Amazon Linux 2023 or Ubuntu 22.04 LTS.
-- **Type**: t3.small (recommended minimum for Node+Redis).
-- **Security Group**: Allow Inbound ports:
-    - `22` (SSH)
-    - `3000` (Application) - *Or map to 80 via load balancer.*
+-   [**API Endpoints**](docs/endpoints.md): Comprehensive list of all API routes.
+-   [**Frontend Integration**](docs/frontend.txt): Guide for frontend developers.
+-   [**Postman Collection**](docs/postman.md): Importable collection for testing.
+-   [**BullMQ & Docker**](docs/bullmq-docker.md): Guide on background jobs.
 
-### 2. Install Docker
-SSH into your instance and run:
+---
 
-**For Amazon Linux 2023:**
-```bash
-sudo yum update -y
-sudo yum install -y docker
-sudo service docker start
-sudo usermod -a -G docker ec2-user
-# Logout and log back in to pick up group changes
-```
+## 🧪 Testing
 
-**Install Docker Compose:**
-```bash
-sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-```
-
-### 3. Deploy Code
-You can clone via Git or copy files.
+Run duplicate checks, unit tests, and e2e tests to ensure stability.
 
 ```bash
-git clone https://github.com/Ur-Code-Buddy/nutribackend.git
-cd nutribackend
-```
+# Unit tests
+npm run test
 
-### 4. Configure Environment
-Create the production `.env` file:
+# End-to-end tests
+npm run test:e2e
 
-```bash
-cp .env.example .env
-nano .env
-```
-Fill in your production DB credentials, AWS keys, and JWT secret.
-
-### 5. Start Application
-Run the container in detached mode:
-
-```bash
-docker-compose up -d --build
-```
-
-### 6. Verify
-Check if the container is running:
-```bash
-docker-compose ps
-```
-
-View logs if needed:
-```bash
-docker-compose logs -f backend
+# Test coverage
+npm run test:cov
 ```
 
 ---
 
-## Documentation
+## ☁️ Deployment (AWS EC2)
 
-- [BullMQ & Docker Guide](docs/bullmq-docker.md)
-- [Project Docker Guide](docs/project-docker.md)
-- [API Documentation (Postman)](docs/postman.md)
+Deploying to AWS EC2 using Docker is straightforward.
+
+1.  **Launch EC2**: Amazon Linux 2023 or Ubuntu 22.04 (t3.small recommended).
+2.  **Security Groups**: Open ports `22` (SSH) and `3000` (App).
+3.  **Install Docker**:
+    ```bash
+    sudo yum update -y && sudo yum install -y docker
+    sudo service docker start
+    sudo usermod -a -G docker ec2-user
+    ```
+4.  **Install Docker Compose**:
+    ```bash
+    sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+    ```
+5.  **Deploy**:
+    ```bash
+    git clone https://github.com/Ur-Code-Buddy/nutribackend.git
+    cd nutribackend
+    cp .env.example .env # Configure your env
+    docker-compose up -d --build
+    ```
+
+---
+
+Made with ❤️ by the NutriTiffin Team.
