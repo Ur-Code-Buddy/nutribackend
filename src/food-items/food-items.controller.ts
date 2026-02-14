@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { FoodItemsService } from './food-items.service';
 import { CreateFoodItemDto } from './dto/create-food-item.dto';
 import { UpdateFoodItemDto } from './dto/update-food-item.dto';
@@ -12,13 +24,16 @@ import { KitchensService } from '../kitchens/kitchens.service'; // You might nee
 export class FoodItemsController {
   constructor(
     private readonly foodItemsService: FoodItemsService,
-    private readonly kitchensService: KitchensService
-  ) { }
+    private readonly kitchensService: KitchensService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.KITCHEN_OWNER)
-  async create(@Request() req: any, @Body() createFoodItemDto: CreateFoodItemDto) {
+  async create(
+    @Request() req: any,
+    @Body() createFoodItemDto: CreateFoodItemDto,
+  ) {
     // Verify user owns the kitchen they are adding items to
     // Assuming createFoodItemDto contains kitchen_id, or we fetch the user's kitchen
     const kitchen = await this.kitchensService.findByOwner(req.user.userId);
@@ -53,7 +68,11 @@ export class FoodItemsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.KITCHEN_OWNER)
-  async update(@Request() req: any, @Param('id') id: string, @Body() updateFoodItemDto: UpdateFoodItemDto) {
+  async update(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() updateFoodItemDto: UpdateFoodItemDto,
+  ) {
     // Validate ownership logic here (omitted slightly for brevity but critical for prod)
     // Check if item belongs to kitchen owned by user
     const item = await this.foodItemsService.findOne(id);
@@ -70,7 +89,7 @@ export class FoodItemsController {
   async setAvailability(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() body: { is_available: boolean }
+    @Body() body: { is_available: boolean },
   ) {
     if (body.is_available === undefined) {
       throw new BadRequestException('is_available required');

@@ -13,6 +13,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { CommonModule } from './common/common.module';
 import { QueueModule } from './queue/queue.module';
 import { UploadModule } from './upload/upload.module';
+import { DeliveriesModule } from './deliveries/deliveries.module';
 
 @Module({
   imports: [
@@ -39,7 +40,10 @@ import { UploadModule } from './upload/upload.module';
           database: configService.get<string>('DB_NAME'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize: true, // Auto-create tables (disable in production)
-          ssl: configService.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : undefined,
+          ssl:
+            configService.get<string>('DB_SSL') === 'true'
+              ? { rejectUnauthorized: false }
+              : undefined,
         };
       },
     }),
@@ -62,8 +66,9 @@ import { UploadModule } from './upload/upload.module';
     JobsModule,
     CommonModule,
     UploadModule,
+    DeliveriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

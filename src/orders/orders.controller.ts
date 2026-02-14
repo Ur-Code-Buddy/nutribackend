@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  UseGuards,
+  Request,
+  BadRequestException,
+} from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto'; // Not really used for general updates, maybe just status
@@ -13,8 +23,8 @@ import { KitchensService } from '../kitchens/kitchens.service';
 export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
-    private readonly kitchenService: KitchensService
-  ) { }
+    private readonly kitchenService: KitchensService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

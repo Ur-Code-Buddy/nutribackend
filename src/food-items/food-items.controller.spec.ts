@@ -47,17 +47,27 @@ describe('FoodItemsController', () => {
       const mockResult = [{ id: '1', name: 'Test Item' }];
       const mockKitchen = { id: 'kitchen-id', owner_id: 'user-id' };
 
-      jest.spyOn(kitchensService, 'findByOwner').mockResolvedValue(mockKitchen as any);
-      jest.spyOn(foodItemsService, 'findAllByKitchen').mockResolvedValue(mockResult as any);
+      jest
+        .spyOn(kitchensService, 'findByOwner')
+        .mockResolvedValue(mockKitchen as any);
+      jest
+        .spyOn(foodItemsService, 'findAllByKitchen')
+        .mockResolvedValue(mockResult as any);
 
-      expect(await controller.getMyItems({ user: { userId: 'user-id' } })).toBe(mockResult);
+      expect(await controller.getMyItems({ user: { userId: 'user-id' } })).toBe(
+        mockResult,
+      );
       expect(kitchensService.findByOwner).toHaveBeenCalledWith('user-id');
-      expect(foodItemsService.findAllByKitchen).toHaveBeenCalledWith('kitchen-id');
+      expect(foodItemsService.findAllByKitchen).toHaveBeenCalledWith(
+        'kitchen-id',
+      );
     });
 
     it('should throw NotFoundException if no kitchen found', async () => {
       jest.spyOn(kitchensService, 'findByOwner').mockResolvedValue(null);
-      await expect(controller.getMyItems({ user: { userId: 'user-id' } })).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.getMyItems({ user: { userId: 'user-id' } }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

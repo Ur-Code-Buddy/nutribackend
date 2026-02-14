@@ -22,4 +22,4 @@ import { FoodItem } from '../food-items/entities/food-item.entity';
   providers: [OrdersService],
   exports: [OrdersService],
 })
-export class OrdersModule { }
+export class OrdersModule {}

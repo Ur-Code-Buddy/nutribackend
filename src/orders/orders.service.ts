@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -20,7 +24,7 @@ export class OrdersService {
     private foodItemRepo: Repository<FoodItem>,
     @InjectQueue('orders')
     private ordersQueue: Queue,
-  ) { }
+  ) {}
 
   async create(clientId: string, dto: CreateOrderDto) {
     // 1. Validate "Next Day"
@@ -34,12 +38,14 @@ export class OrdersService {
       tomorrow.getDate() === scheduledDate.getDate();
 
     if (!isNextDay) {
-      throw new BadRequestException('Orders must be placed for exactly the next day.');
+      throw new BadRequestException(
+        'Orders must be placed for exactly the next day.',
+      );
     }
 
     // 2. Validate Items & Availability
     const orderItems: OrderItem[] = [];
-    let totalPrice = 0;
+    const totalPrice = 0;
 
     for (const itemDto of dto.items) {
       const foodItem = await this.foodItemRepo.findOne({
@@ -48,7 +54,9 @@ export class OrdersService {
       });
 
       if (!foodItem) {
-        throw new BadRequestException(`Food item ${itemDto.food_item_id} not found or not from this kitchen.`);
+        throw new BadRequestException(
+          `Food item ${itemDto.food_item_id} not found or not from this kitchen.`,
+        );
       }
 
       if (!foodItem.active) {
@@ -56,9 +64,13 @@ export class OrdersService {
       }
 
       // Check specific availability
-      const availability = foodItem.availability?.find(a => a.date === dto.scheduled_for);
+      const availability = foodItem.availability?.find(
+        (a) => a.date === dto.scheduled_for,
+      );
       if (availability && !availability.is_available) {
-        throw new BadRequestException(`${foodItem.name} is unavailable for ${dto.scheduled_for}.`);
+        throw new BadRequestException(
+          `${foodItem.name} is unavailable for ${dto.scheduled_for}.`,
+        );
       }
 
       // Check daily max orders (simple check, concurrency could be an issue but ignored for now)
@@ -74,7 +86,9 @@ export class OrdersService {
 
       const currentSold = parseInt(sold?.sum || '0', 10);
       if (currentSold + itemDto.quantity > foodItem.max_daily_orders) {
-        throw new BadRequestException(`${foodItem.name} sold out for ${dto.scheduled_for}.`);
+        throw new BadRequestException(
+          `${foodItem.name} sold out for ${dto.scheduled_for}.`,
+        );
       }
 
       const orderItem = new OrderItem();
@@ -132,7 +146,9 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Order not found');
 
     if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException('Order status cannot be changed once processed.');
+      throw new BadRequestException(
+        'Order status cannot be changed once processed.',
+      );
     }
 
     order.status = status;

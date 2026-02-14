@@ -70,3 +70,14 @@ Notes
 -----
 - Handle 401 Unauthorized by redirecting to Login.
 - Handle 409 Conflict (Duplicate Email/Phone) during registration by showing a user-friendly error.
+
+6. Delivery Driver Dashboard
+----------------------------
+- Role: `DELIVERY_DRIVER`
+- Flow:
+  1. Login to get token.
+  2. GET /deliveries/available -> Show list of orders kitchen has accepted.
+  3. Driver clicks "Accept" -> PATCH /deliveries/:id/accept.
+  4. Order moves to "Current Deliveries" (GET /deliveries/my-orders).
+  5. Show details: Address (Client/Kitchen), Phone numbers, Total Price.
+  6. Driver finishes -> PATCH /deliveries/:id/finish.

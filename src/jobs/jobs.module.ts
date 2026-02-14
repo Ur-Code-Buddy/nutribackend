@@ -14,4 +14,4 @@ import { Order } from '../orders/entities/order.entity';
   providers: [JobsService],
   exports: [JobsService],
 })
-export class JobsModule { }
+export class JobsModule {}

@@ -6,37 +6,37 @@ import { UserRole } from './user.role.enum';
 
 @Injectable()
 export class UsersService {
-    constructor(
-        @InjectRepository(User)
-        private usersRepository: Repository<User>,
-    ) { }
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
 
-    async create(
-        username: string,
-        passwordHash: string,
-        role: UserRole,
-        name: string,
-        email: string,
-        phoneNumber: string,
-        address: string,
-    ): Promise<User> {
-        const user = this.usersRepository.create({
-            username,
-            password_hash: passwordHash,
-            role,
-            name,
-            email,
-            phone_number: phoneNumber,
-            address,
-        });
-        return this.usersRepository.save(user);
-    }
+  async create(
+    username: string,
+    passwordHash: string,
+    role: UserRole,
+    name: string,
+    email: string,
+    phoneNumber: string,
+    address: string,
+  ): Promise<User> {
+    const user = this.usersRepository.create({
+      username,
+      password_hash: passwordHash,
+      role,
+      name,
+      email,
+      phone_number: phoneNumber,
+      address,
+    });
+    return this.usersRepository.save(user);
+  }
 
-    async findOneByUsername(username: string): Promise<User | null> {
-        return this.usersRepository.findOneBy({ username });
-    }
+  async findOneByUsername(username: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ username });
+  }
 
-    async findOneById(id: string): Promise<User | null> {
-        return this.usersRepository.findOneBy({ id });
-    }
+  async findOneById(id: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ id });
+  }
 }

@@ -5,23 +5,26 @@ import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
-    @Post('register')
-    async register(@Body() registerDto: RegisterDto) {
-        return this.authService.register(registerDto);
-    }
+  @Post('register')
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
+  }
 
-    @HttpCode(HttpStatus.OK)
-    @Post('login')
-    async login(@Body() loginDto: LoginDto) {
-        const user = await this.authService.validateUser(loginDto.username, loginDto.password);
-        if (!user) {
-            return {
-                statusCode: HttpStatus.UNAUTHORIZED,
-                message: 'Invalid credentials',
-            };
-        }
-        return this.authService.login(user);
+  @HttpCode(HttpStatus.OK)
+  @Post('login')
+  async login(@Body() loginDto: LoginDto) {
+    const user = await this.authService.validateUser(
+      loginDto.username,
+      loginDto.password,
+    );
+    if (!user) {
+      return {
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: 'Invalid credentials',
+      };
     }
+    return this.authService.login(user);
+  }
 }

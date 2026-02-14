@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Kitchen } from './entities/kitchen.entity';
@@ -10,7 +14,7 @@ export class KitchensService {
   constructor(
     @InjectRepository(Kitchen)
     private kitchensRepository: Repository<Kitchen>,
-  ) { }
+  ) {}
 
   async create(createKitchenDto: CreateKitchenDto): Promise<Kitchen> {
     const existing = await this.kitchensRepository.findOne({

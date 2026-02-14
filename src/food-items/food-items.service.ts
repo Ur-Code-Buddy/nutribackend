@@ -11,7 +11,7 @@ export class FoodItemsService {
   constructor(
     @InjectRepository(FoodItem)
     private foodItemRepo: Repository<FoodItem>,
-  ) { }
+  ) {}
 
   create(createFoodItemDto: CreateFoodItemDto) {
     const item = this.foodItemRepo.create(createFoodItemDto);

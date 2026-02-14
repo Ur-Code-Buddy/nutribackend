@@ -1,31 +1,39 @@
-import { IsNotEmpty, IsString, IsArray, ValidateNested, IsInt, IsDateString, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsArray,
+  ValidateNested,
+  IsInt,
+  IsDateString,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class CreateOrderItemDto {
-    @IsString()
-    @IsNotEmpty()
-    food_item_id: string;
+  @IsString()
+  @IsNotEmpty()
+  food_item_id: string;
 
-    @IsInt()
-    @Min(1)
-    quantity: number;
+  @IsInt()
+  @Min(1)
+  quantity: number;
 }
 
 export class CreateOrderDto {
-    @IsString()
-    @IsNotEmpty()
-    kitchen_id: string;
+  @IsString()
+  @IsNotEmpty()
+  kitchen_id: string;
 
-    // scheduled_for is handled by logic as "tomorrow", but client might send it or just we enforce it.
-    // Requirement: "Orders are placed one day in advance".
-    // Let's enforce implementation to calculate "tomorrow" or validate provided date.
-    // For simplicity, let client request it, and we validate strictly.
-    @IsDateString()
-    @IsNotEmpty()
-    scheduled_for: string;
+  // scheduled_for is handled by logic as "tomorrow", but client might send it or just we enforce it.
+  // Requirement: "Orders are placed one day in advance".
+  // Let's enforce implementation to calculate "tomorrow" or validate provided date.
+  // For simplicity, let client request it, and we validate strictly.
+  @IsDateString()
+  @IsNotEmpty()
+  scheduled_for: string;
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => CreateOrderItemDto)
-    items: CreateOrderItemDto[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderItemDto)
+  items: CreateOrderItemDto[];
 }

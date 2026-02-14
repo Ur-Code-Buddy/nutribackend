@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  BadRequestException,
+} from '@nestjs/common';
 import { KitchensService } from './kitchens.service';
 import { CreateKitchenDto } from './dto/create-kitchen.dto';
 import { UpdateKitchenDto } from './dto/update-kitchen.dto';
@@ -9,7 +20,7 @@ import { UserRole } from '../users/user.role.enum';
 
 @Controller('kitchens')
 export class KitchensController {
-  constructor(private readonly kitchensService: KitchensService) { }
+  constructor(private readonly kitchensService: KitchensService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -34,7 +45,11 @@ export class KitchensController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.KITCHEN_OWNER)
-  async update(@Request() req: any, @Param('id') id: string, @Body() updateKitchenDto: UpdateKitchenDto) {
+  async update(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() updateKitchenDto: UpdateKitchenDto,
+  ) {
     // Ensure user owns this kitchen
     const kitchen = await this.kitchensService.findOne(id);
     if (kitchen.owner_id !== req.user.userId) {

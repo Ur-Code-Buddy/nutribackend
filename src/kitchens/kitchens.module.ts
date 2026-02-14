@@ -11,4 +11,4 @@ import { CommonModule } from '../common/common.module';
   providers: [KitchensService],
   exports: [KitchensService],
 })
-export class KitchensModule { }
+export class KitchensModule {}
