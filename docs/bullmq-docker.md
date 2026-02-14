@@ -64,5 +64,24 @@ For a visual dashboard, you can install `@bull-board/nestjs`.
 - **Connection Refused**: Ensure the `redis` container is running (`docker-compose ps`).
 - **Job Not Processing**: Check backend logs:
   ```bash
+
   docker-compose logs -f backend
   ```
+
+## Handling Updates
+
+When there are updates to the codebase (e.g., from a `git pull`), follow these steps to update your running containers:
+
+1.  **Pull the latest code:**
+    ```bash
+    git pull origin main
+    ```
+
+2.  **Rebuild and Restart Docker Compose:**
+    ```bash
+    docker-compose up -d --build
+    ```
+    This command will:
+    - Rebuild the images with the new code.
+    - Recreate the containers if changes are detected.
+    - Leave unchanged containers running.
