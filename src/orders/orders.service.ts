@@ -45,7 +45,7 @@ export class OrdersService {
 
     // 2. Validate Items & Availability
     const orderItems: OrderItem[] = [];
-    const totalPrice = 0;
+    let totalPrice = 0;
 
     for (const itemDto of dto.items) {
       const foodItem = await this.foodItemRepo.findOne({
@@ -96,6 +96,7 @@ export class OrdersService {
       orderItem.quantity = itemDto.quantity;
       orderItem.snapshot_price = foodItem.price;
       orderItems.push(orderItem);
+      totalPrice += Number(foodItem.price) * itemDto.quantity;
     }
 
     // 3. Create Order
@@ -105,6 +106,7 @@ export class OrdersService {
       scheduled_for: dto.scheduled_for,
       status: OrderStatus.PENDING,
       items: orderItems,
+      total_price: totalPrice,
     });
 
     const savedOrder = await this.ordersRepo.save(order);
