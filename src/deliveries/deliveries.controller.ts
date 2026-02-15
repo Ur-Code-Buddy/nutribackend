@@ -16,7 +16,7 @@ import { UserRole } from '../users/user.role.enum';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.DELIVERY_DRIVER)
 export class DeliveriesController {
-  constructor(private readonly deliveriesService: DeliveriesService) {}
+  constructor(private readonly deliveriesService: DeliveriesService) { }
 
   @Get('available')
   findAllAvailable() {
@@ -25,17 +25,17 @@ export class DeliveriesController {
 
   @Get('my-orders')
   findMyOrders(@Request() req: any) {
-    return this.deliveriesService.findMyOrders(req.user.id);
+    return this.deliveriesService.findMyOrders(req.user.userId);
   }
 
   @Patch(':id/accept')
   acceptDelivery(@Param('id') id: string, @Request() req: any) {
-    return this.deliveriesService.acceptDelivery(id, req.user.id);
+    return this.deliveriesService.acceptDelivery(id, req.user.userId);
   }
 
   @Patch(':id/finish')
   finishDelivery(@Param('id') id: string, @Request() req: any) {
-    return this.deliveriesService.finishDelivery(id, req.user.id);
+    return this.deliveriesService.finishDelivery(id, req.user.userId);
   }
 
   @Get(':id')
