@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsOptional,
   IsBoolean,
+  IsArray,
 } from 'class-validator';
 
 export class CreateFoodItemDto {
@@ -28,4 +29,9 @@ export class CreateFoodItemDto {
   @IsNumber()
   @IsOptional()
   max_daily_orders: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  availability_days?: string[];
 }

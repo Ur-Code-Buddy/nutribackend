@@ -44,6 +44,9 @@ export class FoodItem {
   @Column({ default: true })
   is_available: boolean;
 
+  @Column('simple-array', { nullable: true })
+  availability_days: string[]; // e.g. ["monday", "wednesday"]
+
   @OneToMany(() => FoodItemAvailability, (avail) => avail.food_item)
   availability: FoodItemAvailability[];
 

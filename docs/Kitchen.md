@@ -44,6 +44,7 @@ Each kitchen belongs to exactly one owner.
 | image_url        | string   | Kitchen cover image URL |
 | is_active        | boolean  | Whether kitchen is active |
 | is_menu_visible  | boolean  | Whether menu is visible to clients |
+| availability_days| string[] | Days the menu is available |
 | created_at       | datetime | Creation timestamp |
 | updated_at       | datetime | Last update timestamp |
 
@@ -83,7 +84,8 @@ Authorization: Bearer <JWT_TOKEN>
   },
   "image_url": "https://example.com/kitchen.jpg",
   "is_active": true,
-  "is_menu_visible": true
+  "is_menu_visible": true,
+  "availability_days": ["monday", "wednesday", "friday"]
 }
 ```
 
@@ -99,6 +101,7 @@ Authorization: Bearer <JWT_TOKEN>
 | image_url        | No       | Public image URL |
 | is_active        | No       | Defaults to true |
 | is_menu_visible  | No       | Defaults to true |
+| availability_days| No       | List of available days |
 
 ---
 

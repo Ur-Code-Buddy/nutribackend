@@ -91,6 +91,7 @@ Adds a new food item to the user's kitchen menu.
 | `description` | string | No | Description of the dish. |
 | `image_url` | string | No | URL to the dish image. |
 | `max_daily_orders` | number | No | Maximum number of orders allowed per day. |
+| `availability_days` | array | No | List of days the item is available (e.g. `["monday", "friday"]`). |
 
 ### Get My Items
 **GET** `/menu-items/my-items`
