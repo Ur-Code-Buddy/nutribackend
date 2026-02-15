@@ -79,7 +79,7 @@ When there are updates to the codebase (e.g., from a `git pull`), follow these s
 
 2.  **Rebuild and Restart Docker Compose:**
     ```bash
-    docker-compose up -d --build
+    docker-compose down && docker-compose up -d --build
     ```
     This command will:
     - Rebuild the images with the new code.
