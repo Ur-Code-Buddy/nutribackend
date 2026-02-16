@@ -65,9 +65,7 @@ Returns a list of orders that are `ACCEPTED` by the kitchen but have no driver a
       {
         "food_item_id": "item-uuid",
         "name": "Pizza",
-        "image_url": "http://...",
-        "quantity": 2,
-        "snapshot_price": 50.00
+        "quantity": 2
       }
     ]
   }

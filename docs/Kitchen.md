@@ -97,7 +97,7 @@ Authorization: Bearer <JWT_TOKEN>
 |------------------|----------|-------------|
 | name             | Yes      | Name of the kitchen |
 | details          | No       | Additional kitchen details |
-| operating_hours  | No       | Weekly schedule |
+| operating_hours  | No       | Weekly schedule. Times must be in **HH:MM** format (e.g. 09:00). |
 | image_url        | No       | Public image URL |
 | is_active        | No       | Defaults to true |
 | is_menu_visible  | No       | Defaults to true |

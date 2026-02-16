@@ -49,7 +49,7 @@ Creates a new kitchen profile for the authenticated user.
 | :--- | :--- | :--- | :--- |
 | `name` | string | **Yes** | Name of the kitchen. |
 | `details` | object | No | Additional details (address, phone, description). |
-| `operating_hours` | object | No | Operating hours configuration. |
+| `operating_hours` | object | No | Operating hours configuration (Times in **HH:MM**). |
 | `image_url` | string | No | URL to the kitchen's cover image. |
 | `is_active` | boolean | No | Whether the kitchen is active (default: true). |
 | `is_menu_visible` | boolean | No | Whether the menu is visible to users (default: true). |
@@ -186,7 +186,11 @@ Retrieves details of a specific order.
       "snapshot_price": 100.00
     }
   ],
-  "delivery_driver": null
+  "delivery_driver": {
+    "id": "driver-uuid",
+    "name": "Driver Name",
+    "phone_number": "9876543210"
+  }
 }
 ```
 
