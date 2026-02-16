@@ -14,7 +14,7 @@ export class KitchensService {
   constructor(
     @InjectRepository(Kitchen)
     private kitchensRepository: Repository<Kitchen>,
-  ) {}
+  ) { }
 
   async create(createKitchenDto: CreateKitchenDto): Promise<Kitchen> {
     const existing = await this.kitchensRepository.findOne({
@@ -46,7 +46,7 @@ export class KitchensService {
   }
 
   async update(id: string, updateKitchenDto: UpdateKitchenDto) {
-    await this.kitchensRepository.update(id, updateKitchenDto);
+    await this.kitchensRepository.update(id, updateKitchenDto as any);
     return this.findOne(id);
   }
 

@@ -15,20 +15,26 @@ export class DeliveriesService {
     private ordersRepository: Repository<Order>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async findAllAvailable() {
-    return this.ordersRepository.find({
+    const orders = await this.ordersRepository.find({
       where: {
         status: OrderStatus.ACCEPTED,
         delivery_driver: IsNull(),
       },
-      relations: ['kitchen', 'kitchen.owner'],
+      relations: ['kitchen', 'kitchen.owner', 'items', 'items.food_item'],
       order: {
         created_at: 'ASC',
       },
       select: {
+        id: true,
+        status: true,
+        total_price: true,
+        created_at: true,
+        scheduled_for: true,
         kitchen: {
+          id: true,
           name: true,
           details: {
             address: true,
@@ -37,6 +43,7 @@ export class DeliveriesService {
         },
       },
     });
+    return orders;
   }
 
   async findMyOrders(driverId: string) {

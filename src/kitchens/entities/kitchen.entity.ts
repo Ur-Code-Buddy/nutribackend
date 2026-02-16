@@ -44,11 +44,7 @@ export class Kitchen {
   };
 
   @Column('jsonb', { nullable: true })
-  operating_hours: {
-    open: string;
-    close: string;
-    days_off: number[]; // 0-6 (Sun-Sat)
-  };
+  operating_hours: any;
 
   @Column({ default: true })
   is_active: boolean;

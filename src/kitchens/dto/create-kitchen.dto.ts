@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsString, IsOptional, IsObject } from 'class-validator';
+import { OperatingHoursDto } from './operating-hours.dto';
+import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsObject,
+  ValidateNested,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateKitchenDto {
   @IsOptional()
@@ -12,9 +21,10 @@ export class CreateKitchenDto {
   @IsOptional()
   details: any;
 
-  @IsObject()
   @IsOptional()
-  operating_hours: any;
+  @ValidateNested()
+  @Type(() => OperatingHoursDto)
+  operating_hours: OperatingHoursDto;
 
   @IsString()
   @IsOptional()

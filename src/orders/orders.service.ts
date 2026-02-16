@@ -149,7 +149,7 @@ export class OrdersService {
   async findOne(id: string) {
     return this.ordersRepo.findOne({
       where: { id },
-      relations: ['items', 'items.food_item'],
+      relations: ['items', 'items.food_item', 'delivery_driver'],
     });
   }
 
