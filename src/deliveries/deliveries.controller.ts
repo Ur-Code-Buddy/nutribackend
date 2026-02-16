@@ -11,6 +11,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/user.role.enum';
+import { ResponseMapper } from '../common/utils/response.mapper';
 
 @Controller('deliveries')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -19,13 +20,15 @@ export class DeliveriesController {
   constructor(private readonly deliveriesService: DeliveriesService) { }
 
   @Get('available')
-  findAllAvailable() {
-    return this.deliveriesService.findAllAvailable();
+  async findAllAvailable() {
+    const orders = await this.deliveriesService.findAllAvailable();
+    return orders.map((order) => ResponseMapper.toDriverDeliveryView(order));
   }
 
   @Get('my-orders')
-  findMyOrders(@Request() req: any) {
-    return this.deliveriesService.findMyOrders(req.user.userId);
+  async findMyOrders(@Request() req: any) {
+    const orders = await this.deliveriesService.findMyOrders(req.user.userId);
+    return orders.map((order) => ResponseMapper.toDriverDeliveryView(order));
   }
 
   @Patch(':id/accept')
@@ -39,7 +42,12 @@ export class DeliveriesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.deliveriesService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const order = await this.deliveriesService.findOne(id);
+    // Note: deliveriesService.findOne checks for existence but not necessarily driver assignment for 'viewing'.
+    // If we want strict 'my delivery' check, we should add it.
+    // However, if the driver is viewing an 'available' order (before accepting), they need to see it too.
+    // So we assume if it's found via delivery service, it's viewable by driver.
+    return ResponseMapper.toDriverDeliveryView(order);
   }
 }

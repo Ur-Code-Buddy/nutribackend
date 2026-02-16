@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { FoodItem } from '../../food-items/entities/food-item.entity';
+import { Transform } from 'class-transformer';
 
 @Entity('kitchens')
 export class Kitchen {
@@ -27,6 +28,14 @@ export class Kitchen {
   name: string;
 
   @Column('jsonb', { nullable: true })
+  @Transform(({ value }: { value: any }) => {
+    if (value && typeof value === 'object') {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { email, ...rest } = value;
+      return rest;
+    }
+    return value;
+  })
   details: {
     address: string;
     phone: string;
