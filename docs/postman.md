@@ -22,7 +22,7 @@ This documentation covers the API endpoints for the Nutri Tiffin backend.
     "role": "client" // Enum: "client", "kitchen_owner", "delivery_driver"
   }
   ```
-- **Response**: User object (without password).
+- **Response**: User object (without password or email).
 
 ### Login
 - **Endpoint**: `POST /auth/login`

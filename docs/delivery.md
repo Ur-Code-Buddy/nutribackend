@@ -54,14 +54,22 @@ Returns a list of orders that are `ACCEPTED` by the kitchen but have no driver a
     "id": "order-uuid-1234-5678",
     "status": "ACCEPTED",
     "scheduled_for": "2026-02-16",
-    "created_at": "2026-02-15T12:00:00.000Z",
+    "total_price": 250.00,
     "kitchen": {
+      "id": "kitchen-uuid",
       "name": "Rahul's Home Kitchen",
-      "details": {
-        "address": "221B Baker Street, Mumbai",
-        "phone": "23872393834"
+      "phone": "23872393834",
+      "address": "221B Baker Street, Mumbai"
+    },
+    "items": [
+      {
+        "food_item_id": "item-uuid",
+        "name": "Pizza",
+        "image_url": "http://...",
+        "quantity": 2,
+        "snapshot_price": 50.00
       }
-    }
+    ]
   }
 ]
 ```
@@ -91,14 +99,20 @@ Returns a list of orders assigned to the authenticated driver.
     "id": "order-uuid-1234-5678",
     "status": "OUT_FOR_DELIVERY",
     "scheduled_for": "2026-02-16",
-    "updated_at": "2026-02-15T14:30:00.000Z",
+    "total_price": 250.00,
     "kitchen": {
-      "name": "Rahul's Home Kitchen"
+      "id": "kitchen-uuid",
+      "name": "Rahul's Home Kitchen",
+      "phone": "23872393834",
+      "address": "221B Baker Street, Mumbai"
     },
     "client": {
+      "id": "client-uuid",
       "name": "John Doe",
-      "address": "123 Main St" // Assuming client details are exposed or fetched via user entity
-    }
+      "phone_number": "9876543210",
+      "address": "123 Main St"
+    },
+    "items": [ ... ]
   }
 ]
 ```
@@ -126,9 +140,15 @@ Assigns the order to the authenticated driver and updates status to `OUT_FOR_DEL
 {
   "id": "order-uuid-1234-5678",
   "status": "OUT_FOR_DELIVERY",
-  "delivery_driver_id": "driver-uuid-9876",
-  "picked_up_at": "2026-02-15T14:00:00.000Z",
-  "updated_at": "2026-02-15T14:00:00.000Z"
+  "total_price": 250.00,
+  "kitchen": { ... },
+  "client": { ... },
+  "items": [ ... ],
+  "delivery_driver": {
+    "id": "driver-uuid-9876",
+    "name": "Driver Name",
+    "phone_number": "9998887776"
+  }
 }
 ```
 
@@ -162,8 +182,11 @@ Marks the order as `DELIVERED`. Driver must be the one assigned.
 {
   "id": "order-uuid-1234-5678",
   "status": "DELIVERED",
-  "delivered_at": "2026-02-15T15:00:00.000Z",
-  "updated_at": "2026-02-15T15:00:00.000Z"
+  "total_price": 250.00,
+  "kitchen": { ... },
+  "client": { ... },
+  "items": [ ... ],
+  "delivery_driver": { ... }
 }
 ```
 

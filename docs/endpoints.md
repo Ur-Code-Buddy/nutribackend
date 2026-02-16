@@ -156,13 +156,39 @@ Places a new order.
 **GET** `/orders`
 **Role Required:** Authenticated User
 
-Retrieves all orders for the authenticated user (Client or Kitchen Owner).
+Retrieves all orders for the authenticated user (Client or Kitchen Owner) with role-specific details.
 
 ### Get Order by ID
 **GET** `/orders/:id`
 **Role Required:** Authenticated User
 
 Retrieves details of a specific order.
+
+**Response:**
+```json
+{
+  "id": "order-uuid",
+  "status": "ACCEPTED",
+  "scheduled_for": "2026-02-16",
+  "total_price": 250.00,
+  "kitchen": {
+    "id": "kitchen-id",
+    "name": "Kitchen Name",
+    "phone": "...",
+    "address": "..."
+  },
+  "items": [
+    {
+      "food_item_id": "item-id",
+      "name": "Item Name",
+      "image_url": "http://...",
+      "quantity": 2,
+      "snapshot_price": 100.00
+    }
+  ],
+  "delivery_driver": null
+}
+```
 
 ### Accept Order
 **PATCH** `/orders/:id/accept`
@@ -241,3 +267,19 @@ Updates status to `DELIVERED`.
 **Role Required:** `DELIVERY_DRIVER`
 
 Retrieves full order details including addresses and phone numbers.
+
+**Response:**
+```json
+{
+  "id": "order-uuid",
+  "status": "OUT_FOR_DELIVERY",
+  "total_price": 250.00,
+  "kitchen": { ... },
+  "client": {
+     "name": "Client Name",
+     "phone_number": "...",
+     "address": "..."
+  },
+  "items": [ ... ]
+}
+```

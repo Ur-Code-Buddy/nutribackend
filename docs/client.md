@@ -37,16 +37,17 @@ Success Response (201):
 "id": "8f6fdea3-5971-4030-aa92-5d5448d981d0",
 "username": "client_user01",
 "name": "Rahul Sharma",
-"email": "rahul.sharma01@example.com",
 "phone_number": "+919876543210",
+"address": "123 MG Road, Pondicherry, Puducherry, India",
 "role": "CLIENT",
-"created_at": "2026-02-15T06:10:16.854Z"
+"created_at": "2026-02-15T06:10:16.854Z",
+"updated_at": "2026-02-15T06:10:16.854Z"
 }
 
 Validation Rules:
 
 - username required, unique
-- email required, valid format, unique
+- email required, valid format, unique (but not returned in response)
 - phone_number required, unique
 - password minimum 6 characters
 - role must be CLIENT
@@ -66,7 +67,12 @@ Request Body:
 
 Success Response:
 {
-"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+"user": {
+"id": "8f6fdea3-5971-4030-aa92-5d5448d981d0",
+"username": "client_user01",
+"role": "CLIENT"
+}
 }
 
 ---
@@ -186,19 +192,19 @@ Success Response:
 "kitchen_id": "c282d569-e3a9-4820-ad35-d4093a8b96d8",
 "status": "PENDING",
 "scheduled_for": "2026-02-16",
-"total_price": "250.00",
+"total_price": 250.00,
 "items": [
 {
 "id": "305f804b-5161-4482-bce1-6fa2e5034d95",
 "food_item_id": "aebf865c-abf8-405b-9e5b-ab4fce869084",
 "quantity": 2,
-"snapshot_price": "100.00"
+"snapshot_price": 100.00
 },
 {
 "id": "71e1bfb4-2576-4cee-ae04-69cb5a1eb4a8",
 "food_item_id": "e9663f29-718b-44d9-a8e9-eecf9dc6f68e",
 "quantity": 1,
-"snapshot_price": "50.00"
+"snapshot_price": 50.00
 }
 ],
 "created_at": "2026-02-15T06:43:41.612Z",
@@ -217,11 +223,32 @@ Success Response:
 [
 {
 "id": "d0b9fa9b-66c2-4c9b-9647-91c0019fdc1f",
-"kitchen_id": "c282d569-e3a9-4820-ad35-d4093a8b96d8",
 "status": "ACCEPTED",
 "scheduled_for": "2026-02-16",
-"total_price": "250.00",
-"created_at": "2026-02-15T06:43:41.612Z"
+"total_price": 250.00,
+"items": [
+{
+"food_item_id": "aebf865c-abf8-405b-9e5b-ab4fce869084",
+"name": "Pizza",
+"image_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/e41b0fd1.jpg",
+"quantity": 2,
+"snapshot_price": 100.00
+},
+{
+"food_item_id": "e9663f29-718b-44d9-a8e9-eecf9dc6f68e",
+"name": "Burger",
+"image_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/burger.jpg",
+"quantity": 1,
+"snapshot_price": 50.00
+}
+],
+"kitchen": {
+"id": "c282d569-e3a9-4820-ad35-d4093a8b96d8",
+"name": "Arjuns Kitchen",
+"phone": "7738087085",
+"address": "123"
+},
+"delivery_driver": null
 }
 ]
 
@@ -245,20 +272,34 @@ Success Response:
 "id": "d0b9fa9b-66c2-4c9b-9647-91c0019fdc1f",
 "status": "ACCEPTED",
 "scheduled_for": "2026-02-16",
-"total_price": "250.00",
-"accepted_at": "2026-02-15T06:47:18.478Z",
+"total_price": 250.00,
 "items": [
 {
 "food_item_id": "aebf865c-abf8-405b-9e5b-ab4fce869084",
+"name": "Pizza",
+"image_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/e41b0fd1.jpg",
 "quantity": 2,
-"snapshot_price": "100.00"
+"snapshot_price": 100.00
 },
 {
 "food_item_id": "e9663f29-718b-44d9-a8e9-eecf9dc6f68e",
+"name": "Burger",
+"image_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/burger.jpg",
 "quantity": 1,
-"snapshot_price": "50.00"
+"snapshot_price": 50.00
 }
-]
+],
+"kitchen": {
+"id": "c282d569-e3a9-4820-ad35-d4093a8b96d8",
+"name": "Arjuns Kitchen",
+"phone": "7738087085",
+"address": "123"
+},
+"delivery_driver": {
+"id": "driver-uuid-123",
+"name": "Driver Name",
+"phone_number": "9876543210"
+}
 }
 
 ---
