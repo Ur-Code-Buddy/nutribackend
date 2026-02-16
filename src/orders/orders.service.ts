@@ -24,22 +24,32 @@ export class OrdersService {
     private foodItemRepo: Repository<FoodItem>,
     @InjectQueue('orders')
     private ordersQueue: Queue,
-  ) {}
+  ) { }
 
   async create(clientId: string, dto: CreateOrderDto) {
-    // 1. Validate "Next Day"
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // 1. Validate "1-3 Days in Advance"
+    const now = new Date();
+    const minDate = new Date(now);
+    minDate.setDate(minDate.getDate() + 1);
+    minDate.setHours(0, 0, 0, 0); // Start of tomorrow
+
+    const maxDate = new Date(now);
+    maxDate.setDate(maxDate.getDate() + 3);
+    maxDate.setHours(23, 59, 59, 999); // End of 3rd day
+
     const scheduledDate = new Date(dto.scheduled_for);
+    // Ensure scheduledDate is compared correctly (ignoring time if input is date-only string like YYYY-MM-DD, 
+    // but dto.scheduled_for is validated as DateString. If it has time, we should probably ignore it or handle it.
+    // Assuming standard YYYY-MM-DD format from previous code context or ISO).
+    // Let's normalize scheduledDate to be safe if it comes with time, or just compare timestamps if it is full ISO.
+    // The previous code did strict Y/M/D comparison for "tomorrow".
+    // Let's normalize scheduledDate to 00:00:00 for comparison start
+    const comparisonDate = new Date(scheduledDate);
+    comparisonDate.setHours(0, 0, 0, 0);
 
-    const isNextDay =
-      tomorrow.getFullYear() === scheduledDate.getFullYear() &&
-      tomorrow.getMonth() === scheduledDate.getMonth() &&
-      tomorrow.getDate() === scheduledDate.getDate();
-
-    if (!isNextDay) {
+    if (comparisonDate < minDate || comparisonDate > maxDate) {
       throw new BadRequestException(
-        'Orders must be placed for exactly the next day.',
+        'Orders must be placed for 1 to 3 days in advance.',
       );
     }
 
@@ -154,6 +164,11 @@ export class OrdersService {
     }
 
     order.status = status;
+
+    if (status === OrderStatus.ACCEPTED) {
+      order.accepted_at = new Date();
+    }
+
     return this.ordersRepo.save(order);
   }
 }

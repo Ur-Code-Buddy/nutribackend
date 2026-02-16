@@ -143,7 +143,7 @@ Places a new order.
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `kitchen_id` | string | **Yes** | ID of the kitchen to order from. |
-| `scheduled_for` | string | **Yes** | Date for the order in `YYYY-MM-DD` format. |
+| `scheduled_for` | string | **Yes** | Date for the order in `YYYY-MM-DD` format. Must be 1-3 days in advance. |
 | `items` | array | **Yes** | List of items to order. |
 
 **Item Object (in `items` array):**
