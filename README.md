@@ -1,6 +1,6 @@
 # 🍱 NutriTiffin Backend
 
-> **Robust, Scalable, and Feature-Rich Backend for the NutriTiffin Food Delivery Platform.**
+> **Connecting Home Kitchens with Healthy Eaters through Robust Technology.**
 
 ![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
@@ -11,140 +11,119 @@
 
 ---
 
-## 📖 Overview
+## 🚀 The Mission
 
-**NutriTiffin Backend** is the powerhouse behind the NutriTiffin application, designed to connect healthy home-cooked meal providers (Kitchens) with health-conscious customers (Clients), and facilitate efficient logistics through Delivery Drivers. Built with **NestJS**, it ensures modularity, scalability, and type safety.
+**NutriTiffin** is a comprehensive food delivery platform designed to bridge the gap between talented home chefs and individuals seeking authentic, healthy, home-cooked meals. 
 
----
+Unlike generic food delivery apps, NutriTiffin focuses on specific dietary needs, scheduled meal subscriptions, and empowering small-scale kitchen owners with professional management tools.
 
-## ✨ Key Features
-
-- **🔐 Advanced Authentication**: Secure JWT-based authentication with Role-Based Access Control (RBAC).
-    - Roles: `CLIENT`, `KITCHEN_OWNER`, `DELIVERY_DRIVER`.
-- **🍽️ Kitchen Management**: Comprehensive tools for kitchen owners to manage profiles, operating hours, and active status.
-- **📜 Menu & Inventory**: Flexible menu management with availability toggles, daily order limits, and rich media support.
-- **🛒 Order Processing**: Complex order lifecycle management (Pending -> Accepted -> Out for Delivery -> Delivered).
-- **🚚 Delivery Logistics**: Dedicated dashboard for drivers to view available orders, accept deliveries, and track status.
-- **☁️ Cloud Integration**: Seamless image uploads using **AWS S3**.
-- **⚡ High Performance**: Utilizing **Redis** and **BullMQ** for caching and background job processing.
-- **🗄️ Solid Data Layer**: **PostgreSQL** with **TypeORM** for reliable data persistence and migrations.
+### Key Value Proposition
+-   **For Clients**: Access to verified home-cooked meals, subscription plans, and transparent nutritional info.
+-   **For Kitchens**: A "business-in-a-box" solution for managing menus, orders, and earnings.
+-   **For Logistics**: An efficient, gig-economy friendly driver dispatch system.
 
 ---
 
-## 🛠️ Tech Stack
+## 🏗️ System Architecture
 
-- **Framework**: [NestJS](https://nestjs.com/) (Node.js)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Database**: [PostgreSQL](https://www.postgresql.org/)
-- **ORM**: [TypeORM](https://typeorm.io/)
-- **Caching & Queues**: [Redis](https://redis.io/) & [BullMQ](https://docs.bullmq.io/)
-- **Storage**: [AWS S3](https://aws.amazon.com/s3/)
-- **Containerization**: [Docker](https://www.docker.com/) & Docker Compose
+The backend is built as a modular monolith using **NestJS**, ensuring strict separation of concerns and type safety throughout the stack.
+
+### High-Level Data Flow
+1.  **Client/Kitchen/Driver Apps** communicate via RESTful JSON APIs.
+2.  **API Gateway (NestJS)** handles authentication (JWT) and routing.
+3.  **Service Layer** contains complex business logic (pricing, availability checks).
+4.  **Data Layer** uses **TypeORM** interactions with **PostgreSQL** for ACID compliance.
+5.  **Async Layer** offloads heavy tasks (notifications, reports) to **BullMQ** & **Redis**.
+6.  **Storage Layer** manages media assets via **AWS S3**.
+
+---
+
+## 🛠️ Tech Stack & Engineering Decisions
+
+We chose a modern, scalable stack to ensure performance and maintainability:
+
+### Core Framework
+-   **[NestJS](https://nestjs.com/) (Node.js)**: Chosen for its opinionated architecture, dependency injection, and best-in-class TypeScript support. It allows for easy testing and modular scaling.
+-   **[TypeScript](https://www.typescriptlang.org/)**: Enforces type safety, reducing runtime errors and improving developer velocity with better tooling.
+
+### Data & Storage
+-   **[PostgreSQL](https://www.postgresql.org/)**: The primary relational database. selected for its reliability, JSONB support, and powerful querying capabilities for complex order relations.
+-   **[TypeORM](https://typeorm.io/)**: Provides an abstraction layer for database interactions, simplifying migrations and query building.
+-   **[Redis](https://redis.io/)**: Used for caching frequently accessed data (like menus) and managing job queues.
+-   **[AWS S3](https://aws.amazon.com/s3/)**: Scalable object storage for user avatars and food images.
+
+### Infrastructure & DevOps
+-   **[Docker](https://www.docker.com/)**: Fully containerized environment ensuring consistency from development to production.
+-   **[BullMQ](https://docs.bullmq.io/)**: Handles background job processing (e.g., "End of Day" kitchen summaries), ensuring the main API remains responsive.
+
+---
+
+## 📂 Documentation Map
+
+We maintain detailed documentation for each core module:
+
+-   🍎 **[Client Features](docs/Client.md)**: User registration, meal discovery, and order placement flows.
+-   🖥️ **[Frontend Integration](docs/frontend.md)**: Guide for frontend developers.
+-   👨‍🍳 **[Kitchen Management](docs/Kitchen.md)**: Dashboard features for menu creation and order acceptance.
+-   🚚 **[Delivery Logistics](docs/delivery.md)**: Driver workflows for job discovery and fulfillment.
+-   📡 **[API Endpoints](docs/endpoints.md)**: comprehensive API reference.
+-   🐳 **[Docker & Queues](docs/bullmq-docker.md)**: Infrastructure setup guide.
+-   🧪 **[Postman Collection](docs/postman.md)**: Ready-to-use collection for API testing.
+
+---
+
+## ✨ Features Spotlight
+
+-   **🔐 Role-Based Access Control (RBAC)**: Secure separation of duties between Admins, Owners, Clients, and Drivers using Guards and Decorators.
+-   **📅 Smart Availability**: Menus automatically reset based on daily limits and operating hours.
+-   **🔄 Order States**: Finite state machine implementation for orders (`PENDING` -> `ACCEPTED` -> `OUT_FOR_DELIVERY` -> `DELIVERED` -> `CANCELLED`).
+-   **📍 Geolocation Ready**: Schema designed to support location-based kitchen discovery (future roadmap).
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+-   Node.js v18+
+-   Docker & Docker Compose (Recommended)
 
-Ensure you have the following installed:
-- **Node.js** (v18+)
-- **Docker** & **Docker Compose**
-- **PostgreSQL** (if running locally without Docker)
+### Quick Start (Docker)
+The easiest way to run the full stack (API + DB + Redis):
 
-### Installation
-
-1.  **Clone the repository:**
+1.  **Clone the repo**:
     ```bash
     git clone https://github.com/Ur-Code-Buddy/nutribackend.git
     cd nutribackend
     ```
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Environment Setup:**
-    Duplicate `.env.example` to `.env` and fill in your credentials.
+2.  **Configure Environment**:
     ```bash
     cp .env.example .env
+    # Update AWS / DB credentials in .env if needed
     ```
 
-### Running the Application
-
-#### Option 1: Docker (Recommended 🐳)
-Start the entire stack (Backend + Redis + Postgres) with one command:
-```bash
-docker-compose up --build
-```
-
-#### Option 2: Local Development 💻
-1.  Ensure **Redis** and **PostgreSQL** are running.
-2.  Start the server:
+3.  **Launch**:
     ```bash
-    # Development mode
-    npm run start:dev
-
-    # Production mode
-    npm run start:prod
+    docker-compose up --build
     ```
+    The API will be available at `http://localhost:3000`.
 
----
-
-## 📚 Documentation
-
-Detailed documentation is available in the `docs/` directory:
-
--   [**API Endpoints**](docs/endpoints.md): Comprehensive list of all API routes.
--   [**Frontend Integration**](docs/frontend.txt): Guide for frontend developers.
--   [**Postman Collection**](docs/postman.md): Importable collection for testing.
--   [**BullMQ & Docker**](docs/bullmq-docker.md): Guide on background jobs.
-
----
-
-## 🧪 Testing
-
-Run duplicate checks, unit tests, and e2e tests to ensure stability.
+### Running Tests
+We emphasize quality code. Run our comprehensive test suite:
 
 ```bash
-# Unit tests
+# Unit Tests
 npm run test
 
-# End-to-end tests
+# End-to-End Tests
 npm run test:e2e
-
-# Test coverage
-npm run test:cov
 ```
 
 ---
 
-## ☁️ Deployment (AWS EC2)
+## 👥 Contributors
 
-Deploying to AWS EC2 using Docker is straightforward.
-
-1.  **Launch EC2**: Amazon Linux 2023 or Ubuntu 22.04 (t3.small recommended).
-2.  **Security Groups**: Open ports `22` (SSH) and `3000` (App).
-3.  **Install Docker**:
-    ```bash
-    sudo yum update -y && sudo yum install -y docker
-    sudo service docker start
-    sudo usermod -a -G docker ec2-user
-    ```
-4.  **Install Docker Compose**:
-    ```bash
-    sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    ```
-5.  **Deploy**:
-    ```bash
-    git clone https://github.com/Ur-Code-Buddy/nutribackend.git
-    cd nutribackend
-    cp .env.example .env # Configure your env
-    docker-compose up -d --build
-    ```
+Built with passion by **Ur-Code-Buddy**.
 
 ---
-
-Made with ❤️ by the NutriTiffin Team.
+*For recruitment inquiries or detailed architecture walkthroughs, please verify the `docs/` folder.*
