@@ -90,5 +90,12 @@ export class UsersService {
     user.is_active = is_active;
     return this.usersRepository.save(user);
   }
+
+  async incrementTokenVersion(id: string): Promise<User> {
+    const user = await this.findOneById(id);
+    if (!user) throw new NotFoundException('User not found');
+    user.token_version += 1;
+    return this.usersRepository.save(user);
+  }
 }
 

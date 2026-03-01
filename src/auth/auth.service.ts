@@ -28,7 +28,16 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { username: user.username, sub: user.id, role: user.role };
+    // Increment the token version on every login to invalidate old sessions
+    const updatedUser = await this.usersService.incrementTokenVersion(user.id);
+
+    const payload = {
+      username: user.username,
+      sub: user.id,
+      role: user.role,
+      token_version: updatedUser.token_version,
+    };
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {

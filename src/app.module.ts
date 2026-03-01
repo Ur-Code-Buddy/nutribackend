@@ -14,6 +14,7 @@ import { CommonModule } from './common/common.module';
 import { QueueModule } from './queue/queue.module';
 import { UploadModule } from './upload/upload.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -67,8 +68,9 @@ import { DeliveriesModule } from './deliveries/deliveries.module';
     CommonModule,
     UploadModule,
     DeliveriesModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
