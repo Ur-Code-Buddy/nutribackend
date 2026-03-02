@@ -24,13 +24,108 @@ async function sendVerificationEmail(email: string, token: string): Promise<void
     await client.transactionalEmails.sendTransacEmail({
       subject: 'Verify your NutriTiffin account',
       htmlContent: `
+        <!DOCTYPE html>
         <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f7f6;
+                margin: 0;
+                padding: 0;
+                color: #333333;
+              }
+              .container {
+                max-width: 600px;
+                margin: 40px auto;
+                background-color: #ffffff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+              }
+              .header {
+                background-color: #4CAF50;
+                padding: 30px 20px;
+                text-align: center;
+              }
+              .header h1 {
+                color: #ffffff;
+                margin: 0;
+                font-size: 28px;
+                font-weight: 600;
+              }
+              .content {
+                padding: 40px 30px;
+                text-align: center;
+              }
+              .content p {
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 25px;
+                color: #555555;
+              }
+              .button {
+                display: inline-block;
+                padding: 14px 32px;
+                background-color: #4CAF50;
+                color: #ffffff !important;
+                text-decoration: none;
+                border-radius: 4px;
+                font-size: 16px;
+                font-weight: bold;
+                letter-spacing: 0.5px;
+                transition: background-color 0.3s;
+              }
+              .button:hover {
+                background-color: #45a049;
+              }
+              .divider {
+                height: 1px;
+                background-color: #e0e0e0;
+                margin: 30px 0;
+              }
+              .fallback-link {
+                font-size: 14px;
+                color: #777777;
+                word-break: break-all;
+                background-color: #f9f9f9;
+                padding: 12px;
+                border-radius: 4px;
+              }
+              .footer {
+                background-color: #f9f9f9;
+                padding: 20px;
+                text-align: center;
+                font-size: 13px;
+                color: #888888;
+                border-top: 1px solid #eeeeee;
+              }
+            </style>
+          </head>
           <body>
-            <h1>Welcome to NutriTiffin!</h1>
-            <p>Please click the link below to verify your email address:</p>
-            <a href="${verificationLink}">Verify Email</a>
-            <p>Or copy and paste this link into your browser:<br/>${verificationLink}</p>
-            <p>This link will expire in 24 hours.</p>
+            <div class="container">
+              <div class="header">
+                <h1>NutriTiffin</h1>
+              </div>
+              <div class="content">
+                <h2 style="color: #333; margin-top: 0;">Verify Your Email Address</h2>
+                <p>Welcome to NutriTiffin! We're thrilled to have you on board. Please verify your email address to activate your account and access all our delicious features.</p>
+                <a href="${verificationLink}" class="button">Verify Account</a>
+                
+                <div class="divider"></div>
+                
+                <p style="font-size: 14px; margin-bottom: 10px;">Button not working? Copy and paste this link into your browser:</p>
+                <div class="fallback-link">
+                  ${verificationLink}
+                </div>
+              </div>
+              <div class="footer">
+                <p>This verification link will expire in 24 hours.</p>
+                <p>&copy; ${new Date().getFullYear()} NutriTiffin. All rights reserved.</p>
+              </div>
+            </div>
           </body>
         </html>
       `,
