@@ -293,6 +293,92 @@ Returns the current credit balance of the authenticated kitchen owner.
 
 ---
 
+# 6. Transaction History
+
+Endpoint:
+GET /transactions/my
+
+Role Required:
+KITCHEN_OWNER
+
+Headers:
+Authorization: Bearer <JWT_TOKEN>
+
+Returns a paginated history of all credit transactions the kitchen owner was part of. This includes:
+- **SUPPORT** transactions: When admins add or deduct credits.
+- **DELIVERY** transactions: When the kitchen receives a payout for a completed delivery. The description mentions the delivery short ID (e.g. "Kitchen payout for delivery DEL-X9K2").
+
+---
+
+## Query Parameters
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| page  | No       | Page number (default: 1) |
+| limit | No       | Items per page (default: 20, max: 100) |
+
+---
+
+## Success Response (200 OK)
+
+```json
+{
+  "data": [
+    {
+      "id": "txn-uuid",
+      "short_id": "TXN-A1B2C3",
+      "type": "CREDIT",
+      "source": "SUPPORT",
+      "amount": 500,
+      "description": "Credits added by SUPPORT",
+      "reference_id": null,
+      "from": { "label": "SUPPORT" },
+      "to": {
+        "id": "owner-uuid",
+        "name": "Kitchen Owner",
+        "username": "owner01",
+        "role": "KITCHEN_OWNER"
+      },
+      "created_at": "2026-03-02T17:25:00.000Z"
+    },
+    {
+      "id": "txn-uuid-2",
+      "short_id": "TXN-G7H8I9",
+      "type": "CREDIT",
+      "source": "DELIVERY",
+      "amount": 230,
+      "description": "Kitchen payout for delivery DEL-X9K2",
+      "reference_id": "order-uuid",
+      "from": null,
+      "to": {
+        "id": "owner-uuid",
+        "name": "Kitchen Owner",
+        "username": "owner01",
+        "role": "KITCHEN_OWNER"
+      },
+      "created_at": "2026-03-02T18:00:00.000Z"
+    }
+  ],
+  "total": 2,
+  "page": 1,
+  "limit": 20
+}
+```
+
+---
+
+## Get Single Transaction
+
+GET /transactions/:id
+
+Returns a single transaction. Kitchen owners can only view transactions they are part of.
+
+Error Responses:
+- 403 Forbidden: Transaction doesn't involve you.
+- 404 Not Found: Invalid transaction ID.
+
+---
+
 # Business Rules
 
 1. Only users with role KITCHEN_OWNER can create kitchens.

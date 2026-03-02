@@ -223,3 +223,85 @@ Returns the updated Order object with status `DELIVERED`.
 **Error Responses:**
 
 - `400 Bad Request`: If order is not `OUT_FOR_DELIVERY` or assigned to a different driver.
+
+---
+
+### 8. Transaction History
+
+View all credit transactions the driver was part of — delivery payouts, admin credit adjustments, etc.
+
+- **URL**: `/transactions/my`
+- **Method**: `GET`
+- **Description**: Use this to show the driver their earnings history and all credit movements.
+
+**Query Parameters:**
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `page` | number | No | Page number (default: 1). |
+| `limit` | number | No | Items per page (default: 20, max: 100). |
+
+**Success Response (200 OK):**
+
+```json
+{
+  "data": [
+    {
+      "id": "txn-uuid",
+      "short_id": "TXN-A1B2C3",
+      "type": "CREDIT",
+      "source": "SUPPORT",
+      "amount": 100,
+      "description": "Credits added by SUPPORT",
+      "reference_id": null,
+      "from": { "label": "SUPPORT" },
+      "to": {
+        "id": "driver-uuid",
+        "name": "Driver Name",
+        "username": "driver01",
+        "role": "DELIVERY_DRIVER"
+      },
+      "created_at": "2026-03-02T17:25:00.000Z"
+    },
+    {
+      "id": "txn-uuid-2",
+      "short_id": "TXN-D4E5F6",
+      "type": "CREDIT",
+      "source": "DELIVERY",
+      "amount": 20,
+      "description": "Delivery payout for DEL-X9K2",
+      "reference_id": "order-uuid",
+      "from": null,
+      "to": {
+        "id": "driver-uuid",
+        "name": "Driver Name",
+        "username": "driver01",
+        "role": "DELIVERY_DRIVER"
+      },
+      "created_at": "2026-03-02T18:00:00.000Z"
+    }
+  ],
+  "total": 5,
+  "page": 1,
+  "limit": 20
+}
+```
+
+**Notes:**
+- `source: "SUPPORT"` means credits were added/deducted by an admin. The `from`/`to` field shows `{ "label": "SUPPORT" }` instead of a user object.
+- `source: "DELIVERY"` means payout for a completed delivery. The `description` includes the delivery short ID.
+- `reference_id` links to the related order UUID when applicable.
+
+---
+
+### 9. Get Transaction by ID
+
+- **URL**: `/transactions/:id`
+- **Method**: `GET`
+- **Description**: View a single transaction. Drivers can only see transactions they were part of.
+
+**Error Responses:**
+
+- `403 Forbidden`: If the transaction doesn't involve you.
+- `404 Not Found`: If transaction ID is invalid.
+

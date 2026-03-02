@@ -137,20 +137,48 @@ Retrieves a list of all registered users and their credit balances.
 **POST** `/admin/credits/add`
 **Role Required:** `ADMIN`
 
-Adds integer credits (Rupees) to a specific user's account.
+Adds integer credits (Rupees) to a specific user's account. **A transaction record is automatically created.**
+
 **Request Body:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `username` | string | **Yes** | Username of the user. |
 | `credits` | number | **Yes** | Integer amount of Rupees to add. |
 
+**Response:**
+
+```json
+{
+  "message": "Added 500 credits to john_doe",
+  "credits": 1500,
+  "transaction": {
+    "id": "txn-uuid",
+    "short_id": "TXN-A1B2C3"
+  }
+}
+```
+
 ### Deduct User Credits
 
 **POST** `/admin/credits/deduct`
 **Role Required:** `ADMIN`
 
-Deducts integer credits (Rupees) from a specific user's account. Fails if user has insufficient credits.
+Deducts integer credits (Rupees) from a specific user's account. Fails if user has insufficient credits. **A transaction record is automatically created.**
+
 **Request Body:** Same as Add User Credits.
+
+**Response:**
+
+```json
+{
+  "message": "Deducted 200 credits from john_doe",
+  "credits": 1300,
+  "transaction": {
+    "id": "txn-uuid",
+    "short_id": "TXN-D4E5F6"
+  }
+}
+```
 
 ### Disable User
 
@@ -474,3 +502,118 @@ Retrieves full order details including addresses and phone numbers.
   "items": [ ... ]
 }
 ```
+
+---
+
+## Transactions (`/transactions`)
+
+The transactions system tracks **every credit movement** in the system — admin add/deduct, delivery payouts, order payments. Every role can view the transactions they were part of.
+
+### Get My Transactions
+
+**GET** `/transactions/my`
+**Role Required:** Authenticated User (any role)
+
+Returns a paginated list of all transactions the authenticated user was involved in (as sender or receiver).
+
+**Query Parameters:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `page` | number | No | Page number (default: 1). |
+| `limit` | number | No | Items per page (default: 20, max: 100). |
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": "txn-uuid",
+      "short_id": "TXN-A1B2C3",
+      "type": "CREDIT",
+      "source": "SUPPORT",
+      "amount": 500,
+      "description": "Credits added by SUPPORT",
+      "reference_id": null,
+      "from": { "label": "SUPPORT" },
+      "to": {
+        "id": "user-uuid",
+        "name": "Rahul Sharma",
+        "username": "rahul01",
+        "role": "CLIENT"
+      },
+      "created_at": "2026-03-02T17:25:00.000Z"
+    },
+    {
+      "id": "txn-uuid-2",
+      "short_id": "TXN-D4E5F6",
+      "type": "CREDIT",
+      "source": "DELIVERY",
+      "amount": 20,
+      "description": "Delivery payout for DEL-X9K2",
+      "reference_id": "order-uuid",
+      "from": null,
+      "to": {
+        "id": "driver-uuid",
+        "name": "Driver Name",
+        "username": "driver01",
+        "role": "DELIVERY_DRIVER"
+      },
+      "created_at": "2026-03-02T18:00:00.000Z"
+    }
+  ],
+  "total": 15,
+  "page": 1,
+  "limit": 20
+}
+```
+
+### Get Transaction by ID
+
+**GET** `/transactions/:id`
+**Role Required:** Authenticated User
+
+Retrieves a single transaction. Non-admin users can only view transactions they are a part of (as `from_user` or `to_user`).
+
+**Response:** Same structure as a single item in the `data` array above.
+
+**Error Responses:**
+
+- `403 Forbidden`: If the transaction doesn't involve the authenticated user.
+- `404 Not Found`: If the transaction ID is invalid.
+
+### Get All Transactions (Admin)
+
+**GET** `/transactions`
+**Role Required:** `ADMIN`
+
+Returns all transactions in the system (paginated).
+
+**Query Parameters:** Same as Get My Transactions.
+
+**Response:** Same structure as Get My Transactions.
+
+---
+
+### Transaction Data Enums
+
+#### Transaction Type
+
+| Value | Description |
+| :--- | :--- |
+| `CREDIT` | Credits were added to a user |
+| `DEBIT` | Credits were deducted from a user |
+
+#### Transaction Source
+
+| Value | Description |
+| :--- | :--- |
+| `SUPPORT` | Admin manually added/deducted credits. Shown as "SUPPORT" in `from`/`to` fields. |
+| `DELIVERY` | Payment related to a delivery (kitchen/driver payout). Description mentions the delivery short ID. |
+| `ORDER` | Payment related to order placement or refund. |
+
+### Transaction `from` / `to` Fields
+
+- When a real user is involved, the field contains: `{ id, name, username, role }`
+- When the system (admin/support) is involved and no user is set, the field shows: `{ "label": "SUPPORT" }`
+- Otherwise: `null`

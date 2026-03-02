@@ -95,3 +95,39 @@ Step-by-Step Implementation:
   4. Order moves to "Current Deliveries" (GET /deliveries/my-orders).
   5. Show details: Address (Client/Kitchen), Phone numbers, Total Price.
   6. Driver finishes -> PATCH /deliveries/:id/finish.
+
+7. Transaction History (All Roles)
+
+---
+
+Every user (Client, Kitchen Owner, Delivery Driver) can view their transaction history.
+
+- Endpoint: GET /transactions/my
+- Auth Required: Yes (any role)
+- Query Params: `page` (default 1), `limit` (default 20, max 100)
+- Response: Paginated list of transactions.
+
+Key Integration Points:
+
+1. **SUPPORT label**: When `source` is `SUPPORT` and `from` or `to` is null, show `{ "label": "SUPPORT" }`. Display this as "Support" or "Admin" in the UI instead of a user name.
+
+2. **Delivery references**: When `source` is `DELIVERY`, the `description` mentions the delivery short ID (e.g. "Kitchen payout for delivery DEL-X9K2"). Use this to show context about what the transaction was for.
+
+3. **Transaction types**:
+   - `CREDIT` = money received (show as green/positive)
+   - `DEBIT` = money deducted (show as red/negative)
+
+4. **Reference linking**: `reference_id` contains the order UUID when applicable. You can link transactions to order details.
+
+5. **Transaction short_id**: A human-readable ID like `TXN-A1B2C3` — use this for display in receipts and lists.
+
+Flow:
+  1. Call GET /transactions/my?page=1&limit=20
+  2. Display each transaction with: short_id, type icon (+ or -), amount, description, date.
+  3. For `from`/`to` fields: if it has `label` key, show "SUPPORT"; otherwise show user name.
+  4. Implement pagination with "Load More" or page navigation.
+
+Single Transaction Detail:
+  - GET /transactions/:id
+  - Non-admins can only view transactions they were part of (403 otherwise).
+

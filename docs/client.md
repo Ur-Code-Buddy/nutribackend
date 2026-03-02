@@ -410,6 +410,75 @@ Fee amounts are snapshotted at order creation time.
 
 ---
 
+5. TRANSACTIONS
+
+---
+
+Clients can view all credit transactions they were part of — whether credits were added/deducted by admin (SUPPORT), order payments, or refunds.
+
+5.1 Get My Transactions
+
+GET /transactions/my
+
+Returns a paginated list of transactions where you were involved (as sender or receiver).
+
+Query Parameters:
+- page (number, optional): Page number. Default: 1.
+- limit (number, optional): Items per page. Default: 20, Max: 100.
+
+Success Response:
+{
+  "data": [
+    {
+      "id": "txn-uuid",
+      "short_id": "TXN-A1B2C3",
+      "type": "CREDIT",
+      "source": "SUPPORT",
+      "amount": 500,
+      "description": "Credits added by SUPPORT",
+      "reference_id": null,
+      "from": { "label": "SUPPORT" },
+      "to": {
+        "id": "user-uuid",
+        "name": "Rahul Sharma",
+        "username": "rahul01",
+        "role": "CLIENT"
+      },
+      "created_at": "2026-03-02T17:25:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20
+}
+
+5.2 Get Transaction By ID
+
+GET /transactions/:id
+
+Returns a single transaction. You can only view transactions you were part of.
+
+Error Responses:
+- 403: Transaction doesn't involve you
+- 404: Transaction not found
+
+---
+
+Transaction Fields:
+
+| Field | Description |
+|-------|-------------|
+| short_id | Human-readable ID like TXN-A1B2C3 |
+| type | CREDIT (received) or DEBIT (sent/deducted) |
+| source | SUPPORT (admin), DELIVERY, or ORDER |
+| amount | Credit amount |
+| description | Short summary (e.g. "Credits added by SUPPORT") |
+| reference_id | Related order ID if applicable |
+| from | Sender info (or { "label": "SUPPORT" } for admin actions) |
+| to | Receiver info (or { "label": "SUPPORT" } for admin deductions) |
+
+---
+
 ## ERROR RESPONSE FORMAT
 
 Example Standard Error:

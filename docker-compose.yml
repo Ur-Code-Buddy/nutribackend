@@ -25,6 +25,9 @@ services:
       - BREVO_API_KEY=${BREVO_API_KEY}
       - BASE_URL=${BASE_URL}
       - FRONTEND_URL=${FRONTEND_URL}
+      - PLATFORM_FEES=${PLATFORM_FEES}
+      - KITCHEN_FEES=${KITCHEN_FEES}
+      - DELIVERY_FEES=${DELIVERY_FEES}
     depends_on:
       - redis
     networks:
