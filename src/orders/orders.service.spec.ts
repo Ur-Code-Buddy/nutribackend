@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { getQueueToken } from '@nestjs/bullmq';
+import { ConfigService } from '@nestjs/config';
 import { OrdersService } from './orders.service';
 import { Order, OrderStatus } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
@@ -47,6 +48,19 @@ describe('OrdersService', () => {
             add: jest.fn(),
           },
         },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string, defaultVal?: any) => {
+              const config: Record<string, any> = {
+                PLATFORM_FEES: 10,
+                DELIVERY_FEES: 20,
+                KITCHEN_FEES: 15,
+              };
+              return config[key] ?? defaultVal;
+            }),
+          },
+        },
       ],
     }).compile();
 
@@ -84,10 +98,14 @@ describe('OrdersService', () => {
 
     const result = await service.create('client-1', createDto as any);
 
-    expect(result.total_price).toBe(20);
+    // total_price = items subtotal (10*2=20) + platform_fees (10) + delivery_fees (20) = 50
+    expect(result.total_price).toBe(50);
     expect(mockOrdersRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({
-        total_price: 20,
+        total_price: 50,
+        platform_fees: 10,
+        delivery_fees: 20,
+        kitchen_fees: 3, // 15% of 20 = 3
       }),
     );
   });

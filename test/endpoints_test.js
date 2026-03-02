@@ -1,6 +1,40 @@
 const axios = require('axios');
+const { Client } = require('pg');
+const path = require('path');
+const fs = require('fs');
 
 const BASE_URL = 'https://backend.v1.nutritiffin.com';
+
+// Load .env for DB connection (needed to auto-verify users)
+const envPath = path.join(__dirname, '..', '.env');
+const envConfig = {};
+if (fs.existsSync(envPath)) {
+  fs.readFileSync(envPath)
+    .toString()
+    .split('\n')
+    .forEach((line) => {
+      const parts = line.split('=');
+      if (parts.length >= 2 && !line.startsWith('#')) {
+        envConfig[parts[0].trim()] = parts.slice(1).join('=').trim();
+      }
+    });
+}
+
+async function getDbClient() {
+  const client = new Client({
+    host: envConfig.DB_HOST || process.env.DB_HOST,
+    port: parseInt(envConfig.DB_PORT || process.env.DB_PORT || '5432'),
+    user: envConfig.DB_USERNAME || process.env.DB_USERNAME,
+    password: envConfig.DB_PASSWORD || process.env.DB_PASSWORD,
+    database: envConfig.DB_NAME || process.env.DB_NAME,
+    ssl:
+      (envConfig.DB_SSL || process.env.DB_SSL) === 'true'
+        ? { rejectUnauthorized: false }
+        : false,
+  });
+  await client.connect();
+  return client;
+}
 
 // ---- HELPERS ----
 
@@ -30,7 +64,7 @@ function authHeaders(token) {
 
 // ---- AUTH ACTIONS ----
 
-async function registerUser(role, prefix) {
+async function registerUser(role, prefix, dbClient) {
   const username = `${prefix}_${generateRandomString()}`;
   const password = 'password123';
   const email = `${username}@example.com`;
@@ -60,6 +94,10 @@ async function registerUser(role, prefix) {
     }
   }
 
+  // Auto-verify user in DB so login works (email verification can't be done in automated tests)
+  await dbClient.query('UPDATE users SET is_verified = true WHERE username = $1', [username]);
+  console.log(`  ✔ Email auto-verified for ${username}`);
+
   console.log(`Logging in ${role}: ${username}...`);
   const loginRes = await axios.post(`${BASE_URL}/auth/login`, {
     username,
@@ -77,13 +115,18 @@ async function registerUser(role, prefix) {
 // ---- MAIN TEST SUITE ----
 
 async function main() {
+  let dbClient;
   try {
     console.log('🚀 Starting Complete Endpoint Coverage Test...');
 
+    // Connect to DB for auto-verification
+    dbClient = await getDbClient();
+    console.log('📦 Connected to DB for user verification\n');
+
     // 1. Register Users
-    const owner = await registerUser('KITCHEN_OWNER', 'owner');
-    const client = await registerUser('CLIENT', 'client');
-    const driver = await registerUser('DELIVERY_DRIVER', 'driver');
+    const owner = await registerUser('KITCHEN_OWNER', 'owner', dbClient);
+    const client = await registerUser('CLIENT', 'client', dbClient);
+    const driver = await registerUser('DELIVERY_DRIVER', 'driver', dbClient);
 
     const ownerHeaders = authHeaders(owner.token);
     const clientHeaders = authHeaders(client.token);
@@ -277,6 +320,24 @@ async function main() {
     );
     console.log('✅ Delivery accepted');
 
+    // Pick Up
+    console.log('🚚 Driver: Picking up order...');
+    await axios.patch(
+      `${BASE_URL}/deliveries/${orderId}/pick-up`,
+      {},
+      driverHeaders,
+    );
+    console.log('✅ Order picked up');
+
+    // Out for Delivery
+    console.log('🚚 Driver: Marking out for delivery...');
+    await axios.patch(
+      `${BASE_URL}/deliveries/${orderId}/out-for-delivery`,
+      {},
+      driverHeaders,
+    );
+    console.log('✅ Order out for delivery');
+
     // My Orders
     console.log("🚚 Driver: Checking 'My Orders'...");
     const myDeliveriesRes = await axios.get(
@@ -326,6 +387,8 @@ async function main() {
       console.error(err.message);
     }
     process.exit(1);
+  } finally {
+    if (dbClient) await dbClient.end();
   }
 }
 
