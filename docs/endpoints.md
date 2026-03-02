@@ -69,6 +69,21 @@ Regenerates a verification token and resends the verification email.
 - Returns `400` if the email is already verified.
 - Generates a new token (valid for 24 hours) and sends a verification email.
 
+### Retry Email Login
+**POST** `/auth/retry-email-login`
+
+Retries sending the verification email for login. This functions identically to the resend verification endpoint.
+
+**Request Body:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | **Yes** | The email address associated with the account. |
+
+**Behavior:**
+- Returns `404` if no account is found with the provided email.
+- Returns `400` if the email is already verified.
+- Generates a new token (valid for 24 hours) and sends a verification email.
+
 ---
 
 ## Users & Administration (`/users` & `/admin`)

@@ -59,4 +59,10 @@ export class AuthController {
   async resendVerification(@Body() dto: ResendVerificationDto) {
     return this.authService.resendVerification(dto.email);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('retry-email-login')
+  async retryEmailLogin(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerification(dto.email);
+  }
 }

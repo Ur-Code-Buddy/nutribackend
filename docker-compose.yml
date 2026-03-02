@@ -22,6 +22,9 @@ services:
       - REDIS_PORT=6379
       - CURRENT_VERSION=${CURRENT_VERSION}
       - ADMIN_ACCESS_PASS=${ADMIN_ACCESS_PASS}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - BASE_URL=${BASE_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
     depends_on:
       - redis
     networks:
