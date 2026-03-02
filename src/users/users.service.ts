@@ -49,6 +49,14 @@ export class UsersService {
     return this.usersRepository.findOneBy({ id });
   }
 
+  async findOneByVerifyToken(token: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ verify_token: token });
+  }
+
+  async saveUser(user: User): Promise<User> {
+    return this.usersRepository.save(user);
+  }
+
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({
       select: ['id', 'username', 'name', 'email', 'phone_number', 'role', 'credits', 'is_active', 'created_at']

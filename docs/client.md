@@ -77,7 +77,31 @@ Success Response:
 
 ---
 
-1.3 Get My Profile
+1.3 Verify Email
+
+GET /auth/verify-email?token=...
+
+Redirects the user to the frontend application:
+- On success: Redirects to `FRONTEND_URL/verification-success`.
+- On error: Redirects to `FRONTEND_URL/verification-failed?reason=expired` or `?reason=invalid`.
+
+---
+
+1.4 Resend Verification
+
+POST /auth/resend-verification
+Content-Type: application/json
+
+Request Body:
+{
+"email": "rahul.sharma01@example.com"
+}
+
+Generates a new token (valid for 24 hours) and sends a new verification email.
+
+---
+
+1.5 Get My Profile
 
 GET /users/me
 

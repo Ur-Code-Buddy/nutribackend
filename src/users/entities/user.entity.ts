@@ -46,6 +46,16 @@ export class User {
   @Column({ default: true })
   is_active: boolean;
 
+  @Column({ default: false })
+  is_verified: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  @Exclude()
+  verify_token: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  verify_token_expires_at: Date | null;
+
   @Column({ type: 'int', default: 0 })
   token_version: number;
 

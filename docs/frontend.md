@@ -16,9 +16,11 @@ This document outlines how to integrate with the NutriTiffin backend, focusing o
 - Flow:
   1. Collect all fields.
   2. Call register endpoint.
-  3. On success, redirect to login.
+  3. On success, prompt the user to check their email to verify their account.
+  4. The user clicks the link (`/auth/verify-email?token=...`) and is redirected back to `FRONTEND_URL/verification-success` or `verification-failed`.
 
 - Endpoint: POST /auth/login
+- Note: Users MUST be verified before they can log in. Unverified users will receive a 401 Unauthorized.
 - Response: Returns `access_token`.
 - Usage: Store `access_token` (localStorage/cookie) and send it in the `Authorization` header for all protected requests:
   `Authorization: Bearer <your_token>`

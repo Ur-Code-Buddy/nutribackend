@@ -1,7 +1,9 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, HttpCode, HttpStatus, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -9,7 +11,16 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+    const user = await this.authService.register(registerDto);
+    return {
+      message: 'Registration successful. Please check your email to verify your account.',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 
   @HttpCode(HttpStatus.OK)
@@ -26,5 +37,26 @@ export class AuthController {
       };
     }
     return this.authService.login(user);
+  }
+
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string, @Res() res: any) {
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.nutritiffin.com';
+    try {
+      await this.authService.verifyEmail(token);
+      return res.redirect(`${frontendUrl}/verification-success`);
+    } catch (error) {
+      let reason = 'invalid';
+      if (error.message && error.message.toLowerCase().includes('expired')) {
+        reason = 'expired';
+      }
+      return res.redirect(`${frontendUrl}/verification-failed?reason=${reason}`);
+    }
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('resend-verification')
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerification(dto.email);
   }
 }

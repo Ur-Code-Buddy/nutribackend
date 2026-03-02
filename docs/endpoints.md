@@ -24,16 +24,50 @@ Creates a new user account.
 | `role` | enum | **Yes** | User role. Values: `CLIENT`, `KITCHEN_OWNER`, `DELIVERY_DRIVER`, `ADMIN`. |
 | `admin_access_pass` | string | No | Required only if `role` is `ADMIN`. |
 
+**Response:** Returns a success message prompting the user to verify their email. A verification email is sent (placeholder for now).
+
 ### Login
 **POST** `/auth/login`
 
-Authenticates a user and returns a JWT token.
+Authenticates a user and returns a JWT token. **Rejects users who have not verified their email.**
 
 **Request Body:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `username` | string | **Yes** | Registered username. |
 | `password` | string | **Yes** | User password. |
+
+### Verify Email
+**GET** `/auth/verify-email?token=...`
+
+Verifies a user's email address using the token sent during registration.
+
+**Query Parameters:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `token` | string | **Yes** | The verification token from the email. |
+
+**Behavior:**
+- Looks up the user by the token.
+- Returns a 302 Redirect to the frontend application:
+  - On success: Redirects to `FRONTEND_URL/verification-success` (and sets `is_verified: true`, clears token).
+  - On invalid token: Redirects to `FRONTEND_URL/verification-failed?reason=invalid`.
+  - On expired token (tokens are valid for 24 hours): Redirects to `FRONTEND_URL/verification-failed?reason=expired`.
+
+### Resend Verification Email
+**POST** `/auth/resend-verification`
+
+Regenerates a verification token and resends the verification email.
+
+**Request Body:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | **Yes** | The email address associated with the account. |
+
+**Behavior:**
+- Returns `404` if no account is found with the provided email.
+- Returns `400` if the email is already verified.
+- Generates a new token (valid for 24 hours) and sends a verification email.
 
 ---
 
