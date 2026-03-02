@@ -55,26 +55,26 @@ export class UsersService {
     });
   }
 
-  async addCredits(id: string, amount: number): Promise<User> {
+  async addCredits(username: string, amount: number): Promise<User> {
     return this.dataSource.transaction(async (manager) => {
       const user = await manager.findOne(User, {
-        where: { id },
+        where: { username },
         lock: { mode: 'pessimistic_write' },
       });
-      if (!user) throw new NotFoundException('User not found');
+      if (!user) throw new NotFoundException(`User with username '${username}' not found`);
 
       user.credits = Number(user.credits) + Number(amount);
       return manager.save(user);
     });
   }
 
-  async deductCredits(id: string, amount: number): Promise<User> {
+  async deductCredits(username: string, amount: number): Promise<User> {
     return this.dataSource.transaction(async (manager) => {
       const user = await manager.findOne(User, {
-        where: { id },
+        where: { username },
         lock: { mode: 'pessimistic_write' },
       });
-      if (!user) throw new NotFoundException('User not found');
+      if (!user) throw new NotFoundException(`User with username '${username}' not found`);
       if (Number(user.credits) < Number(amount)) {
         throw new BadRequestException('Insufficient credits');
       }

@@ -17,13 +17,13 @@ export class AdminController {
     }
 
     @Post('credits/add')
-    async addCredits(@Body() body: { userId: string; amount: number }) {
-        return this.usersService.addCredits(body.userId, body.amount);
+    async addCredits(@Body() body: { username: string; credits: number }) {
+        return this.usersService.addCredits(body.username, body.credits);
     }
 
     @Post('credits/deduct')
-    async deductCredits(@Body() body: { userId: string; amount: number }) {
-        return this.usersService.deductCredits(body.userId, body.amount);
+    async deductCredits(@Body() body: { username: string; credits: number }) {
+        return this.usersService.deductCredits(body.username, body.credits);
     }
 
     @Post('users/:id/disable')

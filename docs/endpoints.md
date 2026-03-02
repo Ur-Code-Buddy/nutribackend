@@ -59,8 +59,8 @@ Adds integer credits (Rupees) to a specific user's account.
 **Request Body:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `userId` | string | **Yes** | UUID of the user. |
-| `amount` | number | **Yes** | Integer amount of Rupees to add. |
+| `username` | string | **Yes** | Username of the user. |
+| `credits` | number | **Yes** | Integer amount of Rupees to add. |
 
 ### Deduct User Credits
 **POST** `/admin/credits/deduct`
@@ -68,6 +68,7 @@ Adds integer credits (Rupees) to a specific user's account.
 
 Deducts integer credits (Rupees) from a specific user's account. Fails if user has insufficient credits.
 **Request Body:** Same as Add User Credits.
+
 
 ### Disable User
 **POST** `/admin/users/:id/disable`
