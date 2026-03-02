@@ -66,7 +66,9 @@ describe('OrdersService', () => {
     };
     const createDto = {
       kitchen_id: 'kitchen-1',
-      scheduled_for: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
+      scheduled_for: new Date(Date.now() + 86400000)
+        .toISOString()
+        .split('T')[0], // Tomorrow
       items: [{ food_item_id: 'item-1', quantity: 2 }],
     };
 
@@ -76,7 +78,9 @@ describe('OrdersService', () => {
 
     mockFoodItemRepo.findOne.mockResolvedValue(foodItem);
     mockOrdersRepo.create.mockImplementation((dto: any) => dto);
-    mockOrdersRepo.save.mockImplementation((order: any) => Promise.resolve({ ...order, id: 'order-1' }));
+    mockOrdersRepo.save.mockImplementation((order: any) =>
+      Promise.resolve({ ...order, id: 'order-1' }),
+    );
 
     const result = await service.create('client-1', createDto as any);
 
@@ -153,7 +157,6 @@ describe('OrdersService', () => {
     );
   });
 
-
   it('should set accepted_at when order is accepted', async () => {
     const orderId = 'order-1';
     const mockOrder = {
@@ -164,7 +167,9 @@ describe('OrdersService', () => {
 
     const mockOrdersRepo = module.get(getRepositoryToken(Order));
     mockOrdersRepo.findOne.mockResolvedValue(mockOrder);
-    mockOrdersRepo.save.mockImplementation((order: any) => Promise.resolve({ ...order }));
+    mockOrdersRepo.save.mockImplementation((order: any) =>
+      Promise.resolve({ ...order }),
+    );
 
     const result = await service.updateStatus(orderId, OrderStatus.ACCEPTED);
 
@@ -186,6 +191,8 @@ describe('OrdersService', () => {
 
     mockFoodItemRepo.findOne.mockResolvedValue(foodItem);
     mockOrdersRepo.create.mockImplementation((dto: any) => dto);
-    mockOrdersRepo.save.mockImplementation((order: any) => Promise.resolve({ ...order, id: 'order-1' }));
+    mockOrdersRepo.save.mockImplementation((order: any) =>
+      Promise.resolve({ ...order, id: 'order-1' }),
+    );
   }
 });

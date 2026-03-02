@@ -15,7 +15,7 @@ export class DeliveriesService {
     private ordersRepository: Repository<Order>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async findAllAvailable() {
     const orders = await this.ordersRepository.find({

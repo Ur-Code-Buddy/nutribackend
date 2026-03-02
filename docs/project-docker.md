@@ -5,9 +5,11 @@ This guide provides instructions for running and managing the NutriTiffin backen
 ## Quick Start
 
 1. **Build and Run:**
+
    ```bash
    docker-compose up --build
    ```
+
    This will build the NestJS application and start it alongside a Redis container.
 
 2. **Access the Application:**
@@ -16,6 +18,7 @@ This guide provides instructions for running and managing the NutriTiffin backen
 ## Environment Variables
 
 The `docker-compose.yml` file passes environment variables to the container. Ensure your `.env` file or system environment variables are set for:
+
 - Database credentials (`DB_HOST`, `DB_PORT`, etc.)
 - AWS credentials (`AWS_ACCESS_KEY_ID`, etc.)
 - JWT secrets
@@ -25,17 +28,21 @@ The `docker-compose.yml` file passes environment variables to the container. Ens
 ## Common Commands
 
 ### Stop All Services
+
 ```bash
 docker-compose down
 ```
 
 ### View Logs
+
 ```bash
 docker-compose logs -f
 ```
 
 ### Rebuild Containers
+
 If you install new packages, rebuild the images:
+
 ```bash
 docker-compose up -d --build
 ```
@@ -43,5 +50,6 @@ docker-compose up -d --build
 ## Production Deployment
 
 For production:
+
 1. Ensure `NODE_ENV` is set to `production` (default in the Dockerfile's production stage).
 2. Use a managed Redis instance (e.g., AWS ElastiCache) and update `REDIS_HOST` in your configuration.

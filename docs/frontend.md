@@ -1,12 +1,13 @@
-Frontend Integration Guide for NutriTiffin
-============================================
+# Frontend Integration Guide for NutriTiffin
 
 Base URL: https://backend.v1.nutritiffin.com
 
 This document outlines how to integrate with the NutriTiffin backend, focusing on authentication, kitchen management, and image handling.
 
 1. Authentication & User Registration
--------------------------------------
+
+---
+
 - Endpoint: POST /auth/register
 - Fields:
   - username, password, role ('CLIENT' or 'KITCHEN_OWNER')
@@ -26,7 +27,9 @@ This document outlines how to integrate with the NutriTiffin backend, focusing o
   `Authorization: Bearer <your_token>`
 
 2. Kitchen Management (For Kitchen Owners)
-------------------------------------------
+
+---
+
 - Create Kitchen: POST /kitchens
   - Fields: name, details, operating_hours.
   - Flags:
@@ -38,7 +41,9 @@ This document outlines how to integrate with the NutriTiffin backend, focusing o
   - Send only fields that need changing.
 
 3. Image Upload Flow
---------------------
+
+---
+
 Images (Kitchen cover, Menu items) are NOT sent directly in the Create/Update bodies. You must upload them first to get a URL.
 
 - Endpoint: POST /upload-image
@@ -48,13 +53,16 @@ Images (Kitchen cover, Menu items) are NOT sent directly in the Create/Update bo
 - Formats: JPG, PNG
 
 Step-by-Step Implementation:
+
 1. User selects an image in your UI.
 2. Frontend sends `POST /upload-image` with the file.
 3. Backend returns `{ "image_url": "https://..." }`.
 4. Frontend takes this `image_url` and sends it in the `create` or `update` request (e.g., as `image_url` field in `POST /kitchens` or `POST /menu-items`).
 
-4. Public Listing (For Clients)
--------------------------------
+5. Public Listing (For Clients)
+
+---
+
 - List Kitchens: GET /kitchens
   - Returns ONLY active kitchens (`is_active: true`).
   - Use this to display the main feed.
@@ -63,18 +71,22 @@ Step-by-Step Implementation:
   - Shows details. Check `is_menu_visible` before showing the menu list.
 
 5. Orders
----------
+
+---
+
 - Create Order: POST /orders
   - Requires `kitchen_id`, `scheduled_for` date, and list of `items`.
 - Track Status: GET /orders (shows status: PENDING, ACCEPTED, REJECTED).
 
-Notes
------
+## Notes
+
 - Handle 401 Unauthorized by redirecting to Login.
 - Handle 409 Conflict (Duplicate Email/Phone) during registration by showing a user-friendly error.
 
 6. Delivery Driver Dashboard
-----------------------------
+
+---
+
 - Role: `DELIVERY_DRIVER`
 - Flow:
   1. Login to get token.

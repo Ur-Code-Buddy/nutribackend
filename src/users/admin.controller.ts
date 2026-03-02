@@ -9,30 +9,30 @@ import { UsersService } from './users.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminController {
-    constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
-    @Get('users')
-    async getAllUsers() {
-        return this.usersService.findAll();
-    }
+  @Get('users')
+  async getAllUsers() {
+    return this.usersService.findAll();
+  }
 
-    @Post('credits/add')
-    async addCredits(@Body() body: { username: string; credits: number }) {
-        return this.usersService.addCredits(body.username, body.credits);
-    }
+  @Post('credits/add')
+  async addCredits(@Body() body: { username: string; credits: number }) {
+    return this.usersService.addCredits(body.username, body.credits);
+  }
 
-    @Post('credits/deduct')
-    async deductCredits(@Body() body: { username: string; credits: number }) {
-        return this.usersService.deductCredits(body.username, body.credits);
-    }
+  @Post('credits/deduct')
+  async deductCredits(@Body() body: { username: string; credits: number }) {
+    return this.usersService.deductCredits(body.username, body.credits);
+  }
 
-    @Post('users/:id/disable')
-    async disableUser(@Param('id') id: string) {
-        return this.usersService.updateStatus(id, false);
-    }
+  @Post('users/:id/disable')
+  async disableUser(@Param('id') id: string) {
+    return this.usersService.updateStatus(id, false);
+  }
 
-    @Post('users/:id/enable')
-    async enableUser(@Param('id') id: string) {
-        return this.usersService.updateStatus(id, true);
-    }
+  @Post('users/:id/enable')
+  async enableUser(@Param('id') id: string) {
+    return this.usersService.updateStatus(id, true);
+  }
 }

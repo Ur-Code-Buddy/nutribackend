@@ -11,7 +11,7 @@ export class AppController {
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   @Get()
   getHello(): string {

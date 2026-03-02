@@ -26,7 +26,7 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly kitchenService: KitchensService,
-  ) { }
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -38,7 +38,10 @@ export class OrdersController {
   @Get()
   @UseGuards(JwtAuthGuard)
   async findAll(@Request() req: any) {
-    const orders = await this.ordersService.findAll(req.user.userId, req.user.role);
+    const orders = await this.ordersService.findAll(
+      req.user.userId,
+      req.user.role,
+    );
     if (req.user.role === UserRole.KITCHEN_OWNER) {
       return orders.map((order) => ResponseMapper.toOwnerOrderView(order));
     }

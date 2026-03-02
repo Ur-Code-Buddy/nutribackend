@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Body, Query, HttpCode, HttpStatus, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  HttpCode,
+  HttpStatus,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -7,13 +18,14 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     const user = await this.authService.register(registerDto);
     return {
-      message: 'Registration successful. Please check your email to verify your account.',
+      message:
+        'Registration successful. Please check your email to verify your account.',
       user: {
         id: user.id,
         username: user.username,
@@ -41,7 +53,8 @@ export class AuthController {
 
   @Get('verify-email')
   async verifyEmail(@Query('token') token: string, @Res() res: any) {
-    const frontendUrl = process.env.FRONTEND_URL || 'https://www.nutritiffin.com';
+    const frontendUrl =
+      process.env.FRONTEND_URL || 'https://www.nutritiffin.com';
     try {
       await this.authService.verifyEmail(token);
       return res.redirect(`${frontendUrl}/verification-success`);
@@ -50,7 +63,9 @@ export class AuthController {
       if (error.message && error.message.toLowerCase().includes('expired')) {
         reason = 'expired';
       }
-      return res.redirect(`${frontendUrl}/verification-failed?reason=${reason}`);
+      return res.redirect(
+        `${frontendUrl}/verification-failed?reason=${reason}`,
+      );
     }
   }
 
@@ -60,9 +75,18 @@ export class AuthController {
     return this.authService.resendVerification(dto.email);
   }
 
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 1, ttl: 30000 } })
   @HttpCode(HttpStatus.OK)
   @Post('retry-email-login')
   async retryEmailLogin(@Body() dto: ResendVerificationDto) {
     return this.authService.resendVerification(dto.email);
+  }
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 1, ttl: 10000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('check-email-verified')
+  async checkEmailVerified(@Body() dto: ResendVerificationDto) {
+    return this.authService.checkEmailVerified(dto.email);
   }
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -10,7 +14,7 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private dataSource: DataSource,
-  ) { }
+  ) {}
 
   async create(
     username: string,
@@ -20,6 +24,7 @@ export class UsersService {
     email: string,
     phoneNumber: string,
     address: string,
+    pincode: string,
   ): Promise<User> {
     const user = this.usersRepository.create({
       username,
@@ -29,6 +34,7 @@ export class UsersService {
       email,
       phone_number: phoneNumber,
       address,
+      pincode,
     });
     return this.usersRepository.save(user);
   }
@@ -59,7 +65,17 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({
-      select: ['id', 'username', 'name', 'email', 'phone_number', 'role', 'credits', 'is_active', 'created_at']
+      select: [
+        'id',
+        'username',
+        'name',
+        'email',
+        'phone_number',
+        'role',
+        'credits',
+        'is_active',
+        'created_at',
+      ],
     });
   }
 
@@ -69,7 +85,10 @@ export class UsersService {
         where: { username },
         lock: { mode: 'pessimistic_write' },
       });
-      if (!user) throw new NotFoundException(`User with username '${username}' not found`);
+      if (!user)
+        throw new NotFoundException(
+          `User with username '${username}' not found`,
+        );
 
       user.credits = Number(user.credits) + Number(amount);
       return manager.save(user);
@@ -82,7 +101,10 @@ export class UsersService {
         where: { username },
         lock: { mode: 'pessimistic_write' },
       });
-      if (!user) throw new NotFoundException(`User with username '${username}' not found`);
+      if (!user)
+        throw new NotFoundException(
+          `User with username '${username}' not found`,
+        );
       if (Number(user.credits) < Number(amount)) {
         throw new BadRequestException('Insufficient credits');
       }
@@ -106,4 +128,3 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 }
-

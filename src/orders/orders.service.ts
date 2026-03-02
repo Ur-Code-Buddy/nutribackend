@@ -24,7 +24,7 @@ export class OrdersService {
     private foodItemRepo: Repository<FoodItem>,
     @InjectQueue('orders')
     private ordersQueue: Queue,
-  ) { }
+  ) {}
 
   async create(clientId: string, dto: CreateOrderDto) {
     // 1. Validate "1-3 Days in Advance"
@@ -38,7 +38,7 @@ export class OrdersService {
     maxDate.setHours(23, 59, 59, 999); // End of 3rd day
 
     const scheduledDate = new Date(dto.scheduled_for);
-    // Ensure scheduledDate is compared correctly (ignoring time if input is date-only string like YYYY-MM-DD, 
+    // Ensure scheduledDate is compared correctly (ignoring time if input is date-only string like YYYY-MM-DD,
     // but dto.scheduled_for is validated as DateString. If it has time, we should probably ignore it or handle it.
     // Assuming standard YYYY-MM-DD format from previous code context or ISO).
     // Let's normalize scheduledDate to be safe if it comes with time, or just compare timestamps if it is full ISO.

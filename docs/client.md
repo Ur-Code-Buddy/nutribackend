@@ -28,6 +28,7 @@ Request Body:
 "email": "rahul.sharma01@example.com",
 "phone_number": "+919876543210",
 "address": "123 MG Road, Pondicherry, Puducherry, India",
+"pincode": "605001",
 "password": "client123",
 "role": "CLIENT"
 }
@@ -39,6 +40,7 @@ Success Response (201):
 "name": "Rahul Sharma",
 "phone_number": "+919876543210",
 "address": "123 MG Road, Pondicherry, Puducherry, India",
+"pincode": "605001",
 "role": "CLIENT",
 "created_at": "2026-02-15T06:10:16.854Z",
 "updated_at": "2026-02-15T06:10:16.854Z"
@@ -82,6 +84,7 @@ Success Response:
 GET /auth/verify-email?token=...
 
 Redirects the user to the frontend application:
+
 - On success: Redirects to `FRONTEND_URL/verification-success`.
 - On error: Redirects to `FRONTEND_URL/verification-failed?reason=expired` or `?reason=invalid`.
 
@@ -120,6 +123,25 @@ Success Response:
 "is_active": true,
 "created_at": "2026-02-15T06:10:16.854Z",
 "updated_at": "2026-02-15T06:10:16.854Z"
+}
+
+---
+
+1.6 Check Email Verified
+
+POST /auth/check-email-verified
+Content-Type: application/json
+
+Checks whether the provided email is verified. Has a rate limit: max 1 request every 10 seconds.
+
+Request Body:
+{
+"email": "rahul.sharma01@example.com"
+}
+
+Success Response:
+{
+"is_verified": true
 }
 
 ---

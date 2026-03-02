@@ -24,7 +24,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     if (user.token_version !== payload.token_version) {
-      throw new UnauthorizedException('Session expired. You logged in from another device.');
+      throw new UnauthorizedException(
+        'Session expired. You logged in from another device.',
+      );
     }
 
     return {

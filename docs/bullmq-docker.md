@@ -15,6 +15,7 @@ docker-compose up -d
 ```
 
 This starts:
+
 - **backend**: Your NestJS application
 - **redis**: The Redis store for BullMQ (exposed on port 6379)
 
@@ -33,24 +34,29 @@ If you need to change these (e.g., to use an external Redis provider), update th
 ## Monitoring Queues
 
 ### 1. Using Redis CLI
+
 You can inspect the Redis keys directly to see queue status.
 
 **Access the Redis container:**
+
 ```bash
 docker-compose exec redis redis-cli
 ```
 
 **List all keys:**
+
 ```bash
 keys *
 ```
 
 **Check queue length (example for 'email' queue):**
+
 ```bash
 llen bull:email:wait
 ```
 
 ### 2. Using Bull Board (Optional)
+
 For a visual dashboard, you can install `@bull-board/nestjs`.
 
 1. Install dependencies:
@@ -63,6 +69,7 @@ For a visual dashboard, you can install `@bull-board/nestjs`.
 
 - **Connection Refused**: Ensure the `redis` container is running (`docker-compose ps`).
 - **Job Not Processing**: Check backend logs:
+
   ```bash
 
   docker-compose logs -f backend
@@ -73,6 +80,7 @@ For a visual dashboard, you can install `@bull-board/nestjs`.
 When there are updates to the codebase (e.g., from a `git pull`), follow these steps to update your running containers:
 
 1.  **Pull the latest code:**
+
     ```bash
     git pull origin main
     ```

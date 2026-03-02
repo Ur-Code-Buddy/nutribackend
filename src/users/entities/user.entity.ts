@@ -30,6 +30,9 @@ export class User {
   address: string;
 
   @Column()
+  pincode: string;
+
+  @Column()
   @Exclude()
   password_hash: string;
 

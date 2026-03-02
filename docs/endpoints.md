@@ -1,6 +1,7 @@
 # API Endpoints Documentation
 
 ## Base URL
+
 All endpoints are relative to the base URL: `http://localhost:3000` (for local development).
 
 ---
@@ -8,6 +9,7 @@ All endpoints are relative to the base URL: `http://localhost:3000` (for local d
 ## Authentication (`/auth`)
 
 ### Register User
+
 **POST** `/auth/register`
 
 Creates a new user account.
@@ -20,6 +22,7 @@ Creates a new user account.
 | `email` | string | **Yes** | Email address (unique). |
 | `phone_number` | string | **Yes** | Phone number (unique). |
 | `address` | string | **Yes** | Physical address of the user. |
+| `pincode` | string | **Yes** | PIN Code/Postal code. |
 | `password` | string | **Yes** | Password (min 6 characters). |
 | `role` | enum | **Yes** | User role. Values: `CLIENT`, `KITCHEN_OWNER`, `DELIVERY_DRIVER`, `ADMIN`. |
 | `admin_access_pass` | string | No | Required only if `role` is `ADMIN`. |
@@ -27,6 +30,7 @@ Creates a new user account.
 **Response:** Returns a success message prompting the user to verify their email. A verification email is sent (placeholder for now).
 
 ### Login
+
 **POST** `/auth/login`
 
 Authenticates a user and returns a JWT token. **Rejects users who have not verified their email.**
@@ -38,6 +42,7 @@ Authenticates a user and returns a JWT token. **Rejects users who have not verif
 | `password` | string | **Yes** | User password. |
 
 ### Verify Email
+
 **GET** `/auth/verify-email?token=...`
 
 Verifies a user's email address using the token sent during registration.
@@ -48,6 +53,7 @@ Verifies a user's email address using the token sent during registration.
 | `token` | string | **Yes** | The verification token from the email. |
 
 **Behavior:**
+
 - Looks up the user by the token.
 - Returns a 302 Redirect to the frontend application:
   - On success: Redirects to `FRONTEND_URL/verification-success` (and sets `is_verified: true`, clears token).
@@ -55,6 +61,7 @@ Verifies a user's email address using the token sent during registration.
   - On expired token (tokens are valid for 24 hours): Redirects to `FRONTEND_URL/verification-failed?reason=expired`.
 
 ### Resend Verification Email
+
 **POST** `/auth/resend-verification`
 
 Regenerates a verification token and resends the verification email.
@@ -65,11 +72,13 @@ Regenerates a verification token and resends the verification email.
 | `email` | string | **Yes** | The email address associated with the account. |
 
 **Behavior:**
+
 - Returns `404` if no account is found with the provided email.
 - Returns `400` if the email is already verified.
 - Generates a new token (valid for 24 hours) and sends a verification email.
 
 ### Retry Email Login
+
 **POST** `/auth/retry-email-login`
 
 Retries sending the verification email for login. This functions identically to the resend verification endpoint.
@@ -80,27 +89,51 @@ Retries sending the verification email for login. This functions identically to 
 | `email` | string | **Yes** | The email address associated with the account. |
 
 **Behavior:**
+
 - Returns `404` if no account is found with the provided email.
 - Returns `400` if the email is already verified.
 - Generates a new token (valid for 24 hours) and sends a verification email.
+- Has a rate limit: max 1 request every 30 seconds.
+
+### Check if Email Verified
+
+**POST** `/auth/check-email-verified`
+
+Checks whether the provided email is verified. Has a rate limit: max 1 request every 10 seconds.
+
+**Request Body:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | **Yes** | The email address to check. |
+
+**Response:**
+
+```json
+{
+  "is_verified": true
+}
+```
 
 ---
 
 ## Users & Administration (`/users` & `/admin`)
 
 ### Get Current User Profile
+
 **GET** `/users/me`
 **Role Required:** Authenticated User
 
 Retrieves the profile of the currently logged-in user, including their Rupee `credits` balance.
 
 ### Get All Users
+
 **GET** `/admin/users`
 **Role Required:** `ADMIN`
 
 Retrieves a list of all registered users and their credit balances.
 
 ### Add User Credits
+
 **POST** `/admin/credits/add`
 **Role Required:** `ADMIN`
 
@@ -112,20 +145,22 @@ Adds integer credits (Rupees) to a specific user's account.
 | `credits` | number | **Yes** | Integer amount of Rupees to add. |
 
 ### Deduct User Credits
+
 **POST** `/admin/credits/deduct`
 **Role Required:** `ADMIN`
 
 Deducts integer credits (Rupees) from a specific user's account. Fails if user has insufficient credits.
 **Request Body:** Same as Add User Credits.
 
-
 ### Disable User
+
 **POST** `/admin/users/:id/disable`
 **Role Required:** `ADMIN`
 
 Deactivates a user account (Client, Kitchen Owner, or Delivery Driver).
 
 ### Enable User
+
 **POST** `/admin/users/:id/enable`
 **Role Required:** `ADMIN`
 
@@ -136,6 +171,7 @@ Reactivates a previously disabled user account.
 ## Kitchens (`/kitchens`)
 
 ### Create Kitchen
+
 **POST** `/kitchens`
 **Role Required:** `KITCHEN_OWNER`
 
@@ -152,22 +188,26 @@ Creates a new kitchen profile for the authenticated user.
 | `is_menu_visible` | boolean | No | Whether the menu is visible to users (default: true). |
 
 ### Get Kitchen Credits
+
 **GET** `/kitchens/credits`
 **Role Required:** `KITCHEN_OWNER`
 
 Retrieves the current available credit balance for the authenticated kitchen owner.
 
 ### Get All Kitchens
+
 **GET** `/kitchens`
 
 Retrieves a list of all active kitchens.
 
 ### Get Kitchen by ID
+
 **GET** `/kitchens/:id`
 
 Retrieves details of a specific kitchen.
 
 ### Update Kitchen
+
 **PATCH** `/kitchens/:id`
 **Role Required:** `KITCHEN_OWNER`
 
@@ -181,6 +221,7 @@ Partial of **Create Kitchen** body.
 ## Menu Items (`/menu-items`)
 
 ### Create Menu Item
+
 **POST** `/menu-items`
 **Role Required:** `KITCHEN_OWNER`
 
@@ -197,22 +238,26 @@ Adds a new food item to the user's kitchen menu.
 | `availability_days` | array | No | List of days the item is available (e.g. `["monday", "friday"]`). |
 
 ### Get My Items
+
 **GET** `/menu-items/my-items`
 **Role Required:** `KITCHEN_OWNER`
 
 Retrieves all menu items for the authenticated kitchen owner.
 
 ### Get Menu Items by Kitchen
+
 **GET** `/menu-items/kitchen/:kitchenId`
 
 Retrieves all menu items for a specific kitchen.
 
 ### Get Menu Item by ID
+
 **GET** `/menu-items/:id`
 
 Retrieves details of a specific menu item.
 
 ### Update Menu Item
+
 **PATCH** `/menu-items/:id`
 **Role Required:** `KITCHEN_OWNER`
 
@@ -222,6 +267,7 @@ Updates a menu item.
 Partial of **Create Menu Item** body.
 
 ### Set Menu Item Availability
+
 **PATCH** `/menu-items/:id/availability`
 **Role Required:** `KITCHEN_OWNER`
 
@@ -237,6 +283,7 @@ Sets the availability of a specific item.
 ## Orders (`/orders`)
 
 ### Create Order
+
 **POST** `/orders`
 **Role Required:** `CLIENT`
 
@@ -256,24 +303,27 @@ Places a new order.
 | `quantity` | number | **Yes** | Quantity to order (min 1). |
 
 ### Get All Orders
+
 **GET** `/orders`
 **Role Required:** Authenticated User
 
 Retrieves all orders for the authenticated user (Client or Kitchen Owner) with role-specific details.
 
 ### Get Order by ID
+
 **GET** `/orders/:id`
 **Role Required:** Authenticated User
 
 Retrieves details of a specific order.
 
 **Response:**
+
 ```json
 {
   "id": "order-uuid",
   "status": "ACCEPTED",
   "scheduled_for": "2026-02-16",
-  "total_price": 250.00,
+  "total_price": 250.0,
   "kitchen": {
     "id": "kitchen-id",
     "name": "Kitchen Name",
@@ -286,7 +336,7 @@ Retrieves details of a specific order.
       "name": "Item Name",
       "image_url": "http://...",
       "quantity": 2,
-      "snapshot_price": 100.00
+      "snapshot_price": 100.0
     }
   ],
   "delivery_driver": {
@@ -298,12 +348,14 @@ Retrieves details of a specific order.
 ```
 
 ### Accept Order
+
 **PATCH** `/orders/:id/accept`
 **Role Required:** `KITCHEN_OWNER`
 
 Marks an order as `ACCEPTED`.
 
 ### Reject Order
+
 **PATCH** `/orders/:id/reject`
 **Role Required:** `KITCHEN_OWNER`
 
@@ -314,11 +366,13 @@ Marks an order as `REJECTED`.
 ## Uploads (`/upload-image`)
 
 ### Upload Image
+
 **POST** `/upload-image`
 
 Uploads an image file to S3 and returns the public URL.
 
 **Request:**
+
 - **Content-Type**: `multipart/form-data`
 - **Body**: form-data with key `file` containing the image file (jpg/png, max 5MB).
 
@@ -327,16 +381,19 @@ Uploads an image file to S3 and returns the public URL.
 ## App General
 
 ### Health Check
+
 **GET** `/health`
 
 Returns the API health status.
 
 ### Uptime
+
 **GET** `/uptime`
 
 Returns the current version and uptime.
 
 ### Root
+
 **GET** `/`
 
 Returns a welcome message.
@@ -346,42 +403,49 @@ Returns a welcome message.
 ## Deliveries (`/deliveries`)
 
 ### Get Driver Credits
+
 **GET** `/deliveries/credits`
 **Role Required:** `DELIVERY_DRIVER`
 
 Retrieves the current available credit balance for the authenticated delivery driver.
 
 ### Get Available Deliveries
+
 **GET** `/deliveries/available`
 **Role Required:** `DELIVERY_DRIVER`
 
 Retrieves a list of orders that are `ACCEPTED` and ready for pickup.
 
 ### Get My Deliveries
+
 **GET** `/deliveries/my-orders`
 **Role Required:** `DELIVERY_DRIVER`
 
 Retrieves a list of orders assigned to the authenticated driver.
 
 ### Accept Delivery
+
 **PATCH** `/deliveries/:id/accept`
 **Role Required:** `DELIVERY_DRIVER`
 
 Assigns the order to the driver and updates status to `OUT_FOR_DELIVERY`.
 
 ### Finish Delivery
+
 **PATCH** `/deliveries/:id/finish`
 **Role Required:** `DELIVERY_DRIVER`
 
 Updates status to `DELIVERED`.
 
 ### Get Order Details
+
 **GET** `/deliveries/:id`
 **Role Required:** `DELIVERY_DRIVER`
 
 Retrieves full order details including addresses and phone numbers.
 
 **Response:**
+
 ```json
 {
   "id": "order-uuid",

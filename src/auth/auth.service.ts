@@ -14,11 +14,16 @@ import { RegisterDto } from './dto/register.dto';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/user.role.enum';
 
-async function sendVerificationEmail(email: string, token: string): Promise<void> {
+async function sendVerificationEmail(
+  email: string,
+  token: string,
+): Promise<void> {
   const backendUrl = process.env.BASE_URL || 'http://localhost:3000';
   const verificationLink = `${backendUrl}/auth/verify-email?token=${token}`;
 
-  const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY as string });
+  const client = new BrevoClient({
+    apiKey: process.env.BREVO_API_KEY as string,
+  });
 
   try {
     await client.transactionalEmails.sendTransacEmail({
@@ -29,12 +34,13 @@ async function sendVerificationEmail(email: string, token: string): Promise<void
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verify Your Email | NutriTiffin</title>
             <style>
               body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #f4f7f6;
                 margin: 0;
                 padding: 0;
+                background-color: #f4f6f8;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 color: #333333;
               }
               .container {
@@ -42,95 +48,122 @@ async function sendVerificationEmail(email: string, token: string): Promise<void
                 margin: 40px auto;
                 background-color: #ffffff;
                 border-radius: 8px;
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
                 overflow: hidden;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
               }
               .header {
-                background-color: #4CAF50;
-                padding: 30px 20px;
+                background-color: #1f2937;
+                padding: 28px 20px;
                 text-align: center;
               }
               .header h1 {
                 color: #ffffff;
                 margin: 0;
-                font-size: 28px;
+                font-size: 24px;
                 font-weight: 600;
+                letter-spacing: 0.5px;
               }
               .content {
-                padding: 40px 30px;
-                text-align: center;
+                padding: 40px 35px;
+                text-align: left;
+              }
+              .content h2 {
+                margin-top: 0;
+                font-size: 20px;
+                font-weight: 600;
+                color: #111827;
               }
               .content p {
-                font-size: 16px;
-                line-height: 1.6;
-                margin-bottom: 25px;
-                color: #555555;
+                font-size: 15px;
+                line-height: 1.7;
+                color: #4b5563;
+                margin-bottom: 20px;
+              }
+              .button-wrapper {
+                text-align: center;
+                margin: 30px 0;
               }
               .button {
                 display: inline-block;
-                padding: 14px 32px;
-                background-color: #4CAF50;
+                padding: 14px 34px;
+                background-color: #2563eb;
                 color: #ffffff !important;
                 text-decoration: none;
-                border-radius: 4px;
-                font-size: 16px;
-                font-weight: bold;
-                letter-spacing: 0.5px;
-                transition: background-color 0.3s;
+                border-radius: 6px;
+                font-size: 15px;
+                font-weight: 600;
+                letter-spacing: 0.4px;
               }
               .button:hover {
-                background-color: #45a049;
+                background-color: #1e40af;
               }
               .divider {
                 height: 1px;
-                background-color: #e0e0e0;
+                background-color: #e5e7eb;
                 margin: 30px 0;
               }
+              .fallback-text {
+                font-size: 13px;
+                color: #6b7280;
+                margin-bottom: 8px;
+              }
               .fallback-link {
-                font-size: 14px;
-                color: #777777;
+                font-size: 13px;
+                color: #1d4ed8;
                 word-break: break-all;
-                background-color: #f9f9f9;
-                padding: 12px;
-                border-radius: 4px;
+              }
+              .security-note {
+                font-size: 12px;
+                color: #6b7280;
+                margin-top: 25px;
               }
               .footer {
-                background-color: #f9f9f9;
+                background-color: #f9fafb;
                 padding: 20px;
                 text-align: center;
-                font-size: 13px;
-                color: #888888;
-                border-top: 1px solid #eeeeee;
+                font-size: 12px;
+                color: #9ca3af;
+                border-top: 1px solid #e5e7eb;
               }
             </style>
           </head>
-            <body>
+          <body>
             <div class="container">
+              
               <div class="header">
                 <h1>NutriTiffin</h1>
               </div>
+
               <div class="content">
-                <h2 style="color: #333; margin-top: 0;">Verify Your Email Address</h2>
-                <p>Welcome to NutriTiffin! We're thrilled to have you on board. Please verify your email address to activate your account and access all our delicious features.</p>
+                <h2>Verify Your Email Address</h2>
 
-                <div style="background-color: #fff8e1; border-left: 4px solid #f59e0b; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px; font-size: 14px; color: #555;">
-                  ⚠️ <strong>Security Notice:</strong> This email was sent by <strong>NutriTiffin</strong> from <strong>no-reply@nutritiffin.com</strong>. If you did <em>not</em> create a NutriTiffin account, please ignore this email or <a href="mailto:support@nutritiffin.com" style="color: #f59e0b;">contact our support team</a>.
+                <p>
+                  Thank you for signing up with NutriTiffin. To activate your account and begin using our services, please confirm your email address by clicking the button below.
+                </p>
+
+                <div class="button-wrapper">
+                  <a href="${verificationLink}" class="button">Verify Email Address</a>
                 </div>
 
-                <a href="${verificationLink}" class="button">Verify Account</a>
-                
                 <div class="divider"></div>
-                
-                <p style="font-size: 14px; margin-bottom: 10px;">Button not working? Copy and paste this link into your browser:</p>
-                <div class="fallback-link">
+
+                <p class="fallback-text">
+                  If the button above does not work, copy and paste the following link into your browser:
+                </p>
+                <p class="fallback-link">
                   ${verificationLink}
-                </div>
+                </p>
+
+                <p class="security-note">
+                  This email was sent from no-reply@nutritiffin.com. If you did not create an account with NutriTiffin, you may safely ignore this message or contact support@nutritiffin.com for assistance.
+                </p>
               </div>
+
               <div class="footer">
                 <p>This verification link will expire in 24 hours.</p>
-                <p>If you did not request this email, no action is required — simply ignore it.</p>
                 <p>&copy; ${new Date().getFullYear()} NutriTiffin. All rights reserved.</p>
               </div>
+
             </div>
           </body>
         </html>
@@ -141,7 +174,10 @@ async function sendVerificationEmail(email: string, token: string): Promise<void
     console.log(`[EMAIL SENT] Verification email sent to ${email}`);
   } catch (error: any) {
     const errorDetails = error?.body || error?.response?.body || error;
-    console.error(`[EMAIL ERROR] Failed to send verification email to ${email}`, JSON.stringify(errorDetails, null, 2));
+    console.error(
+      `[EMAIL ERROR] Failed to send verification email to ${email}`,
+      JSON.stringify(errorDetails, null, 2),
+    );
   }
 }
 
@@ -150,7 +186,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   /**
    * Generate a secure random hex token and its expiry (24h from now).
@@ -202,7 +238,10 @@ export class AuthService {
   async register(registerDto: RegisterDto): Promise<User> {
     if (registerDto.role === UserRole.ADMIN) {
       const adminPass = process.env.ADMIN_ACCESS_PASS;
-      if (!registerDto.admin_access_pass || registerDto.admin_access_pass !== adminPass) {
+      if (
+        !registerDto.admin_access_pass ||
+        registerDto.admin_access_pass !== adminPass
+      ) {
         throw new UnauthorizedException('Invalid or missing admin access pass');
       }
     }
@@ -241,6 +280,7 @@ export class AuthService {
         registerDto.email,
         registerDto.phone_number,
         registerDto.address,
+        registerDto.pincode,
       );
     } catch (error) {
       if (error.code === '23505') {
@@ -279,7 +319,10 @@ export class AuthService {
       throw new NotFoundException('Invalid verification token');
     }
 
-    if (user.verify_token_expires_at && user.verify_token_expires_at < new Date()) {
+    if (
+      user.verify_token_expires_at &&
+      user.verify_token_expires_at < new Date()
+    ) {
       throw new BadRequestException(
         'Verification token has expired. Please request a new one.',
       );
@@ -313,8 +356,23 @@ export class AuthService {
     user.verify_token_expires_at = expiresAt;
     await this.usersService.saveUser(user);
 
-    await sendVerificationEmail(user.email, token); // TODO: implement with Brevo
+    await sendVerificationEmail(user.email, token);
 
-    return { message: 'Verification email has been resent. Please check your inbox.' };
+    return {
+      message: 'Verification email has been resent. Please check your inbox.',
+    };
+  }
+
+  async checkEmailVerified(email: string): Promise<{ is_verified: boolean }> {
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) {
+      throw new NotFoundException('No account found with this email address');
+    }
+
+    return { is_verified: user.is_verified };
   }
 }

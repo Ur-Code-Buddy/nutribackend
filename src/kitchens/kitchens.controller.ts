@@ -24,7 +24,7 @@ export class KitchensController {
   constructor(
     private readonly kitchensService: KitchensService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   @Get('credits')
   @UseGuards(JwtAuthGuard, RolesGuard)

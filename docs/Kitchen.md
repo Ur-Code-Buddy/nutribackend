@@ -34,19 +34,19 @@ Each kitchen belongs to exactly one owner.
 
 # Data Model
 
-| Field            | Type      | Description |
-|------------------|----------|-------------|
-| id               | UUID     | Unique kitchen identifier |
-| owner_id         | UUID     | User ID of the kitchen owner |
-| name             | string   | Kitchen name |
-| details          | JSON     | Address, phone, description |
-| operating_hours  | JSON     | Weekly schedule configuration |
-| image_url        | string   | Kitchen cover image URL |
-| is_active        | boolean  | Whether kitchen is active |
-| is_menu_visible  | boolean  | Whether menu is visible to clients |
-| availability_days| string[] | Days the menu is available |
-| created_at       | datetime | Creation timestamp |
-| updated_at       | datetime | Last update timestamp |
+| Field             | Type     | Description                        |
+| ----------------- | -------- | ---------------------------------- |
+| id                | UUID     | Unique kitchen identifier          |
+| owner_id          | UUID     | User ID of the kitchen owner       |
+| name              | string   | Kitchen name                       |
+| details           | JSON     | Address, phone, description        |
+| operating_hours   | JSON     | Weekly schedule configuration      |
+| image_url         | string   | Kitchen cover image URL            |
+| is_active         | boolean  | Whether kitchen is active          |
+| is_menu_visible   | boolean  | Whether menu is visible to clients |
+| availability_days | string[] | Days the menu is available         |
+| created_at        | datetime | Creation timestamp                 |
+| updated_at        | datetime | Last update timestamp              |
 
 ---
 
@@ -93,15 +93,15 @@ Authorization: Bearer <JWT_TOKEN>
 
 ## Field Details
 
-| Field            | Required | Description |
-|------------------|----------|-------------|
-| name             | Yes      | Name of the kitchen |
-| details          | No       | Additional kitchen details |
-| operating_hours  | No       | Weekly schedule. Times must be in **HH:MM** format (e.g. 09:00). |
-| image_url        | No       | Public image URL |
-| is_active        | No       | Defaults to true |
-| is_menu_visible  | No       | Defaults to true |
-| availability_days| No       | List of available days |
+| Field             | Required | Description                                                      |
+| ----------------- | -------- | ---------------------------------------------------------------- |
+| name              | Yes      | Name of the kitchen                                              |
+| details           | No       | Additional kitchen details                                       |
+| operating_hours   | No       | Weekly schedule. Times must be in **HH:MM** format (e.g. 09:00). |
+| image_url         | No       | Public image URL                                                 |
+| is_active         | No       | Defaults to true                                                 |
+| is_menu_visible   | No       | Defaults to true                                                 |
+| availability_days | No       | List of available days                                           |
 
 ---
 
@@ -132,7 +132,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 401 Unauthorized  
 403 Forbidden  
-400 Bad Request  
+400 Bad Request
 
 ---
 
@@ -264,7 +264,7 @@ Updatable fields:
 401 Unauthorized  
 403 Forbidden  
 404 Not Found  
-400 Bad Request  
+400 Bad Request
 
 ---
 

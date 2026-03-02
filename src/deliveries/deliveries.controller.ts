@@ -21,7 +21,7 @@ export class DeliveriesController {
   constructor(
     private readonly deliveriesService: DeliveriesService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   @Get('credits')
   async getCredits(@Request() req: any) {

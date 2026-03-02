@@ -14,7 +14,7 @@ export class KitchensService {
   constructor(
     @InjectRepository(Kitchen)
     private kitchensRepository: Repository<Kitchen>,
-  ) { }
+  ) {}
 
   async create(createKitchenDto: CreateKitchenDto): Promise<Kitchen> {
     const existing = await this.kitchensRepository.findOne({

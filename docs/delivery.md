@@ -19,7 +19,9 @@ All endpoints require a specific **Header**:
 ## Data Enums
 
 ### Order Status
+
 The `status` field in responses can be one of:
+
 - `PENDING`: Created by client, not yet accepted by kitchen.
 - `ACCEPTED`: Accepted by kitchen, waiting for driver (Visible in Available).
 - `REJECTED`: Rejected by kitchen.
@@ -56,7 +58,7 @@ Retrieves a list of orders that are ready for pickup. These orders have been acc
 - **URL**: `/deliveries/available`
 - **Method**: `GET`
 - **Description**: Use this to show the "Job Board" or "Available Orders" list to the driver.
-- **Notes**: 
+- **Notes**:
   - **Client details (address/phone) are HIDDEN** in this view to protect privacy until the order is accepted.
   - Returns orders sorted by creation date (Oldest first).
 
@@ -68,7 +70,7 @@ Retrieves a list of orders that are ready for pickup. These orders have been acc
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "status": "ACCEPTED",
     "scheduled_for": "2026-02-16",
-    "total_price": 450.00,
+    "total_price": 450.0,
     "kitchen": {
       "id": "kitchen-uuid-123",
       "name": "Spicy Treats Kitchen",
@@ -81,7 +83,7 @@ Retrieves a list of orders that are ready for pickup. These orders have been acc
         "name": "Chicken Biryani",
         "image_url": "https://s3.aws.com/...",
         "quantity": 2,
-        "snapshot_price": 225.00
+        "snapshot_price": 225.0
       }
     ]
     // Note: 'client' and 'delivery_driver' fields are null/undefined here
@@ -98,7 +100,7 @@ Retrieves all orders where the current user is assigned as the driver.
 - **URL**: `/deliveries/my-orders`
 - **Method**: `GET`
 - **Description**: Use this to show the "My Tasks" or "Current Deliveries" list.
-- **Notes**: 
+- **Notes**:
   - **Client details ARE INCLUDED** here (Name, Phone, Address) so the driver knows where to deliver.
 
 **Success Response (200 OK):**
@@ -109,7 +111,7 @@ Retrieves all orders where the current user is assigned as the driver.
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "status": "OUT_FOR_DELIVERY",
     "scheduled_for": "2026-02-16",
-    "total_price": 450.00,
+    "total_price": 450.0,
     "kitchen": {
       "id": "kitchen-uuid-123",
       "name": "Spicy Treats Kitchen",
@@ -127,7 +129,7 @@ Retrieves all orders where the current user is assigned as the driver.
         "food_item_id": "item-uuid-001",
         "name": "Chicken Biryani",
         "quantity": 2,
-        "snapshot_price": 225.00
+        "snapshot_price": 225.0
       }
     ]
   }
@@ -146,7 +148,7 @@ Retrieves full details for a specific order.
 - **Description**: View single order details.
 
 **Success Response (200 OK):**
-*Same structure as "My Active Deliveries"*
+_Same structure as "My Active Deliveries"_
 
 ---
 
@@ -163,6 +165,7 @@ Assigns the current driver to the order and changes status to `OUT_FOR_DELIVERY`
 Returns the updated Order object (including client details now).
 
 **Error Responses:**
+
 - `400 Bad Request`: If order is not in `ACCEPTED` state (e.g. already taken by someone else).
 - `404 Not Found`: If order ID is invalid.
 
@@ -181,4 +184,5 @@ Marks the order as `DELIVERED`.
 Returns the updated Order object with status `DELIVERED`.
 
 **Error Responses:**
+
 - `400 Bad Request`: If order is not `OUT_FOR_DELIVERY` or assigned to a different driver.
