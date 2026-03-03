@@ -26,7 +26,7 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly kitchenService: KitchensService,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -122,6 +122,14 @@ export class OrdersController {
   async reject(@Request() req: any, @Param('id') id: string) {
     await this.validateOrderOwnership(req.user.userId, id);
     return this.ordersService.updateStatus(id, OrderStatus.REJECTED);
+  }
+
+  @Patch(':id/ready')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.KITCHEN_OWNER)
+  async ready(@Request() req: any, @Param('id') id: string) {
+    await this.validateOrderOwnership(req.user.userId, id);
+    return this.ordersService.updateStatus(id, OrderStatus.READY);
   }
 
   private async validateOrderOwnership(userId: string, orderId: string) {

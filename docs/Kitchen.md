@@ -44,6 +44,9 @@ Each kitchen belongs to exactly one owner.
 | image_url         | string   | Kitchen cover image URL            |
 | is_active         | boolean  | Whether kitchen is active          |
 | is_menu_visible   | boolean  | Whether menu is visible to clients |
+| is_veg            | boolean  | Defaults to false (non-veg). If true, it is vegetarian |
+| positive_count    | number   | Number of thumbs up / positive reviews |
+| negative_count    | number   | Number of thumbs down / negative reviews |
 | availability_days | string[] | Days the menu is available         |
 | created_at        | datetime | Creation timestamp                 |
 | updated_at        | datetime | Last update timestamp              |

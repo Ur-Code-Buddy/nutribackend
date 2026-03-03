@@ -382,6 +382,13 @@ Retrieves details of a specific order.
 
 Marks an order as `ACCEPTED`.
 
+### Mark Order Ready
+
+**PATCH** `/orders/:id/ready`
+**Role Required:** `KITCHEN_OWNER`
+
+Marks an order as `READY` for pickup.
+
 ### Reject Order
 
 **PATCH** `/orders/:id/reject`
@@ -442,7 +449,7 @@ Retrieves the current available credit balance for the authenticated delivery dr
 **GET** `/deliveries/available`
 **Role Required:** `DELIVERY_DRIVER`
 
-Retrieves a list of orders that are `ACCEPTED` and ready for pickup.
+Retrieves a list of orders that are `ACCEPTED` or `READY` for pickup.
 
 ### Get My Deliveries
 

@@ -173,16 +173,22 @@ export class OrdersService {
     const order = await this.findOne(id);
     if (!order) throw new NotFoundException('Order not found');
 
-    if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException(
-        'Order status cannot be changed once processed.',
-      );
+    if (status === OrderStatus.ACCEPTED || status === OrderStatus.REJECTED) {
+      if (order.status !== OrderStatus.PENDING) {
+        throw new BadRequestException('Order status cannot be conditionally changed unless PENDING.');
+      }
+    } else if (status === OrderStatus.READY) {
+      if (order.status !== OrderStatus.ACCEPTED) {
+        throw new BadRequestException('Order must be ACCEPTED before it can be marked as READY.');
+      }
     }
 
     order.status = status;
 
     if (status === OrderStatus.ACCEPTED) {
       order.accepted_at = new Date();
+    } else if (status === OrderStatus.READY) {
+      order.ready_at = new Date();
     }
 
     return this.ordersRepo.save(order);

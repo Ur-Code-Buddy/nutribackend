@@ -34,4 +34,8 @@ export class CreateFoodItemDto {
   @IsArray()
   @IsString({ each: true })
   availability_days?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  is_veg?: boolean;
 }

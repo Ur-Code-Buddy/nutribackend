@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, In } from 'typeorm';
 import { Order, OrderStatus } from '../orders/entities/order.entity';
 import { User } from '../users/entities/user.entity';
 
@@ -20,7 +20,7 @@ export class DeliveriesService {
   async findAllAvailable() {
     const orders = await this.ordersRepository.find({
       where: {
-        status: OrderStatus.ACCEPTED,
+        status: In([OrderStatus.ACCEPTED, OrderStatus.READY]),
         delivery_driver: IsNull(),
       },
       relations: ['kitchen', 'kitchen.owner', 'items', 'items.food_item'],
@@ -72,7 +72,7 @@ export class DeliveriesService {
   async acceptDelivery(id: string, driverId: string) {
     const order = await this.findOne(id);
 
-    if (order.status !== OrderStatus.ACCEPTED) {
+    if (order.status !== OrderStatus.ACCEPTED && order.status !== OrderStatus.READY) {
       throw new BadRequestException('Order is not available for pickup');
     }
 
@@ -91,8 +91,8 @@ export class DeliveriesService {
       throw new BadRequestException('You are not the driver for this order');
     }
 
-    if (order.status !== OrderStatus.ACCEPTED) {
-      throw new BadRequestException('Order cannot be picked up from current status');
+    if (order.status !== OrderStatus.READY) {
+      throw new BadRequestException('Order can only be picked up when READY');
     }
 
     order.status = OrderStatus.PICKED_UP;
@@ -109,7 +109,7 @@ export class DeliveriesService {
     }
 
     if (order.status !== OrderStatus.PICKED_UP) {
-      throw new BadRequestException('Order must be picked up before going out for delivery');
+      throw new BadRequestException('Order must be PICKED_UP before going out for delivery');
     }
 
     order.status = OrderStatus.OUT_FOR_DELIVERY;

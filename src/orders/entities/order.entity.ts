@@ -15,6 +15,7 @@ import { OrderItem } from './order-item.entity';
 export enum OrderStatus {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
+  READY = 'READY',
   PICKED_UP = 'PICKED_UP',
   OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
   DELIVERED = 'DELIVERED',
@@ -76,6 +77,9 @@ export class Order {
 
   @Column({ nullable: true })
   accepted_at: Date;
+
+  @Column({ nullable: true })
+  ready_at: Date;
 
   @Column({ nullable: true })
   picked_up_at: Date;
