@@ -142,36 +142,35 @@ Completes the password reset process by verifying the emailed OTP against Redis 
 
 **Response:** Returns a success message.
 
-### Request Phone OTP (Registration)
+### Request Phone OTP (Resend / Registration)
 
-**POST** `/auth/phone-registration`
+**POST** `/auth/resend-phone-otp`
 
-Integrates with the **MessageCentral CPaaS API** to send a 6-digit SMS OTP to a phone number.
+Integrates with the **MessageCentral CPaaS API** to send a 6-digit SMS OTP to a phone number. Temporary storage via Redis.
 
 **Request Body:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `mobileNumber` | string | **Yes** | Target phone number. |
-| `countryCode` | string | **Yes** | Calling code (e.g. "91"). |
+| `phone` | string | **Yes** | Target phone number. |
 
 **Response:**
 ```json
 {
-  "message": "OTP sent successfully",
-  "verificationId": "5915384"
+  "message": "OTP sent successfully"
 }
 ```
 
 ### Verify Phone OTP
 
-**POST** `/auth/phone-verification`
+**POST** `/auth/verify-phone`
+**Role Required:** Authenticated User
 
-Validates an SMS OTP against the MessageCentral API using the provided verification ID. Successfully verifying will automatically mark any associated NutriTiffin user account as `is_verified = true`.
+Validates an SMS OTP against the MessageCentral API using the provided OTP and phone number. Successfully verifying will automatically mark the associated NutriTiffin user account as `phone_verified = true` and update their phone number. Returns 409 if phone belongs to another verified account.
 
 **Request Body:**
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `verificationId` | string | **Yes** | The ID returned during phone registration. |
+| `phone` | string | **Yes** | The phone number being verified. |
 | `otp` | string | **Yes** | The code entered by the user. |
 
 **Response:**

@@ -8,7 +8,7 @@ export class UserSummaryDTO {
   name: string;
 
   @Expose()
-  phone_number: string;
+  phone_number: string | null;
 
   @Expose()
   address: string;

@@ -24,8 +24,8 @@ export class User {
   @Exclude()
   email: string;
 
-  @Column({ unique: true })
-  phone_number: string;
+  @Column({ unique: true, nullable: true })
+  phone_number: string | null;
 
   @Column()
   address: string;
@@ -51,7 +51,10 @@ export class User {
   is_active: boolean;
 
   @Column({ default: false })
-  is_verified: boolean;
+  email_verified: boolean;
+
+  @Column({ default: false })
+  phone_verified: boolean;
 
   @Column({ type: 'varchar', nullable: true })
   @Exclude()

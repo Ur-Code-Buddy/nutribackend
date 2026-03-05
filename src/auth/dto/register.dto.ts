@@ -21,8 +21,8 @@ export class RegisterDto {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
-  phone_number: string;
+  @IsOptional()
+  phone_number?: string;
 
   @IsString()
   @IsNotEmpty()

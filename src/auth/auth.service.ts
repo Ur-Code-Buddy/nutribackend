@@ -4,6 +4,7 @@ import {
   ConflictException,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -13,8 +14,8 @@ import { BrevoClient } from '@getbrevo/brevo';
 import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { PhoneRegistrationDto } from './dto/phone-registration.dto';
-import { PhoneVerificationDto } from './dto/phone-verification.dto';
+import { ResendPhoneOtpDto } from './dto/resend-phone-otp.dto';
+import { VerifyPhoneDto } from './dto/verify-phone.dto';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/user.role.enum';
 import { RedisService } from '../redis/redis.service';
@@ -261,9 +262,9 @@ export class AuthService {
 
   async login(user: any) {
     // Reject unverified users
-    if (!user.is_verified) {
-      throw new UnauthorizedException(
-        'Email not verified. Please check your inbox and verify your email before logging in.',
+    if (!user.email_verified || !user.phone_verified) {
+      throw new ForbiddenException(
+        'Account not fully verified. Both email and phone verification are required.',
       );
     }
 
@@ -321,13 +322,6 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
-    const existingPhone = await this.usersService.findOneByPhoneNumber(
-      registerDto.phone_number,
-    );
-    if (existingPhone) {
-      throw new ConflictException('Phone number already exists');
-    }
-
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(registerDto.password, salt);
 
@@ -339,7 +333,6 @@ export class AuthService {
         registerDto.role,
         registerDto.name,
         registerDto.email,
-        registerDto.phone_number,
         registerDto.address,
         registerDto.pincode,
       );
@@ -360,7 +353,8 @@ export class AuthService {
 
     // Generate verification token and persist it
     const { token, expiresAt } = this.generateVerificationToken();
-    user.is_verified = false;
+    user.email_verified = false;
+    user.phone_verified = false;
     user.verify_token = token;
     user.verify_token_expires_at = expiresAt;
     await this.usersService.saveUser(user);
@@ -389,7 +383,7 @@ export class AuthService {
       );
     }
 
-    user.is_verified = true;
+    user.email_verified = true;
     user.verify_token = null;
     user.verify_token_expires_at = null;
     await this.usersService.saveUser(user);
@@ -407,7 +401,7 @@ export class AuthService {
       throw new NotFoundException('No account found with this email address');
     }
 
-    if (user.is_verified) {
+    if (user.email_verified) {
       throw new BadRequestException('Email is already verified');
     }
 
@@ -434,7 +428,7 @@ export class AuthService {
       throw new NotFoundException('No account found with this email address');
     }
 
-    return { is_verified: user.is_verified };
+    return { is_verified: user.email_verified };
   }
 
   async deleteAccount(userId: string): Promise<{ message: string }> {
@@ -491,7 +485,7 @@ export class AuthService {
     return { message: 'Password has been changed successfully. You can now log in.' };
   }
 
-  async phoneRegistration(dto: PhoneRegistrationDto) {
+  async resendPhoneOtp(dto: ResendPhoneOtpDto) {
     const customerId = process.env.SMS_CUSTOMER_ID;
     const authToken = process.env.SMS_API_KEY;
 
@@ -499,7 +493,8 @@ export class AuthService {
       throw new BadRequestException('SMS service is not configured properly');
     }
 
-    const url = `https://cpaas.messagecentral.com/verification/v3/send?customerId=${customerId}&mobileNumber=${dto.mobileNumber}&countryCode=${dto.countryCode}&flowType=SMS&otpLength=6`;
+    const countryCode = '91'; // We can default or extract from DTO if needed
+    const url = `https://cpaas.messagecentral.com/verification/v3/send?customerId=${customerId}&mobileNumber=${dto.phone}&countryCode=${countryCode}&flowType=SMS&otpLength=6`;
 
     try {
       const response = await fetch(url, {
@@ -512,9 +507,12 @@ export class AuthService {
       const result = await response.json();
 
       if (response.ok && result?.responseCode === 200) {
+        // Store verificationId in Redis temporarily (e.g., 5 mins)
+        const redisKey = `phone_verify_id:${dto.phone}`;
+        await this.redisService.client.setex(redisKey, 300, result.data.verificationId);
+
         return {
           message: 'OTP sent successfully',
-          verificationId: result.data.verificationId,
         };
       }
 
@@ -527,14 +525,21 @@ export class AuthService {
     }
   }
 
-  async phoneVerification(dto: PhoneVerificationDto) {
+  async verifyPhone(userId: string, dto: VerifyPhoneDto) {
     const authToken = process.env.SMS_API_KEY;
 
     if (!authToken) {
       throw new BadRequestException('SMS service is not configured properly');
     }
 
-    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?verificationId=${dto.verificationId}&code=${dto.otp}`;
+    const redisKey = `phone_verify_id:${dto.phone}`;
+    const verificationId = await this.redisService.client.get(redisKey);
+
+    if (!verificationId) {
+      throw new BadRequestException('OTP expired or not requested for this phone number');
+    }
+
+    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?verificationId=${verificationId}&code=${dto.otp}`;
 
     try {
       const response = await fetch(url, {
@@ -549,14 +554,24 @@ export class AuthService {
       if (response.ok && result?.responseCode === 200 && result?.data?.verificationStatus === 'VERIFICATION_COMPLETED') {
         const mobileNumber = result.data.mobileNumber;
 
-        // "Mark phone number as verified"
-        // Try to find the user with this mobile number and mark them as verified if they exist
         if (mobileNumber) {
-          const user = await this.usersService.findOneByPhoneNumber(mobileNumber);
-          if (user) {
-            user.is_verified = true; // Leveraging existing field or custom flow
-            await this.usersService.saveUser(user);
+          // Check if this phone number is already attached to another verified account
+          const existingUser = await this.usersService.findOneByPhoneNumber(mobileNumber);
+          if (existingUser && existingUser.id !== userId) {
+            throw new ConflictException('This phone number already belongs to another verified account');
           }
+
+          const user = await this.usersService.findOneById(userId);
+          if (!user) {
+            throw new NotFoundException('User not found');
+          }
+
+          user.phone_number = mobileNumber;
+          user.phone_verified = true;
+          await this.usersService.saveUser(user);
+
+          // Clear temp store
+          await this.redisService.client.del(redisKey);
         }
 
         return {
@@ -567,7 +582,7 @@ export class AuthService {
 
       throw new BadRequestException(result?.data?.errorMessage || result?.message || 'Invalid or expired OTP');
     } catch (error: any) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof ConflictException || error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
       throw new BadRequestException('Failed to communicate with SMS provider: ' + error.message);

@@ -18,8 +18,8 @@ import { RegisterDto } from './dto/register.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { PhoneRegistrationDto } from './dto/phone-registration.dto';
-import { PhoneVerificationDto } from './dto/phone-verification.dto';
+import { ResendPhoneOtpDto } from './dto/resend-phone-otp.dto';
+import { VerifyPhoneDto } from './dto/verify-phone.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -114,15 +114,17 @@ export class AuthController {
     return this.authService.resetPassword(dto);
   }
 
+  @Throttle({ default: { limit: 1, ttl: 30000 } })
   @HttpCode(HttpStatus.OK)
-  @Post('phone-registration')
-  async phoneRegistration(@Body() dto: PhoneRegistrationDto) {
-    return this.authService.phoneRegistration(dto);
+  @Post('resend-phone-otp')
+  async resendPhoneOtp(@Body() dto: ResendPhoneOtpDto) {
+    return this.authService.resendPhoneOtp(dto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  @Post('phone-verification')
-  async phoneVerification(@Body() dto: PhoneVerificationDto) {
-    return this.authService.phoneVerification(dto);
+  @Post('verify-phone')
+  async verifyPhone(@Req() req: any, @Body() dto: VerifyPhoneDto) {
+    return this.authService.verifyPhone(req.user.userId, dto);
   }
 }
