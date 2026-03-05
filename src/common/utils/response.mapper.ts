@@ -14,6 +14,7 @@ export class ResponseMapper {
     dto.id = order.id;
     dto.status = order.status;
     dto.scheduled_for = order.scheduled_for;
+    dto.created_at = order.created_at;
     dto.total_price = Number(order.total_price);
     dto.platform_fees = Number(order.platform_fees);
     dto.delivery_fees = Number(order.delivery_fees);

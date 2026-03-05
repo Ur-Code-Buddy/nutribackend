@@ -56,6 +56,9 @@ export class BaseOrderViewDTO {
   scheduled_for: string;
 
   @Expose()
+  created_at: Date;
+
+  @Expose()
   total_price: number;
 
   @Expose()

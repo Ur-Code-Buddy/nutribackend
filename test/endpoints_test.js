@@ -3,7 +3,7 @@ const { Client } = require('pg');
 const path = require('path');
 const fs = require('fs');
 
-const BASE_URL = 'https://backend.v1.nutritiffin.com';
+const BASE_URL = 'http://localhost:3000';
 
 // Load .env for DB connection (needed to auto-verify users)
 const envPath = path.join(__dirname, '..', '.env');
@@ -15,7 +15,9 @@ if (fs.existsSync(envPath)) {
     .forEach((line) => {
       const parts = line.split('=');
       if (parts.length >= 2 && !line.startsWith('#')) {
-        envConfig[parts[0].trim()] = parts.slice(1).join('=').trim();
+        let val = parts.slice(1).join('=').trim();
+        val = val.replace(/^["'](.*)["']$/, '$1');
+        envConfig[parts[0].trim()] = val;
       }
     });
 }

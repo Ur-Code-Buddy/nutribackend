@@ -27,6 +27,11 @@ async function sendVerificationEmail(
   const backendUrl = process.env.BASE_URL || 'http://localhost:3000';
   const verificationLink = `${backendUrl}/auth/verify-email?token=${token}`;
 
+  if (process.env.PRODUCTION === 'false') {
+    console.log(`[DEV MODE] Email verification link for ${email}: ${verificationLink}`);
+    return;
+  }
+
   const client = new BrevoClient({
     apiKey: process.env.BREVO_API_KEY as string,
   });
@@ -191,6 +196,11 @@ async function sendPasswordResetOtpEmail(
   email: string,
   otp: string,
 ): Promise<void> {
+  if (process.env.PRODUCTION === 'false') {
+    console.log(`[DEV MODE] Password reset OTP for ${email}: ${otp}`);
+    return;
+  }
+
   const client = new BrevoClient({
     apiKey: process.env.BREVO_API_KEY as string,
   });
@@ -261,8 +271,10 @@ export class AuthService {
   }
 
   async login(user: any) {
-    // Reject unverified users
-    if (!user.email_verified || !user.phone_verified) {
+    const isDevelopment = process.env.PRODUCTION === 'false';
+
+    // Reject unverified users (only in production)
+    if (!isDevelopment && (!user.email_verified || !user.phone_verified)) {
       throw new ForbiddenException(
         'Account not fully verified. Both email and phone verification are required.',
       );
@@ -351,15 +363,21 @@ export class AuthService {
       throw error;
     }
 
+    const isDevelopment = process.env.PRODUCTION === 'false';
+
     // Generate verification token and persist it
     const { token, expiresAt } = this.generateVerificationToken();
-    user.email_verified = false;
-    user.phone_verified = false;
+    user.email_verified = isDevelopment;
+    user.phone_verified = isDevelopment;
     user.verify_token = token;
     user.verify_token_expires_at = expiresAt;
     await this.usersService.saveUser(user);
 
-    await sendVerificationEmail(user.email, token); // TODO: implement with Brevo
+    if (!isDevelopment) {
+      await sendVerificationEmail(user.email, token); // TODO: implement with Brevo
+    } else {
+      console.log(`[DEV MODE] Auto-verified user ${user.email}. Verification link: ${process.env.BASE_URL || 'http://localhost:3000'}/auth/verify-email?token=${token}`);
+    }
 
     return user;
   }
@@ -486,6 +504,13 @@ export class AuthService {
   }
 
   async resendPhoneOtp(dto: ResendPhoneOtpDto) {
+    if (process.env.PRODUCTION === 'false') {
+      const redisKey = `phone_verify_id:${dto.phone}`;
+      await this.redisService.client.setex(redisKey, 300, 'dev-verification-id');
+      console.log(`[DEV MODE] Phone confirm OTP bypass for ${dto.phone}. Use any 6-digit OTP to verify.`);
+      return { message: 'OTP sent successfully (DEV MODE)' };
+    }
+
     const customerId = process.env.SMS_CUSTOMER_ID;
     const authToken = process.env.SMS_API_KEY;
 
@@ -526,17 +551,42 @@ export class AuthService {
   }
 
   async verifyPhone(userId: string, dto: VerifyPhoneDto) {
-    const authToken = process.env.SMS_API_KEY;
+    const isDevelopment = process.env.PRODUCTION === 'false';
+    const redisKey = `phone_verify_id:${dto.phone}`;
 
-    if (!authToken) {
-      throw new BadRequestException('SMS service is not configured properly');
+    if (isDevelopment) {
+      // By-pass OTP completely in development
+      const existingUser = await this.usersService.findOneByPhoneNumber(dto.phone);
+      if (existingUser && existingUser.id !== userId) {
+        throw new ConflictException('This phone number already belongs to another verified account');
+      }
+
+      const user = await this.usersService.findOneById(userId);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      user.phone_number = dto.phone;
+      user.phone_verified = true;
+      await this.usersService.saveUser(user);
+      await this.redisService.client.del(redisKey);
+
+      return {
+        message: 'Phone number bypassed successfully (DEV MODE)',
+        verified: true,
+      };
     }
 
-    const redisKey = `phone_verify_id:${dto.phone}`;
     const verificationId = await this.redisService.client.get(redisKey);
 
     if (!verificationId) {
       throw new BadRequestException('OTP expired or not requested for this phone number');
+    }
+
+    const authToken = process.env.SMS_API_KEY;
+
+    if (!authToken) {
+      throw new BadRequestException('SMS service is not configured properly');
     }
 
     const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?verificationId=${verificationId}&code=${dto.otp}`;
