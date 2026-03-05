@@ -577,6 +577,62 @@ Retrieves full order details including addresses and phone numbers.
 }
 ```
 
+  "items": [ ... ]
+}
+```
+
+---
+
+## Reviews (`/reviews`)
+
+Clients can add reviews for individual `order_items` that belong to an order that has been `DELIVERED` within the last 24 hours. A review is marked as either a thumbs up (`positive_count`) or thumbs down (`negative_count`).
+
+### Add a Review
+
+**POST** `/reviews`
+**Role Required:** `CLIENT`
+
+Creates a review for a specific ordered item.
+
+**Request Body:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `order_item_id` | string | **Yes** | ID of the specific order item being reviewed. |
+| `is_positive` | boolean | **Yes** | `true` for positive (upvote), `false` for negative (downvote). |
+
+**Response:**
+```json
+{
+  "id": "review-uuid",
+  "client_id": "client-uuid",
+  "kitchen_id": "kitchen-uuid",
+  "food_item_id": "item-uuid",
+  "order_id": "order-uuid",
+  "order_item_id": "order-item-uuid",
+  "is_positive": true,
+  "created_at": "2026-03-05T20:10:00.000Z"
+}
+```
+
+### Get My Reviews
+
+**GET** `/reviews/my`
+**Role Required:** `CLIENT`
+
+Retrieves all reviews made by the authenticated client.
+
+### Get Reviews by Food Item
+
+**GET** `/reviews/food-item/:foodItemId`
+
+Retrieves all reviews associated with a specific food item.
+
+### Get Reviews by Kitchen
+
+**GET** `/reviews/kitchen/:kitchenId`
+
+Retrieves all reviews associated with a specific kitchen.
+
 ---
 
 ## Transactions (`/transactions`)
@@ -589,6 +645,7 @@ The transactions system tracks **every credit movement** in the system — admin
 **Role Required:** Authenticated User (any role)
 
 Returns a paginated list of all transactions the authenticated user was involved in (as sender or receiver).
+
 
 **Query Parameters:**
 | Field | Type | Required | Description |
