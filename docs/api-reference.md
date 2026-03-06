@@ -299,6 +299,62 @@ Updates the authenticated user's profile. Requires the current password for secu
 
 Retrieves a list of all registered users and their credit balances.
 
+### Search Users
+
+**GET** `/admin/users/search?q=:query`
+**Role Required:** `ADMIN`
+
+Search users by username, name, or email with a partial match query. Useful when the user table grows too large to list everyone efficiently.
+
+**Response:**
+```json
+[
+  {
+    "id": "3a22...",
+    "username": "john_doe",
+    "credits": 1250,
+    "status": "active"
+  }
+]
+```
+
+### Get User Credits
+
+**GET** `/admin/users/credits/:username`
+**Role Required:** `ADMIN`
+
+Look up a specific user's credit balance quickly, including their last transaction date, without fetching the entire user list.
+
+**Response:**
+```json
+{
+  "username": "john_doe",
+  "credits": 1250,
+  "last_transaction": "2026-03-06T14:30:00Z"
+}
+```
+
+### Get Platform Stats
+
+**GET** `/admin/stats`
+**Role Required:** `ADMIN`
+
+Return a quick summary/dashboard of the entire platform metrics in one call, reducing the need for multiple expensive queries.
+
+**Response:**
+```json
+{
+  "total_users": 142,
+  "active_users": 98,
+  "disabled_users": 3,
+  "total_credits_in_circulation": 45200,
+  "active_kitchens": 2,
+  "pending_deliveries": 12,
+  "completed_deliveries_today": 47,
+  "transactions_today": 63
+}
+```
+
 ### Add User Credits
 
 **POST** `/admin/credits/add`
@@ -670,11 +726,11 @@ Updates status to `DELIVERED`.
 ### Get Order Details
 
 **GET** `/deliveries/:id`
-**Role Required:** `DELIVERY_DRIVER`
+**Role Required:** `DELIVERY_DRIVER` or `ADMIN`
 
-Retrieves full order details including addresses and phone numbers.
+Retrieves full order details. Depending on the user's role, the shape of the response differs.
 
-**Response:**
+**Response for Delivery Driver:**
 
 ```json
 {
@@ -688,6 +744,22 @@ Retrieves full order details including addresses and phone numbers.
      "address": "..."
   },
   "items": [ ... ]
+}
+```
+
+**Response for Admin:**
+
+```json
+{
+  "id": "del_001",
+  "user": "john_doe",
+  "kitchen": "Main Kitchen",
+  "status": "IN_TRANSIT",
+  "items": ["Paneer Tiffin x1", "Extra Roti x2"],
+  "driver": "Ravi",
+  "destination": "Andheri West, Mumbai",
+  "estimated_delivery": "2026-03-06T13:00:00Z",
+  "created_at": "2026-03-06T11:30:00Z"
 }
 ```
 
@@ -834,6 +906,34 @@ Returns all transactions in the system (paginated).
 **Query Parameters:** Same as Get My Transactions.
 
 **Response:** Same structure as Get My Transactions.
+
+### Get User Transaction History (Admin)
+
+**GET** `/admin/transactions/user/:username`
+**Role Required:** `ADMIN`
+
+Get the transaction history for a specific user to easily view their spending patterns or audit their account for dispute resolution.
+
+**Response:**
+
+```json
+[
+  { 
+    "id": "txn_abc", 
+    "type": "credit", 
+    "credits": 500, 
+    "reason": "support", 
+    "date": "2026-03-06T10:00:00Z" 
+  },
+  { 
+    "id": "txn_def", 
+    "type": "debit", 
+    "credits": 120, 
+    "reason": "order", 
+    "date": "2026-03-06T12:30:00Z" 
+  }
+]
+```
 
 ---
 

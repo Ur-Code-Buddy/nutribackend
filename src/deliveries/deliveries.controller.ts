@@ -64,8 +64,23 @@ export class DeliveriesController {
   }
 
   @Get(':id')
+  @Roles(UserRole.DELIVERY_DRIVER, UserRole.ADMIN)
   async findOne(@Param('id') id: string, @Request() req: any) {
     const order = await this.deliveriesService.findOne(id);
+
+    if (req.user.role === UserRole.ADMIN) {
+      return {
+        id: order.id,
+        user: order.client?.username,
+        kitchen: order.kitchen?.name,
+        status: order.status,
+        items: order.items?.map(i => `${i.food_item?.name} x${i.quantity}`),
+        driver: order.delivery_driver?.name || null,
+        destination: order.client?.address,
+        estimated_delivery: order.scheduled_for,
+        created_at: order.created_at,
+      };
+    }
 
     // Check ownership: driver is assigned OR it's unassigned & available
     if (order.delivery_driver_id !== req.user.userId) {

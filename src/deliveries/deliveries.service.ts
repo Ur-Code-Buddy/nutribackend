@@ -61,7 +61,7 @@ export class DeliveriesService {
   async findOne(id: string) {
     const order = await this.ordersRepository.findOne({
       where: { id },
-      relations: ['kitchen', 'client', 'items', 'items.food_item'],
+      relations: ['kitchen', 'client', 'items', 'items.food_item', 'delivery_driver'],
     });
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} not found`);

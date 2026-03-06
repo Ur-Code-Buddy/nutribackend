@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, ILike, In, MoreThanOrEqual } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UserRole } from './user.role.enum';
 import { Kitchen } from '../kitchens/entities/kitchen.entity';
@@ -227,5 +227,53 @@ export class UsersService {
         }
       }
     });
+  }
+
+  async searchUsers(query: string) {
+    return this.usersRepository.find({
+      where: [
+        { username: ILike(`%${query}%`) },
+        { name: ILike(`%${query}%`) },
+        { email: ILike(`%${query}%`) },
+      ],
+      select: ['id', 'username', 'credits', 'is_active', 'is_banned'],
+      take: 20,
+    });
+  }
+
+  async getPlatformStats() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [
+      total_users,
+      active_users,
+      disabled_users,
+      credits_result,
+      active_kitchens,
+      pending_deliveries,
+      completed_deliveries_today,
+      transactions_today,
+    ] = await Promise.all([
+      this.dataSource.manager.count('User'),
+      this.dataSource.manager.count('User', { where: { is_active: true, is_banned: false } }),
+      this.dataSource.manager.count('User', { where: [{ is_active: false }, { is_banned: true }] }),
+      this.dataSource.manager.createQueryBuilder('User', 'user').select('SUM(user.credits)', 'total').getRawOne(),
+      this.dataSource.manager.count('Kitchen', { where: { is_active: true } }),
+      this.dataSource.manager.count('Order', { where: { status: In(['PENDING', 'ACCEPTED', 'READY', 'PICKED_UP', 'OUT_FOR_DELIVERY']) } }),
+      this.dataSource.manager.count('Order', { where: { status: 'DELIVERED', delivered_at: MoreThanOrEqual(today) } }),
+      this.dataSource.manager.count('Transaction', { where: { created_at: MoreThanOrEqual(today) } }),
+    ]);
+
+    return {
+      total_users,
+      active_users,
+      disabled_users,
+      total_credits_in_circulation: parseFloat(credits_result.total || '0'),
+      active_kitchens,
+      pending_deliveries,
+      completed_deliveries_today,
+      transactions_today,
+    };
   }
 }

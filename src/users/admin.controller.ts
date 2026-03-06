@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseGuards, Request, Query, NotFoundException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -161,6 +161,57 @@ export class AdminController {
   @Get('users')
   async getAllUsers() {
     return this.usersService.findAll();
+  }
+
+  @Get('users/search')
+  async searchUsers(@Query('q') q: string) {
+    if (!q) {
+      return [];
+    }
+    const users = await this.usersService.searchUsers(q);
+    return users.map(user => ({
+      id: user.id,
+      username: user.username,
+      credits: user.credits,
+      status: user.is_banned ? 'banned' : (user.is_active ? 'active' : 'disabled'),
+    }));
+  }
+
+  @Get('users/credits/:username')
+  async getUserCredits(@Param('username') username: string) {
+    const user = await this.usersService.findOneByUsername(username);
+    if (!user) {
+      throw new NotFoundException(`User with username '${username}' not found`);
+    }
+    const txns = await this.txnService.findByUser(user.id, 1, 1);
+    const last_transaction = txns.data.length > 0 ? txns.data[0].created_at : null;
+
+    return {
+      username: user.username,
+      credits: user.credits,
+      last_transaction,
+    };
+  }
+
+  @Get('stats')
+  async getStats() {
+    return this.usersService.getPlatformStats();
+  }
+
+  @Get('transactions/user/:username')
+  async getUserTransactions(@Param('username') username: string) {
+    const user = await this.usersService.findOneByUsername(username);
+    if (!user) {
+      throw new NotFoundException(`User with username '${username}' not found`);
+    }
+    const txns = await this.txnService.findByUser(user.id, 1, 50);
+    return txns.data.map(txn => ({
+      id: txn.short_id || txn.id,
+      type: txn.type.toLowerCase(),
+      credits: txn.amount,
+      reason: txn.source.toLowerCase(),
+      date: txn.created_at,
+    }));
   }
 
   @Post('credits/add')
