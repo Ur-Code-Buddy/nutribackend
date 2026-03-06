@@ -1,5 +1,7 @@
 import {
   Injectable,
+  Inject,
+  forwardRef,
   UnauthorizedException,
   ConflictException,
   BadRequestException,
@@ -246,6 +248,7 @@ async function sendPasswordResetOtpEmail(
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
     private jwtService: JwtService,
     private redisService: RedisService,

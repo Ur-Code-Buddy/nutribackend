@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -9,6 +11,8 @@ import { User } from './entities/user.entity';
 import { UserRole } from './user.role.enum';
 import { Kitchen } from '../kitchens/entities/kitchen.entity';
 import { FoodItem } from '../food-items/entities/food-item.entity';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -128,6 +132,53 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
     user.token_version += 1;
     return this.usersRepository.save(user);
+  }
+
+  async updateProfile(
+    id: string,
+    dto: UpdateProfileDto,
+  ): Promise<{ user: User; phoneChanged: boolean; changedFields: string[] }> {
+    const user = await this.findOneById(id);
+    if (!user) throw new NotFoundException('User not found');
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(dto.current_password, user.password_hash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    let phoneChanged = false;
+    const changedFields: string[] = [];
+
+    if (dto.address !== undefined && dto.address !== user.address) {
+      user.address = dto.address;
+      changedFields.push('address');
+    }
+
+    if (dto.pincode !== undefined && dto.pincode !== user.pincode) {
+      user.pincode = dto.pincode;
+      changedFields.push('pincode');
+    }
+
+    if (dto.phone_number !== undefined && dto.phone_number !== user.phone_number) {
+      // Check if the new phone number is already taken by another user
+      const existingUser = await this.findOneByPhoneNumber(dto.phone_number);
+      if (existingUser && existingUser.id !== id) {
+        throw new ConflictException('Phone number already in use by another account');
+      }
+
+      user.phone_number = dto.phone_number;
+      user.phone_verified = false;
+      phoneChanged = true;
+      changedFields.push('phone_number');
+    }
+
+    if (changedFields.length === 0) {
+      return { user, phoneChanged: false, changedFields: [] };
+    }
+
+    const savedUser = await this.usersRepository.save(user);
+    return { user: savedUser, phoneChanged, changedFields };
   }
 
   async deleteAccount(id: string): Promise<void> {
