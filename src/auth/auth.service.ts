@@ -345,6 +345,7 @@ export class AuthService {
         registerDto.role,
         registerDto.name,
         registerDto.email,
+        registerDto.phone_number,
         registerDto.address,
         registerDto.pincode,
       );
@@ -375,6 +376,11 @@ export class AuthService {
 
     if (!isDevelopment) {
       await sendVerificationEmail(user.email, token); // TODO: implement with Brevo
+      if (user.phone_number) {
+        await this.resendPhoneOtp({ phone: user.phone_number }).catch(err => {
+          console.error('[SMS ERROR] Failed to send OTP during registration', err);
+        });
+      }
     } else {
       console.log(`[DEV MODE] Auto-verified user ${user.email}. Verification link: ${process.env.BASE_URL || 'http://localhost:3000'}/auth/verify-email?token=${token}`);
     }
@@ -550,23 +556,17 @@ export class AuthService {
     }
   }
 
-  async verifyPhone(userId: string, dto: VerifyPhoneDto) {
+  async verifyPhone(dto: VerifyPhoneDto) {
     const isDevelopment = process.env.PRODUCTION === 'false';
     const redisKey = `phone_verify_id:${dto.phone}`;
 
     if (isDevelopment) {
       // By-pass OTP completely in development
-      const existingUser = await this.usersService.findOneByPhoneNumber(dto.phone);
-      if (existingUser && existingUser.id !== userId) {
-        throw new ConflictException('This phone number already belongs to another verified account');
-      }
-
-      const user = await this.usersService.findOneById(userId);
+      const user = await this.usersService.findOneByPhoneNumber(dto.phone);
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
-      user.phone_number = dto.phone;
       user.phone_verified = true;
       await this.usersService.saveUser(user);
       await this.redisService.client.del(redisKey);
@@ -605,18 +605,11 @@ export class AuthService {
         const mobileNumber = result.data.mobileNumber;
 
         if (mobileNumber) {
-          // Check if this phone number is already attached to another verified account
-          const existingUser = await this.usersService.findOneByPhoneNumber(mobileNumber);
-          if (existingUser && existingUser.id !== userId) {
-            throw new ConflictException('This phone number already belongs to another verified account');
-          }
-
-          const user = await this.usersService.findOneById(userId);
+          const user = await this.usersService.findOneByPhoneNumber(mobileNumber);
           if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException('User with this phone number not found');
           }
 
-          user.phone_number = mobileNumber;
           user.phone_verified = true;
           await this.usersService.saveUser(user);
 

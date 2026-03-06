@@ -24,6 +24,7 @@ export class UsersService {
     role: UserRole,
     name: string,
     email: string,
+    phone_number: string,
     address: string,
     pincode: string,
   ): Promise<User> {
@@ -33,7 +34,7 @@ export class UsersService {
       role,
       name,
       email,
-      phone_number: null,
+      phone_number,
       address,
       pincode,
     });

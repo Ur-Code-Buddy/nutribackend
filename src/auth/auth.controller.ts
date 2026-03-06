@@ -121,10 +121,9 @@ export class AuthController {
     return this.authService.resendPhoneOtp(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('verify-phone')
-  async verifyPhone(@Req() req: any, @Body() dto: VerifyPhoneDto) {
-    return this.authService.verifyPhone(req.user.userId, dto);
+  async verifyPhone(@Body() dto: VerifyPhoneDto) {
+    return this.authService.verifyPhone(dto);
   }
 }
