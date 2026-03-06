@@ -376,11 +376,6 @@ export class AuthService {
 
     if (!isDevelopment) {
       await sendVerificationEmail(user.email, token); // TODO: implement with Brevo
-      if (user.phone_number) {
-        await this.resendPhoneOtp({ phone: user.phone_number }).catch(err => {
-          console.error('[SMS ERROR] Failed to send OTP during registration', err);
-        });
-      }
     } else {
       console.log(`[DEV MODE] Auto-verified user ${user.email}. Verification link: ${process.env.BASE_URL || 'http://localhost:3000'}/auth/verify-email?token=${token}`);
     }
@@ -412,7 +407,14 @@ export class AuthService {
     user.verify_token_expires_at = null;
     await this.usersService.saveUser(user);
 
-    return { message: 'Email verified successfully. You can now log in.' };
+    const isDevelopment = process.env.PRODUCTION === 'false';
+    if (!isDevelopment && user.phone_number) {
+      await this.resendPhoneOtp({ phone: user.phone_number }).catch(err => {
+        console.error('[SMS ERROR] Failed to send OTP during email verification', err);
+      });
+    }
+
+    return { message: 'Email verified successfully. An OTP has been sent to your phone to complete verification.' };
   }
 
   async resendVerification(email: string): Promise<{ message: string }> {
