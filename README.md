@@ -114,6 +114,33 @@ Seamless image uploads (avatars, food photos) to **AWS S3**, with presigned URLs
 
 ---
 
+## 🛡️ Security Practices
+
+We take the security of our platform, our users, and their transactions very seriously. Here are the core practices and mechanisms we employ to protect NutriTiffin:
+
+### 1. Robust Authentication & Authorization
+- **JWT-Based Authentication**: Stateless, secure sessions using JSON Web Tokens.
+- **Role-Based Access Control (RBAC)**: Strict role definitions (`CLIENT`, `KITCHEN_OWNER`, `DELIVERY_DRIVER`, `ADMIN`) enforced via `@Roles()` decorators and `RolesGuard`.
+- **Admin Access Protection**: Elevated role registration requires a secure, secret `ADMIN_ACCESS_PASS` managed via environment variables.
+
+### 2. Multi-Factor Verification (MFA)
+- **Email Verification**: User registration triggers a Brevo-powered email validation loop to verify identity.
+- **SMS OTP Verification**: Critical actions and login enablement in production environments require Phone-level OTP verification, integrated through MessageCentral. Re-login is blocked until both Email and Phone verified tags are true.
+
+### 3. Data Integrity & Concurrency Guard
+- **Pessimistic Row-Level Locking**: Credit and wallet systems in PostgreSQL use `lock: { mode: 'pessimistic_write' }` in TypeORM. This absolutely prevents race conditions and double-spending when deducting or adding credits.
+- **Transaction Blocks**: Any complex movement of credits or data spanning multiple tables is wrapped in `.transaction()` blocks to guarantee ACID compliance.
+
+### 4. API Resilience & Rate Limiting
+- **Throttler Module**: NestJS `@nestjs/throttler` is actively used on sensitive endpoints (like `/auth/forgot-password`, `/auth/check-email-verified`) to prevent brute-force and DDoS attacks.
+- **Global Validation Pipes**: `class-validator` and `class-transformer` intercept bad payloads and ensure that our DTOs are strictly matched, sanitizing inputs by default.
+
+### 5. Separation of Environments
+- **Environment Targeting**: We safely decouple DEV and PRODUCTION setups using `PRODUCTION=true|false`. The system natively skips sending live emails/OTPs during local testing while strictly enforcing them in production.
+- **Secure File Storage**: User-uploaded media goes directly to AWS S3 utilizing scoped IAM keys, rather than congesting local or DB storage.
+
+---
+
 ## 🏗️ Architecture
 
 The backend is built as a **modular monolith** using [NestJS](https://nestjs.com/), ensuring strict separation of concerns and end-to-end type safety.

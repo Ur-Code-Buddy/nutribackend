@@ -24,7 +24,7 @@ export class User {
   @Exclude()
   email: string;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ type: 'varchar', unique: true, nullable: true })
   phone_number: string | null;
 
   @Column()
