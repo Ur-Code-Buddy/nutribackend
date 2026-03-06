@@ -515,7 +515,7 @@ export class AuthService {
     if (process.env.PRODUCTION === 'false') {
       const redisKey = `phone_verify_id:${dto.phone}`;
       await this.redisService.client.setex(redisKey, 300, 'dev-verification-id');
-      console.log(`[DEV MODE] Phone confirm OTP bypass for ${dto.phone}. Use any 6-digit OTP to verify.`);
+      console.log(`[DEV MODE] Phone confirm OTP bypass for ${dto.phone}. Use any 4-digit OTP to verify.`);
       return { message: 'OTP sent successfully (DEV MODE)' };
     }
 
@@ -527,19 +527,27 @@ export class AuthService {
     }
 
     const countryCode = '91'; // We can default or extract from DTO if needed
-    const url = `https://cpaas.messagecentral.com/verification/v3/send?customerId=${customerId}&mobileNumber=${dto.phone}&countryCode=${countryCode}&flowType=SMS&otpLength=6`;
+    const url = `https://cpaas.messagecentral.com/verification/v3/send?customerId=${customerId}&mobileNumber=${dto.phone}&countryCode=${countryCode}&flowType=SMS&otpLength=4`;
 
     try {
       const response = await fetch(url, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'authToken': authToken,
         },
       });
 
-      const result = await response.json();
+      let result: any = {};
+      const responseText = await response.text();
+      if (responseText) {
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          throw new BadRequestException(`Failed to parse SMS provider response (Status: ${response.status})`);
+        }
+      }
 
-      if (response.ok && result?.responseCode === 200) {
+      if (response.ok && (result?.responseCode === 200 || result?.responseCode === '200')) {
         // Store verificationId in Redis temporarily (e.g., 5 mins)
         const redisKey = `phone_verify_id:${dto.phone}`;
         await this.redisService.client.setex(redisKey, 300, result.data.verificationId);
@@ -549,7 +557,7 @@ export class AuthService {
         };
       }
 
-      throw new BadRequestException(result?.message || 'Failed to send OTP');
+      throw new BadRequestException(result?.message || result?.data?.errorMessage || `Failed to send OTP (Status: ${response.status})`);
     } catch (error: any) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -601,9 +609,17 @@ export class AuthService {
         },
       });
 
-      const result = await response.json();
+      let result: any = {};
+      const responseText = await response.text();
+      if (responseText) {
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          throw new BadRequestException(`Failed to parse SMS provider response (Status: ${response.status})`);
+        }
+      }
 
-      if (response.ok && result?.responseCode === 200 && result?.data?.verificationStatus === 'VERIFICATION_COMPLETED') {
+      if (response.ok && (result?.responseCode === 200 || result?.responseCode === '200') && result?.data?.verificationStatus === 'VERIFICATION_COMPLETED') {
         const mobileNumber = result.data.mobileNumber;
 
         if (mobileNumber) {
@@ -625,7 +641,7 @@ export class AuthService {
         };
       }
 
-      throw new BadRequestException(result?.data?.errorMessage || result?.message || 'Invalid or expired OTP');
+      throw new BadRequestException(result?.data?.errorMessage || result?.message || `Invalid or expired OTP (Status: ${response.status})`);
     } catch (error: any) {
       if (error instanceof ConflictException || error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
