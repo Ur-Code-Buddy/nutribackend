@@ -31,7 +31,7 @@ export class AuthController {
     const user = await this.authService.register(registerDto);
     return {
       message:
-        'Registration successful. Please check your email to verify your account.',
+        'Registration successful. Please check your email and verify your phone number via the /auth/verify-phone endpoint.',
       user: {
         id: user.id,
         username: user.username,

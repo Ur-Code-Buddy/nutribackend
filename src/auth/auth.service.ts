@@ -276,7 +276,7 @@ export class AuthService {
     // Reject unverified users (only in production)
     if (!isDevelopment && (!user.email_verified || !user.phone_verified)) {
       throw new ForbiddenException(
-        'Account not fully verified. Both email and phone verification are required.',
+        'Account not fully verified. Both email and phone verification are required. Please use the /auth/verify-phone endpoint to verify your phone number.',
       );
     }
 
