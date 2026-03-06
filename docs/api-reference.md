@@ -214,12 +214,83 @@ Validates the 4-digit SMS OTP against the MessageCentral API using a `GET` reque
 
 ## Users & Administration (`/users` & `/admin`)
 
+### Check Username Availability
+
+**GET** `/users/check-username/:username`
+
+Checks whether a username is already registered. This is a **public endpoint** (no authentication required) with strict rate limiting.
+
+**Rate Limits:**
+- **10 requests per minute**
+- **25 requests per hour**
+
+**Path Parameters:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `username` | string | **Yes** | The username to check. |
+
+**Response:**
+
+```json
+{
+  "exists": true
+}
+```
+
 ### Get Current User Profile
 
 **GET** `/users/me`
 **Role Required:** Authenticated User
 
 Retrieves the profile of the currently logged-in user, including their Rupee `credits` balance.
+
+### Update Profile
+
+**PATCH** `/users/me`
+**Role Required:** Authenticated User
+
+Updates the authenticated user's profile. Requires the current password for security verification. A notification email is sent to the user after the profile is updated.
+
+**Request Body:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `current_password` | string | **Yes** | The user's current password (verified before changes are applied). |
+| `address` | string | No | Updated address. |
+| `phone_number` | string | No | Updated phone number. |
+| `pincode` | string | No | Updated pincode. |
+
+**Behavior:**
+
+- Verifies the `current_password` against the stored hash. Returns `401 Unauthorized` if incorrect.
+- Only updates fields that are provided **and** differ from the current values.
+- If `phone_number` changes:
+  - Checks uniqueness (returns `409 Conflict` if already taken by another user).
+  - Resets `phone_verified` to `false`.
+  - Automatically sends a 4-digit SMS OTP to the new phone number.
+  - The user must verify the new phone number via `POST /auth/verify-phone` before logging in again.
+- A notification email is sent to the user listing the fields that were changed.
+- If no fields differ, the profile is returned unchanged (no email is sent).
+
+**Response:**
+
+```json
+{
+  "message": "Profile updated successfully. An OTP has been sent to your new phone number for verification.",
+  "phone_verification_required": true,
+  "user": {
+    "id": "user-uuid",
+    "username": "john_doe",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone_number": "9876543210",
+    "address": "New Address",
+    "pincode": "400001",
+    "role": "CLIENT",
+    "credits": 500,
+    "phone_verified": false
+  }
+}
+```
 
 ### Get All Users
 

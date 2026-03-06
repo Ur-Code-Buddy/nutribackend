@@ -158,6 +158,71 @@ Checks whether the provided email is verified. Has a rate limit: max 1 request e
 
 ---
 
+### 1.7 Check Username Availability
+
+**`GET /users/check-username/:username`**
+
+Public endpoint (no auth required). Rate limited to **10 requests per minute** and **25 requests per hour**.
+
+**Success Response:**
+```json
+{
+  "exists": false
+}
+```
+
+---
+
+### 1.8 Update Profile
+
+**`PATCH /users/me`**
+
+Requires: `Authorization: Bearer <JWT>`
+
+**Content-Type:** `application/json`
+
+**Request Body:**
+```json
+{
+  "current_password": "client123",
+  "address": "456 New Street, Bangalore, Karnataka",
+  "phone_number": "9998887770",
+  "pincode": "560001"
+}
+```
+
+All fields except `current_password` are optional — include only what you want to change.
+
+**Business Rules:**
+- `current_password` is **required** and verified before applying any changes
+- If `phone_number` changes, `phone_verified` is reset to `false` and a 4-digit SMS OTP is sent automatically
+- Returns `401` if password is incorrect
+- Returns `409` if the new phone number is already taken
+- A **notification email** is sent listing the changed fields
+
+**Success Response (with phone change):**
+```json
+{
+  "message": "Profile updated successfully. An OTP has been sent to your new phone number for verification.",
+  "phone_verification_required": true,
+  "user": {
+    "id": "8f6fdea3-5971-4030-aa92-5d5448d981d0",
+    "username": "client_user01",
+    "name": "Rahul Sharma",
+    "email": "rahul.sharma01@example.com",
+    "phone_number": "9998887770",
+    "address": "456 New Street, Bangalore, Karnataka",
+    "pincode": "560001",
+    "role": "CLIENT",
+    "credits": 50,
+    "phone_verified": false,
+    "is_active": true
+  }
+}
+```
+
+---
+
 ## 2. KITCHENS
 
 ### 2.1 Get All Active Kitchens

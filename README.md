@@ -318,7 +318,9 @@ Below is a summary of all available endpoints. For full request/response schemas
 
 | Method | Endpoint | Auth | Description |
 | :---: | :--- | :---: | :--- |
+| `GET` | `/users/check-username/:username` | — | Check if a username exists (rate limited) |
 | `GET` | `/users/me` | 🔑 Any | Get current user profile |
+| `PATCH` | `/users/me` | 🔑 Any | Update own profile (address, phone, pincode) |
 | `GET` | `/admin/users` | 🛡️ Admin | List all users |
 | `POST` | `/admin/credits/add` | 🛡️ Admin | Add credits to a user |
 | `POST` | `/admin/credits/deduct` | 🛡️ Admin | Deduct credits from a user |

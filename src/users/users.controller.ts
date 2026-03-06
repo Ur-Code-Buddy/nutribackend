@@ -1,4 +1,5 @@
-import { Controller, Get, Patch, Body, UseGuards, Request, Inject, forwardRef } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, Request, Inject, forwardRef } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { AuthService } from '../auth/auth.service';
@@ -93,6 +94,13 @@ export class UsersController {
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
   ) { }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 }, hourly: { limit: 25, ttl: 3600000 } })
+  @Get('check-username/:username')
+  async checkUsername(@Param('username') username: string) {
+    const user = await this.usersService.findOneByUsername(username);
+    return { exists: !!user };
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')

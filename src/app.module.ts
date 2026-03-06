@@ -71,8 +71,14 @@ import { ReviewsModule } from './reviews/reviews.module';
         const isProd = config.get<string>('PRODUCTION') !== 'false';
         return [
           {
+            name: 'default',
             ttl: 60000,
-            limit: isProd ? 10 : 1000000, // basically disables rate limiting when false
+            limit: isProd ? 10 : 1000000,
+          },
+          {
+            name: 'hourly',
+            ttl: 3600000,
+            limit: isProd ? 100 : 1000000,
           },
         ];
       },
