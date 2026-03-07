@@ -1,161 +1,116 @@
-const https = require('https');
+const axios = require('axios');
 
-const hostname = 'backend.v1.nutritiffin.com';
+const BASE_URL = 'https://backend.v1.nutritiffin.com';
 
-function request(method, path, body = null, token = null) {
-    return new Promise((resolve, reject) => {
-        const data = body ? JSON.stringify(body) : '';
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        if (body) headers['Content-Length'] = Buffer.byteLength(data);
+async function main() {
+    try {
+        console.log(`Running test-workflow against ${BASE_URL}\n`);
 
-        const req = https.request({
-            hostname, path, method, headers
-        }, res => {
-            let resBody = '';
-            res.on('data', d => resBody += d);
-            res.on('end', () => {
-                try {
-                    if (resBody) {
-                        const parsed = JSON.parse(resBody);
-                        resolve({ status: res.statusCode, data: parsed });
-                    } else {
-                        resolve({ status: res.statusCode, data: null });
-                    }
-                } catch (e) {
-                    resolve({ status: res.statusCode, data: resBody });
-                }
-            });
+        const generatePhone = () => '9' + Math.floor(100000000 + Math.random() * 900000000).toString();
+        const ts = Date.now();
+
+        console.log('--- Registering Accounts ---');
+
+        // Kitchen Owner
+        const ownerName = `vkitchen_${ts}`;
+        await axios.post(`${BASE_URL}/auth/register`, {
+            username: ownerName, name: 'V Kitchen', email: `${ownerName}@yopmail.com`,
+            phone_number: generatePhone(), address: '123 St', pincode: '123456',
+            password: 'Password123!', role: 'KITCHEN_OWNER'
         });
-        req.on('error', reject);
-        if (body) req.write(data);
-        req.end();
-    });
-}
+        const kToken = (await axios.post(`${BASE_URL}/auth/login`, { username: ownerName, password: 'Password123!' })).data.access_token;
+        console.log('Kitchen Logged In');
 
-function getTomorrowStr() {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
-}
+        // Client: use existing credited account
+        const clientUsername = 'nutriuser';
+        const clientPassword = 'pass123';
+        const cToken = (await axios.post(`${BASE_URL}/auth/login`, {
+            username: clientUsername,
+            password: clientPassword,
+        })).data.access_token;
+        console.log(`Client Logged In as ${clientUsername}`);
 
-async function runTest() {
-    console.log('--- Starting Flow Test ---');
+        // Driver
+        const driverName = `vdriver_${ts}`;
+        await axios.post(`${BASE_URL}/auth/register`, {
+            username: driverName, name: 'V Driver', email: `${driverName}@yopmail.com`,
+            phone_number: generatePhone(), address: '789 St', pincode: '123456',
+            password: 'Password123!', role: 'DELIVERY_DRIVER'
+        });
+        const dToken = (await axios.post(`${BASE_URL}/auth/login`, { username: driverName, password: 'Password123!' })).data.access_token;
+        console.log('Driver Logged In');
 
-    // 1. Logins
-    console.log('Logging in...');
-    const kRes = await request('POST', '/auth/login', { username: 'vkitchen1', password: 'Password123!' });
-    if (kRes.status !== 200 && kRes.status !== 201) return console.log('Kitchen login failed:', kRes.data);
-    const kToken = kRes.data.access_token;
-    console.log('Kitchen Logger in.');
+        // Kitchen Setup
+        console.log('\n--- Kitchen Setup ---');
+        const kitchenId = (await axios.post(
+            `${BASE_URL}/kitchens`,
+            {
+                name: `Virtual Test Kitchen ${ts}`,
+                details: { address: 'Kitchen St' },
+                operating_hours: { monday: { open: '08:00', close: '20:00' }, tuesday: { open: '08:00', close: '20:00' } }
+            },
+            { headers: { Authorization: `Bearer ${kToken}` } }
+        )).data.id;
+        console.log(`Kitchen Created: ${kitchenId}`);
 
-    const cRes = await request('POST', '/auth/login', { username: 'vclient1', password: 'Password123!' });
-    if (cRes.status !== 200 && cRes.status !== 201) return console.log('Client login failed:', cRes.data);
-    const cToken = cRes.data.access_token;
-    console.log('Client Logged in.');
+        const menuItemId = (await axios.post(
+            `${BASE_URL}/menu-items`,
+            {
+                name: 'Virtual Tiffin', price: 100, description: 'Test tiffin',
+                max_daily_orders: 50, availability_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+                is_available: true,
+            },
+            { headers: { Authorization: `Bearer ${kToken}` } }
+        )).data.id;
+        console.log(`Menu Item Created: ${menuItemId}`);
 
-    const dRes = await request('POST', '/auth/login', { username: 'vdriver1', password: 'Password123!' });
-    if (dRes.status !== 200 && dRes.status !== 201) return console.log('Driver login failed:', dRes.data);
-    const dToken = dRes.data.access_token;
-    console.log('Driver Logged in.');
+        // Order
+        console.log('\n--- Client Placing Order ---');
+        const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+        const orderRes = await axios.post(
+            `${BASE_URL}/orders`,
+            { kitchen_id: kitchenId, scheduled_for: tomorrow.toISOString().split('T')[0], items: [{ food_item_id: menuItemId, quantity: 1 }] },
+            { headers: { Authorization: `Bearer ${cToken}` } }
+        );
+        const orderId = orderRes.data.id;
+        const orderItemId = orderRes.data.items[0].id;
+        console.log(`Order Created: ${orderId}`);
 
-    // 2. Kitchen Setup
-    console.log('Setting up Kitchen...');
-    let kDataRes = await request('GET', '/kitchens');
-    let kitchenId = null;
-    const kitchens = kDataRes.data;
-    let kitchen = kitchens.find(k => k.name === 'My Virtual Kitchen');
+        // Manage
+        console.log('\n--- Owner Managing Order ---');
+        await axios.patch(`${BASE_URL}/orders/${orderId}/accept`, {}, { headers: { Authorization: `Bearer ${kToken}` } });
+        console.log('Order Accepted');
+        await axios.patch(`${BASE_URL}/orders/${orderId}/ready`, {}, { headers: { Authorization: `Bearer ${kToken}` } });
+        console.log('Order Ready');
 
-    if (!kitchen) {
-        const kCreateRes = await request('POST', '/kitchens', {
-            name: 'My Virtual Kitchen',
-            details: { address: 'Kitchen 1 Street' },
-            is_active: true,
-            is_menu_visible: true
-        }, kToken);
-        if (kCreateRes.status !== 201) return console.log('Failed to create kitchen:', kCreateRes.data);
-        kitchenId = kCreateRes.data.id;
-    } else {
-        kitchenId = kitchen.id;
+        // Deliver
+        console.log('\n--- Driver Delivery Flow ---');
+        await axios.patch(`${BASE_URL}/deliveries/${orderId}/accept`, {}, { headers: { Authorization: `Bearer ${dToken}` } });
+        console.log('Driver Accepted Delivery');
+        await axios.patch(`${BASE_URL}/deliveries/${orderId}/pick-up`, {}, { headers: { Authorization: `Bearer ${dToken}` } });
+        console.log('Driver Picked Up Delivery');
+        await axios.patch(`${BASE_URL}/deliveries/${orderId}/out-for-delivery`, {}, { headers: { Authorization: `Bearer ${dToken}` } });
+        console.log('Driver Out for Delivery');
+        await axios.patch(`${BASE_URL}/deliveries/${orderId}/finish`, {}, { headers: { Authorization: `Bearer ${dToken}` } });
+        console.log('Driver Finished Delivery');
+
+        // Review
+        console.log('\n--- Client Review ---');
+        await axios.post(`${BASE_URL}/reviews`, { order_item_id: orderItemId, is_positive: true }, { headers: { Authorization: `Bearer ${cToken}` } });
+        console.log('Review Posted');
+
+        console.log('\n✨ ALL WORKFLOW ENDPOINTS TESTED SUCCESSFULLY! ✨');
+
+    } catch (error) {
+        console.error('\n❌ ERROR OCCURRED:');
+        if (error.response) {
+            console.error('Status:', error.response.status);
+            console.error('Data:', JSON.stringify(error.response.data, null, 2));
+        } else {
+            console.error(error.message);
+        }
+        process.exit(1);
     }
-
-    // Add Item
-    console.log('Adding menu item...');
-    const miRes = await request('POST', '/menu-items', {
-        name: 'Virtual Tiffin',
-        price: 100,
-        description: 'A delicious test tiffin',
-        max_daily_orders: 50,
-        is_veg: true
-    }, kToken);
-    if (miRes.status !== 201) return console.log('Failed to create menu item:', miRes.data);
-    const menuItemId = miRes.data.id;
-
-    // 3. Client places order
-    console.log('Client placing order...');
-    const orderRes = await request('POST', '/orders', {
-        kitchen_id: kitchenId,
-        scheduled_for: getTomorrowStr(),
-        items: [{ food_item_id: menuItemId, quantity: 1 }]
-    }, cToken);
-    if (orderRes.status !== 201) return console.log('Failed to create order:', orderRes.data);
-    const orderId = orderRes.data.id;
-    const orderItemId = orderRes.data.items[0].id;
-    console.log('Order created:', orderId);
-
-    // 4. Kitchen accepts
-    console.log('Kitchen accepting order...');
-    const accRes = await request('PATCH', `/orders/${orderId}/accept`, null, kToken);
-    if (accRes.status !== 200) return console.log('Kitchen accept failed:', accRes.data);
-
-    // 5. Kitchen marks ready
-    console.log('Kitchen marking order ready...');
-    const readyRes = await request('PATCH', `/orders/${orderId}/ready`, null, kToken);
-    if (readyRes.status !== 200) return console.log('Kitchen mark ready failed:', readyRes.data);
-
-    // 6. Driver checks available deliveries
-    console.log('Driver listing available deliveries...');
-    const availRes = await request('GET', `/deliveries/available`, null, dToken);
-    if (availRes.status !== 200) return console.log('Fetch available failed:', availRes.data);
-    const availableOrders = availRes.data;
-    const targetAvailable = availableOrders.find(o => o.id === orderId);
-    if (!targetAvailable) return console.log('Order not found in available deliveries!');
-
-    // 7. Driver accepts delivery
-    console.log('Driver accepting delivery...');
-    const dAccRes = await request('PATCH', `/deliveries/${orderId}/accept`, null, dToken);
-    if (dAccRes.status !== 200) return console.log('Driver accept failed:', dAccRes.data);
-
-    // 8. Driver picks up
-    // NOT ANYMORE, driver skips pick-up and goes to out-for-delivery directly as per the code
-    // Wait, I left out-for-delivery checking orderStatus = READY! Wait, NO, I updated it so it picks it up!
-    // Wait, didn't I re-add pickUpDelivery? Yes, I added PICKED_UP back!
-    // Then there are 3 steps for driver: Accept, Pick-up, Out-for-delivery, Finish.
-    console.log('Driver picking up delivery...');
-    let pickRes = await request('PATCH', `/deliveries/${orderId}/pick-up`, null, dToken);
-    if (pickRes.status !== 200 && pickRes.status !== 404) {
-        console.log('Driver pickup failed (might not exist if refactored correctly!):', pickRes.status, pickRes.data);
-    }
-
-    // 9. Driver out for delivery
-    console.log('Driver marking out for delivery...');
-    const outRes = await request('PATCH', `/deliveries/${orderId}/out-for-delivery`, null, dToken);
-    if (outRes.status !== 200) return console.log('Driver out for delivery failed:', outRes.data);
-
-    // 10. Driver finishes delivery
-    console.log('Driver finishing delivery...');
-    const finRes = await request('PATCH', `/deliveries/${orderId}/finish`, null, dToken);
-    if (finRes.status !== 200) return console.log('Driver finish delivery failed:', finRes.data);
-
-    // 11. Client reviews
-    console.log('Client reviewing...');
-    const revRes = await request('POST', '/reviews', {
-        order_item_id: orderItemId,
-        is_positive: true
-    }, cToken);
-    if (revRes.status !== 201) return console.log('Review failed:', revRes.data);
-
-    console.log('--- ALL ENDPOINTS TESTED SUCCESSFULLY! ---');
 }
 
-runTest();
+main();

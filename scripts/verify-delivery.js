@@ -6,11 +6,14 @@ async function main() {
   try {
     console.log(`Testing against ${BASE_URL}\n`);
 
+    // Helper for 10-digit phone
+    const generatePhone = () => '9' + Math.floor(100000000 + Math.random() * 900000000).toString();
+
     // 1. Register & Login Kitchen Owner
     console.log('--- Kitchen Owner Setup ---');
     const ts = Date.now();
     const ownerUsername = `owner_${ts}`;
-    const kitchenOwnerEmail = `owner_${ts}@test.com`;
+    const kitchenOwnerEmail = `owner_${ts}@yopmail.com`;
 
     console.log(`Registering Owner: ${ownerUsername}`);
     try {
@@ -18,23 +21,27 @@ async function main() {
         username: ownerUsername,
         name: 'Test Owner',
         email: kitchenOwnerEmail,
-        phone_number: `${ts}`,
+        phone_number: generatePhone(),
         address: 'Kitchen St',
         pincode: '123456',
-        password: 'password',
+        password: 'Password123!',
         role: 'KITCHEN_OWNER',
       });
     } catch (e) {
-      if (e.response?.status !== 409) throw e;
-      console.log('Owner already exists (unexpected for unique ts)');
+      if (e.response && e.response.status === 409) {
+        console.log('Owner already exists (unexpected for unique ts)');
+      } else {
+        throw e;
+      }
     }
 
     console.log(`Logging in Owner: ${ownerUsername}`);
     const ownerLogin = await axios.post(`${BASE_URL}/auth/login`, {
-      username: ownerUsername, // CHANGED from email to username
-      password: 'password',
+      username: ownerUsername,
+      password: 'Password123!',
     });
     const ownerToken = ownerLogin.data.access_token;
+    if (!ownerToken) throw new Error('Owner login failed, no token received');
     console.log('Kitchen Owner Logged In');
 
     // Create Kitchen
@@ -46,9 +53,12 @@ async function main() {
         details: {
           address: '123 Food St',
           phone: '555-5555',
-          email: 'kitchen@test.com',
+          email: kitchenOwnerEmail,
         },
-        operating_hours: { open: '09:00', close: '22:00', days_off: [] },
+        operating_hours: {
+          monday: { open: '08:00', close: '20:00' },
+          tuesday: { open: '08:00', close: '20:00' },
+        },
       },
       { headers: { Authorization: `Bearer ${ownerToken}` } },
     );
@@ -61,43 +71,33 @@ async function main() {
       `${BASE_URL}/menu-items`,
       {
         name: 'Test Burger',
-        price: 10,
+        price: 250,
         description: 'Tasty test burger',
-        kitchen_id: kitchenId,
+        max_daily_orders: 50,
+        availability_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        is_available: true,
       },
       { headers: { Authorization: `Bearer ${ownerToken}` } },
     );
     const menuItemId = menuItem.data.id;
     console.log('Menu Item Created:', menuItemId);
 
-    // 2. Register & Login Client
-    console.log('\n--- Client Setup ---');
-    const clientUsername = `client_${ts}`;
-    const clientEmail = `client_${ts}@test.com`;
-
-    console.log(`Registering Client: ${clientUsername}`);
-    await axios.post(`${BASE_URL}/auth/register`, {
-      username: clientUsername,
-      name: 'Test Client',
-      email: clientEmail,
-      phone_number: `${ts + 1}`,
-      address: 'Client St',
-      pincode: '123456',
-      password: 'password',
-      role: 'CLIENT',
-    });
+    // 2. Login Existing Client (with credits)
+    console.log('\n--- Client Setup (Existing) ---');
+    const clientUsername = 'nutriuser';
+    const clientPassword = 'pass123';
 
     console.log(`Logging in Client: ${clientUsername}`);
     const clientLogin = await axios.post(`${BASE_URL}/auth/login`, {
-      username: clientUsername, // CHANGED from email to username
-      password: 'password',
+      username: clientUsername,
+      password: clientPassword,
     });
     const clientToken = clientLogin.data.access_token;
+    if (!clientToken) throw new Error('Client login failed, no token received');
     console.log('Client Logged In');
 
     // Create Order
     console.log('Creating Order...');
-    // Order for tomorrow
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const scheduledFor = tomorrow.toISOString().split('T')[0];
@@ -119,35 +119,42 @@ async function main() {
     await axios.patch(
       `${BASE_URL}/orders/${orderId}/accept`,
       {},
-      {
-        headers: { Authorization: `Bearer ${ownerToken}` },
-      },
+      { headers: { Authorization: `Bearer ${ownerToken}` } }
     );
     console.log('Order Accepted by Kitchen');
+
+    // Kitchen marks Order Ready
+    await axios.patch(
+      `${BASE_URL}/orders/${orderId}/ready`,
+      {},
+      { headers: { Authorization: `Bearer ${ownerToken}` } }
+    );
+    console.log('Order Marked READY by Kitchen');
 
     // 4. Register & Login Delivery Driver
     console.log('\n--- Driver Setup ---');
     const driverUsername = `driver_${ts}`;
-    const driverEmail = `driver_${ts}@test.com`;
+    const driverEmail = `driver_${ts}@yopmail.com`;
 
     console.log(`Registering Driver: ${driverUsername}`);
     await axios.post(`${BASE_URL}/auth/register`, {
       username: driverUsername,
       name: 'Test Driver',
       email: driverEmail,
-      phone_number: `${ts + 2}`,
+      phone_number: generatePhone(),
       address: 'Driver HQ',
       pincode: '123456',
-      password: 'password',
+      password: 'Password123!',
       role: 'DELIVERY_DRIVER',
     });
 
     console.log(`Logging in Driver: ${driverUsername}`);
     const driverLogin = await axios.post(`${BASE_URL}/auth/login`, {
-      username: driverUsername, // CHANGED from email to username
-      password: 'password',
+      username: driverUsername,
+      password: 'Password123!',
     });
     const driverToken = driverLogin.data.access_token;
+    if (!driverToken) throw new Error('Driver login failed, no token');
     console.log('Driver Logged In');
 
     // 5. Driver Flow
@@ -162,57 +169,43 @@ async function main() {
 
     const targetOrder = available.data.find((o) => o.id === orderId);
     if (!targetOrder) {
-      console.error('Available list:', JSON.stringify(available.data, null, 2));
       throw new Error(`Order ${orderId} not found in available list`);
     }
     console.log('Found target order in available list');
 
-    // Check details in available list
-    if (targetOrder.kitchen && targetOrder.kitchen.address) {
-      console.log('Kitchen Address visible:', targetOrder.kitchen.address);
-    } else {
-      console.log('Kitchen Address NOT visible (might be expected or issue)');
-    }
-
-    // Accept
+    // Accept Delivery
     console.log(`Accepting Delivery ${orderId}...`);
     await axios.patch(
       `${BASE_URL}/deliveries/${orderId}/accept`,
       {},
-      {
-        headers: { Authorization: `Bearer ${driverToken}` },
-      },
+      { headers: { Authorization: `Bearer ${driverToken}` } }
     );
     console.log('Driver Accepted Order');
 
-    // Get My Orders
-    console.log('Fetching My Orders...');
-    const myOrders = await axios.get(`${BASE_URL}/deliveries/my-orders`, {
-      headers: { Authorization: `Bearer ${driverToken}` },
-    });
-    console.log('My Orders Count:', myOrders.data.length);
-    const myOrder = myOrders.data.find((o) => o.id === orderId);
-    if (!myOrder) throw new Error('Order not found in my-orders list');
-    console.log('Found order in my-orders');
-
-    // Get Details
-    console.log('Fetching Order Details...');
-    const orderDetails = await axios.get(`${BASE_URL}/deliveries/${orderId}`, {
-      headers: { Authorization: `Bearer ${driverToken}` },
-    });
-    console.log(
-      'Order Details Client Address:',
-      orderDetails.data.client?.address,
+    // Pick-up Delivery
+    console.log(`Picking up Delivery ${orderId}...`);
+    await axios.patch(
+      `${BASE_URL}/deliveries/${orderId}/pick-up`,
+      {},
+      { headers: { Authorization: `Bearer ${driverToken}` } }
     );
+    console.log('Driver Picked up Order');
 
-    // Finish
+    // Out for delivery
+    console.log(`Marking Delivery ${orderId} Out for Delivery...`);
+    await axios.patch(
+      `${BASE_URL}/deliveries/${orderId}/out-for-delivery`,
+      {},
+      { headers: { Authorization: `Bearer ${driverToken}` } }
+    );
+    console.log('Driver Marked Order Out for Delivery');
+
+    // Finish Delivery
     console.log('Finishing Delivery...');
     await axios.patch(
       `${BASE_URL}/deliveries/${orderId}/finish`,
       {},
-      {
-        headers: { Authorization: `Bearer ${driverToken}` },
-      },
+      { headers: { Authorization: `Bearer ${driverToken}` } }
     );
     console.log('Driver Finished Delivery');
 
