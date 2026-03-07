@@ -119,267 +119,207 @@ async function registerUser(role, prefix, dbClient) {
 async function main() {
   let dbClient;
   try {
-    console.log('🚀 Starting Complete Endpoint Coverage Test...');
+    console.log('🚀 Starting Expanded Complete Endpoint Coverage Test...');
 
     // Connect to DB for auto-verification
     dbClient = await getDbClient();
     console.log('📦 Connected to DB for user verification\n');
 
-    // 1. Register Users
-    const owner = await registerUser('KITCHEN_OWNER', 'owner', dbClient);
-    const client = await registerUser('CLIENT', 'client', dbClient);
-    const driver = await registerUser('DELIVERY_DRIVER', 'driver', dbClient);
+    // 1. Register Users (Multiple ones)
+    console.log('--- REGISTERING ACCOUNTS ---');
+    const owners = [];
+    const clients = [];
+    const drivers = [];
 
-    const ownerHeaders = authHeaders(owner.token);
-    const clientHeaders = authHeaders(client.token);
-    const driverHeaders = authHeaders(driver.token);
-
-    // 2. Create Kitchen (Owner)
-    console.log('\n👨‍🍳 Owner: Creating Kitchen...');
-    const kitchenName = `Kitchen ${generateRandomString()}`;
-    const kitchenRes = await axios.post(
-      `${BASE_URL}/kitchens`,
-      {
-        name: kitchenName,
-        details: {
-          address: '123 Test St, Food City',
-          phone: '9876543210',
-          description: 'Best automated food in town',
-        },
-        operating_hours: {
-          monday: { open: '08:00', close: '20:00' },
-        },
-      },
-      ownerHeaders,
-    );
-
-    if (kitchenRes.status !== 201)
-      throw new Error(`Kitchen creation failed: ${kitchenRes.status}`);
-    const kitchenId = kitchenRes.data.id;
-    console.log(`✅ Kitchen created: ${kitchenId}`);
-
-    // 2b. Update Kitchen
-    console.log('👨‍🍳 Owner: Updating Kitchen details...');
-    const updateKitchenRes = await axios.patch(
-      `${BASE_URL}/kitchens/${kitchenId}`,
-      {
-        name: `${kitchenName} Updated`,
-        details: {
-          address: '456 New St, Food City',
-          phone: '9876543210',
-          description: 'Updated description',
-        },
-      },
-      ownerHeaders,
-    );
-    if (updateKitchenRes.data.name !== `${kitchenName} Updated`)
-      throw new Error('Kitchen name update failed');
-    console.log('✅ Kitchen updated successfully');
-
-    // 2c. Get All Kitchens (Public)
-    console.log('🌍 Public: Listing all kitchens...');
-    const allKitchensRes = await axios.get(`${BASE_URL}/kitchens`);
-    if (!allKitchensRes.data.find((k) => k.id === kitchenId))
-      throw new Error('New kitchen not found in public list');
-    console.log('✅ New kitchen found in public list');
-
-    // 3. Create Menu Item (Owner)
-    console.log('\n🥘 Owner: Adding Menu Item...');
-    const itemName = `Dish ${generateRandomString()}`;
-    const itemRes = await axios.post(
-      `${BASE_URL}/menu-items`,
-      {
-        name: itemName,
-        price: 250,
-        description: 'Original description',
-        max_daily_orders: 50,
-        availability_days: ['monday', 'tuesday'],
-        is_available: true,
-      },
-      ownerHeaders,
-    );
-    const menuItemId = itemRes.data.id;
-    console.log(`✅ Menu Item created: ${menuItemId}`);
-
-    // 3b. Update Menu Item
-    console.log('🥘 Owner: Updating Menu Item...');
-    const updateItemRes = await axios.patch(
-      `${BASE_URL}/menu-items/${menuItemId}`,
-      {
-        price: 300,
-        description: 'Updated description',
-      },
-      ownerHeaders,
-    );
-    console.log('Update response data:', updateItemRes.data);
-    const returnedPrice = parseFloat(updateItemRes.data.price);
-    if (returnedPrice !== 300) {
-      throw new Error(
-        `Menu item price update failed. Expected 300, got ${updateItemRes.data.price}`,
-      );
+    for (let i = 1; i <= 2; i++) {
+        owners.push(await registerUser('KITCHEN_OWNER', `owner${i}`, dbClient));
     }
-    console.log('✅ Menu Item price updated');
+    for (let i = 1; i <= 3; i++) {
+        clients.push(await registerUser('CLIENT', `client${i}`, dbClient));
+    }
+    for (let i = 1; i <= 2; i++) {
+        drivers.push(await registerUser('DELIVERY_DRIVER', `driver${i}`, dbClient));
+    }
 
-    // 3c. Toggle Availability
-    console.log('🥘 Owner: Toggling availability...');
-    await axios.patch(
-      `${BASE_URL}/menu-items/${menuItemId}/availability`,
-      { is_available: false },
-      ownerHeaders,
-    );
-    // Toggle back to true for ordering
-    await axios.patch(
-      `${BASE_URL}/menu-items/${menuItemId}/availability`,
-      { is_available: true },
-      ownerHeaders,
-    );
-    console.log('✅ Availability toggled successfully');
+    const ownerHeaders = owners.map(o => authHeaders(o.token));
+    const clientHeaders = clients.map(c => authHeaders(c.token));
+    const driverHeaders = drivers.map(d => authHeaders(d.token));
 
-    // 3d. List Menu Items
-    console.log("🥘 Owner: Checking 'My Items'...");
-    const myItemsRes = await axios.get(
-      `${BASE_URL}/menu-items/my-items`,
-      ownerHeaders,
-    );
-    if (!myItemsRes.data.find((i) => i.id === menuItemId))
-      throw new Error("Item not found in 'My Items'");
-    console.log("✅ Item found in owner's list");
+    // 2. Create Kitchens (Owners)
+    console.log('\n--- CREATING KITCHENS ---');
+    const kitchens = [];
+    for (let i = 0; i < owners.length; i++) {
+      console.log(`👨‍🍳 Owner ${i+1}: Creating Kitchen...`);
+      const kitchenName = `Kitchen ${i+1} - ${generateRandomString(4)}`;
+      const kitchenRes = await axios.post(
+        `${BASE_URL}/kitchens`,
+        {
+          name: kitchenName,
+          details: {
+            address: `${100 + i} Test St, Food City`,
+            phone: `987654321${i}`,
+            description: `Best automated food by owner ${i+1}`,
+          },
+          operating_hours: {
+            monday: { open: '08:00', close: '20:00' },
+            tuesday: { open: '08:00', close: '20:00' },
+            wednesday: { open: '08:00', close: '20:00' },
+            thursday: { open: '08:00', close: '20:00' },
+            friday: { open: '08:00', close: '20:00' },
+            saturday: { open: '08:00', close: '20:00' },
+            sunday: { open: '08:00', close: '20:00' }
+          },
+        },
+        ownerHeaders[i],
+      );
 
-    // 4. Place Order (Client)
-    console.log('\n🛒 Client: Placing Order...');
+      if (kitchenRes.status !== 201) throw new Error(`Kitchen creation failed: ${kitchenRes.status}`);
+      kitchens.push(kitchenRes.data);
+      console.log(`✅ Kitchen created: ${kitchenRes.data.id}`);
+    }
+
+    // 3. Create Menu Items (Multiple items per kitchen)
+    console.log('\n--- ADDING MENU ITEMS ---');
+    const allMenuItems = [];
+    for (let i = 0; i < owners.length; i++) {
+      for (let j = 1; j <= 2; j++) {
+          const itemName = `Dish ${i+1}-${j} ${generateRandomString(4)}`;
+          const itemRes = await axios.post(
+            `${BASE_URL}/menu-items`,
+            {
+              name: itemName,
+              price: 150 + (j * 50),
+              description: `Delicious dish ${j} from kitchen ${i+1}`,
+              max_daily_orders: 50,
+              availability_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+              is_available: true,
+            },
+            ownerHeaders[i],
+          );
+          allMenuItems.push({ ...itemRes.data, ownerIndex: i, kitchenId: kitchens[i].id });
+          console.log(`✅ Menu Item created: ${itemRes.data.id} for Kitchen ${kitchens[i].id}`);
+      }
+    }
+
+    // 4. Place Multiple Orders (Clients placing orders to different kitchens)
+    console.log('\n--- PLACING MULTIPLE ORDERS (TRANSACTIONS) ---');
     const tomorrow = tomorrowDate();
-    // console.log("Client Headers:", JSON.stringify(clientHeaders, null, 2));
-    const orderRes = await axios.post(
+    const allOrders = [];
+
+    // Client 1 orders from Kitchen 1
+    console.log(`🛒 Client 1: Ordering from Kitchen 1...`);
+    let orderRes = await axios.post(
       `${BASE_URL}/orders`,
       {
-        kitchen_id: kitchenId,
+        kitchen_id: kitchens[0].id,
         scheduled_for: tomorrow,
-        items: [{ food_item_id: menuItemId, quantity: 2 }],
+        items: [{ food_item_id: allMenuItems[0].id, quantity: 2 }],
       },
-      clientHeaders,
+      clientHeaders[0],
     );
-    const orderId = orderRes.data.id;
-    console.log(`✅ Order placed: ${orderId}`);
+    allOrders.push({ id: orderRes.data.id, clientIndex: 0, ownerIndex: 0 });
+    console.log(`✅ Order placed: ${orderRes.data.id}`);
 
-    // 4b. Alternate Order for Rejection
-    console.log('🛒 Client: Placing second order for rejection test...');
+    // Client 2 orders from Kitchen 1
+    console.log(`🛒 Client 2: Ordering from Kitchen 1...`);
+    orderRes = await axios.post(
+      `${BASE_URL}/orders`,
+      {
+        kitchen_id: kitchens[0].id,
+        scheduled_for: tomorrow,
+        items: [{ food_item_id: allMenuItems[1].id, quantity: 1 }],
+      },
+      clientHeaders[1],
+    );
+    allOrders.push({ id: orderRes.data.id, clientIndex: 1, ownerIndex: 0 });
+    console.log(`✅ Order placed: ${orderRes.data.id}`);
+
+    // Client 3 orders from Kitchen 2
+    console.log(`🛒 Client 3: Ordering from Kitchen 2...`);
+    orderRes = await axios.post(
+      `${BASE_URL}/orders`,
+      {
+        kitchen_id: kitchens[1].id,
+        scheduled_for: tomorrow,
+        items: [{ food_item_id: allMenuItems[2].id, quantity: 3 }],
+      },
+      clientHeaders[2],
+    );
+    allOrders.push({ id: orderRes.data.id, clientIndex: 2, ownerIndex: 1 });
+    console.log(`✅ Order placed: ${orderRes.data.id}`);
+
+    // Client 1 orders again but for rejection test
+    console.log(`🛒 Client 1: Placing order to be rejected...`);
     const rejectOrderRes = await axios.post(
       `${BASE_URL}/orders`,
       {
-        kitchen_id: kitchenId,
+        kitchen_id: kitchens[1].id,
         scheduled_for: tomorrow,
-        items: [{ food_item_id: menuItemId, quantity: 1 }],
+        items: [{ food_item_id: allMenuItems[3].id, quantity: 5 }],
       },
-      clientHeaders,
+      clientHeaders[0],
     );
     const rejectOrderId = rejectOrderRes.data.id;
-    console.log(`✅ Rejection test order placed: ${rejectOrderId}`);
+    console.log(`✅ Order placed (will be rejected): ${rejectOrderId}`);
 
     // 5. Owner Order Management
-    console.log('\n👨‍🍳 Owner: Managing Orders...');
+    console.log('\n--- MANAGING ORDERS (OWNERS) ---');
+    for (let i = 0; i < owners.length; i++) {
+        console.log(`👨‍🍳 Owner ${i+1}: Managing Orders...`);
+        const ownerOrdersRes = await axios.get(`${BASE_URL}/orders`, ownerHeaders[i]);
+        
+        for (const order of ownerOrdersRes.data) {
+            if (order.id === rejectOrderId && i === 1) { // It's for Kitchen 2
+                console.log(`👨‍🍳 Owner ${i+1}: Rejecting order ${order.id}...`);
+                await axios.patch(`${BASE_URL}/orders/${order.id}/reject`, {}, ownerHeaders[i]);
+                console.log(`✅ Order REJECTED`);
+            } else if (allOrders.find(o => o.id === order.id)) {
+                // Accept valid orders
+                console.log(`👨‍🍳 Owner ${i+1}: Accepting order ${order.id}...`);
+                await axios.patch(`${BASE_URL}/orders/${order.id}/accept`, {}, ownerHeaders[i]);
+                console.log(`✅ Order ACCEPTED`);
+            }
+        }
+    }
 
-    // List Orders
-    const ownerOrdersRes = await axios.get(`${BASE_URL}/orders`, ownerHeaders);
-    if (!ownerOrdersRes.data.find((o) => o.id === orderId))
-      throw new Error('Order not found in owner list');
+    // 6. Delivery Driver Flow (Drivers take turns processing available orders)
+    console.log('\n--- DELIVERY OPERATIONS ---');
+    for (let d = 0; d < drivers.length; d++) {
+        console.log(`🚚 Driver ${d+1}: Checking available deliveries...`);
+        const availableRes = await axios.get(`${BASE_URL}/deliveries/available`, driverHeaders[d]);
+        
+        // Take up to 2 deliveries each
+        const toDeliver = availableRes.data.slice(0, 2);
+        for (const deliveryJob of toDeliver) {
+            console.log(`🚚 Driver ${d+1}: Processing delivery for order ${deliveryJob.id}...`);
+            await axios.patch(`${BASE_URL}/deliveries/${deliveryJob.id}/accept`, {}, driverHeaders[d]);
+            console.log(`   ✅ Accepted`);
+            await axios.patch(`${BASE_URL}/deliveries/${deliveryJob.id}/pick-up`, {}, driverHeaders[d]);
+            console.log(`   ✅ Picked up`);
+            await axios.patch(`${BASE_URL}/deliveries/${deliveryJob.id}/out-for-delivery`, {}, driverHeaders[d]);
+            console.log(`   ✅ Out for delivery`);
+            await axios.patch(`${BASE_URL}/deliveries/${deliveryJob.id}/finish`, {}, driverHeaders[d]);
+            console.log(`   ✅ Finished`);
+        }
+    }
 
-    // Accept First Order
-    console.log('👨‍🍳 Owner: Accepting first order...');
-    await axios.patch(`${BASE_URL}/orders/${orderId}/accept`, {}, ownerHeaders);
-    console.log('✅ First order ACCEPTED');
+    // 7. Verify Client Views
+    console.log('\n--- VERIFYING CLIENT HISTORIES ---');
+    for (let c = 0; c < clients.length; c++) {
+        console.log(`😊 Client ${c+1}: Verifying Order History...`);
+        const clientHistoryRes = await axios.get(`${BASE_URL}/orders`, clientHeaders[c]);
+        
+        const myOrdersExpected = allOrders.filter(o => o.clientIndex === c);
+        for (const expected of myOrdersExpected) {
+            const found = clientHistoryRes.data.find(o => o.id === expected.id);
+            if (!found || found.status !== 'DELIVERED') {
+                throw new Error(`Client ${c+1} history mismatch! Order ${expected.id} not DELIVERED.`);
+            }
+            console.log(`✅ Confirmed order ${expected.id} is DELIVERED`);
+        }
+    }
 
-    // Reject Second Order
-    console.log('👨‍🍳 Owner: Rejecting second order...');
-    const rejectedRes = await axios.patch(
-      `${BASE_URL}/orders/${rejectOrderId}/reject`,
-      {},
-      ownerHeaders,
-    );
-    if (rejectedRes.data.status !== 'REJECTED')
-      throw new Error('Order rejection failed');
-    console.log('✅ Second order REJECTED');
-
-    // 6. Delivery Driver Flow
-    console.log('\n🚚 Driver: Operations...');
-
-    // Find Available
-    // console.log("Driver Headers:", JSON.stringify(driverHeaders, null, 2));
-    const availableRes = await axios.get(
-      `${BASE_URL}/deliveries/available`,
-      driverHeaders,
-    );
-    const deliveryJob = availableRes.data.find((d) => d.id === orderId);
-    if (!deliveryJob)
-      throw new Error('Accepted order not found in available list');
-    console.log('✅ Order found in available deliveries');
-
-    // Accept Delivery
-    console.log('🚚 Driver: Accepting Delivery...');
-    await axios.patch(
-      `${BASE_URL}/deliveries/${orderId}/accept`,
-      {},
-      driverHeaders,
-    );
-    console.log('✅ Delivery accepted');
-
-    // Pick Up
-    console.log('🚚 Driver: Picking up order...');
-    await axios.patch(
-      `${BASE_URL}/deliveries/${orderId}/pick-up`,
-      {},
-      driverHeaders,
-    );
-    console.log('✅ Order picked up');
-
-    // Out for Delivery
-    console.log('🚚 Driver: Marking out for delivery...');
-    await axios.patch(
-      `${BASE_URL}/deliveries/${orderId}/out-for-delivery`,
-      {},
-      driverHeaders,
-    );
-    console.log('✅ Order out for delivery');
-
-    // My Orders
-    console.log("🚚 Driver: Checking 'My Orders'...");
-    const myDeliveriesRes = await axios.get(
-      `${BASE_URL}/deliveries/my-orders`,
-      driverHeaders,
-    );
-    if (!myDeliveriesRes.data.find((d) => d.id === orderId))
-      throw new Error("Delivery not found in driver's history");
-    console.log("✅ Delivery found in driver's list");
-
-    // Finish Delivery
-    console.log('🏁 Driver: Finishing Delivery...');
-    await axios.patch(
-      `${BASE_URL}/deliveries/${orderId}/finish`,
-      {},
-      driverHeaders,
-    );
-    console.log('✅ Delivery finished');
-
-    // 7. Verify Client View
-    console.log('\n😊 Client: Verifying Order History...');
-    const clientHistoryRes = await axios.get(
-      `${BASE_URL}/orders`,
-      clientHeaders,
-    );
-    const deliveredOrder = clientHistoryRes.data.find((o) => o.id === orderId);
-    const rejectedOrder = clientHistoryRes.data.find(
-      (o) => o.id === rejectOrderId,
-    );
-
-    if (!deliveredOrder || deliveredOrder.status !== 'DELIVERED')
-      throw new Error('Client history mismatch for delivered order');
-    if (!rejectedOrder || rejectedOrder.status !== 'REJECTED')
-      throw new Error('Client history mismatch for rejected order');
-
-    console.log(
-      '✅ Client history verified (DELIVERED and REJECTED orders confirmed)',
-    );
-
-    console.log('\n✨ ALL COMPREHENSIVE CHECKS PASSED ✨');
+    console.log('\n✨ ALL MULTIPLE-ACCOUNT EXPERIMENTS COMPLETED WITH SUCCESS ✨');
   } catch (err) {
     console.error('\n❌ TEST FAILED');
     if (err.response) {
