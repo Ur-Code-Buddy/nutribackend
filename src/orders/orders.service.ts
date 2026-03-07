@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -27,6 +28,8 @@ export class OrdersService {
     private ordersQueue: Queue,
     private configService: ConfigService,
   ) { }
+
+  private readonly logger = new Logger(OrdersService.name);
 
   async create(clientId: string, dto: CreateOrderDto) {
     // 1. Validate "1-3 Days in Advance"
@@ -62,10 +65,9 @@ export class OrdersService {
       const sortedItems = [...dto.items].sort((a, b) => a.food_item_id.localeCompare(b.food_item_id));
 
       for (const itemDto of sortedItems) {
-        // Use pessimistic write lock to serialize concurrent capacity checks
+        // Use pessimistic write lock on the food item row only
         const foodItem = await queryRunner.manager.findOne(FoodItem, {
           where: { id: itemDto.food_item_id, kitchen_id: dto.kitchen_id },
-          relations: ['availability'],
           lock: { mode: 'pessimistic_write' },
         });
 
@@ -79,9 +81,15 @@ export class OrdersService {
           throw new BadRequestException(`${foodItem.name} is inactive.`);
         }
 
-        // Check specific availability
-        const availability = foodItem.availability?.find(
-          (a) => a.date === dto.scheduled_for,
+        // Check specific availability (if an override exists for that date)
+        const availability = await queryRunner.manager.findOne(
+          FoodItemAvailability,
+          {
+            where: {
+              food_item_id: foodItem.id,
+              date: dto.scheduled_for,
+            },
+          },
         );
         if (availability && !availability.is_available) {
           throw new BadRequestException(
@@ -139,11 +147,18 @@ export class OrdersService {
       await queryRunner.commitTransaction();
 
       // 5. Trigger Auto-Reject Job (10 mins)
-      await this.ordersQueue.add(
-        'order-timeout',
-        { orderId: savedOrder.id },
-        { delay: 10 * 60 * 1000, jobId: `timeout-${savedOrder.id}` },
-      );
+      try {
+        await this.ordersQueue.add(
+          'order-timeout',
+          { orderId: savedOrder.id },
+          { delay: 10 * 60 * 1000, jobId: `timeout-${savedOrder.id}` },
+        );
+      } catch (queueErr) {
+        // In production, we prefer a successful order over background timeout logic.
+        this.logger.error(
+          `Failed to enqueue order-timeout job for order ${savedOrder.id}: ${queueErr?.message ?? queueErr}`,
+        );
+      }
 
       return savedOrder;
     } catch (err) {
