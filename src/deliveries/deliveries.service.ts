@@ -75,9 +75,9 @@ export class DeliveriesService {
     await queryRunner.startTransaction();
 
     try {
+      // Lock only the order row itself to avoid FOR UPDATE on outer joins
       const order = await queryRunner.manager.findOne(Order, {
         where: { id },
-        relations: ['kitchen', 'client', 'items', 'items.food_item'],
         lock: { mode: 'pessimistic_write' },
       });
 
