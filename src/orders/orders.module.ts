@@ -8,6 +8,8 @@ import { OrderItem } from './entities/order-item.entity';
 import { FoodItemsModule } from '../food-items/food-items.module';
 import { KitchensModule } from '../kitchens/kitchens.module';
 import { FoodItem } from '../food-items/entities/food-item.entity';
+import { UsersModule } from '../users/users.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { FoodItem } from '../food-items/entities/food-item.entity';
     }),
     FoodItemsModule,
     KitchensModule,
+    UsersModule,
+    NotificationsModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

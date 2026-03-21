@@ -14,6 +14,9 @@ import { OrderItem } from './entities/order-item.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FoodItem } from '../food-items/entities/food-item.entity';
 import { FoodItemAvailability } from '../food-items/entities/food-item-availability.entity';
+import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { Kitchen } from '../kitchens/entities/kitchen.entity';
 
 @Injectable()
 export class OrdersService {
@@ -27,6 +30,8 @@ export class OrdersService {
     @InjectQueue('orders')
     private ordersQueue: Queue,
     private configService: ConfigService,
+    private usersService: UsersService,
+    private notificationsService: NotificationsService,
   ) { }
 
   private readonly logger = new Logger(OrdersService.name);
@@ -125,9 +130,11 @@ export class OrdersService {
       const platformFees = Number(this.configService.get<number>('PLATFORM_FEES', 10));
       const deliveryFees = Number(this.configService.get<number>('DELIVERY_FEES', 20));
       const kitchenFeesPercent = Number(this.configService.get<number>('KITCHEN_FEES', 15));
+      const taxPercent = Number(this.configService.get<number>('TAX_PERCENT', 5));
 
       const kitchenFees = parseFloat(((kitchenFeesPercent / 100) * totalPrice).toFixed(2));
-      const grandTotal = parseFloat((totalPrice + platformFees + deliveryFees).toFixed(2));
+      const taxFees = parseFloat(((taxPercent / 100) * totalPrice).toFixed(2));
+      const grandTotal = parseFloat((totalPrice + platformFees + deliveryFees + taxFees).toFixed(2));
 
       // 4. Create Order
       const order = queryRunner.manager.create(Order, {
@@ -140,11 +147,30 @@ export class OrdersService {
         platform_fees: platformFees,
         delivery_fees: deliveryFees,
         kitchen_fees: kitchenFees,
+        tax_fees: taxFees,
       });
 
       const savedOrder = await queryRunner.manager.save(order);
 
       await queryRunner.commitTransaction();
+
+      // Send Firebase Notification to Kitchen Owner
+      try {
+        const kitchen = await queryRunner.manager.findOne(Kitchen, { where: { id: dto.kitchen_id } });
+        if (kitchen) {
+          const kitchenOwner = await this.usersService.findOneById(kitchen.owner_id);
+          if (kitchenOwner && kitchenOwner.fcm_token) {
+            this.notificationsService.sendPushNotification(
+              kitchenOwner.fcm_token,
+              'New Order Received!',
+              `A new order was placed. Please check your dashboard.`,
+              { orderId: savedOrder.id }
+            );
+          }
+        }
+      } catch (notifErr) {
+        this.logger.error('Failed to send push notification', notifErr);
+      }
 
       // 5. Trigger Auto-Reject Job (10 mins)
       try {

@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, In } from 'typeorm';
 import { Order, OrderStatus } from '../orders/entities/order.entity';
 import { User } from '../users/entities/user.entity';
+import { Transaction, TransactionType, TransactionSource } from '../transactions/entities/transaction.entity';
 
 @Injectable()
 export class DeliveriesService {
@@ -152,9 +153,118 @@ export class DeliveriesService {
       throw new BadRequestException('Order is not out for delivery');
     }
 
-    order.status = OrderStatus.DELIVERED;
-    order.delivered_at = new Date();
+    const queryRunner = this.ordersRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    return this.ordersRepository.save(order);
+    function generateShortId(): string {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return `TXN-${result}`;
+    }
+
+    try {
+      const txOrder = await queryRunner.manager.findOne(Order, {
+        where: { id },
+        relations: ['kitchen'],
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!txOrder || txOrder.status !== OrderStatus.OUT_FOR_DELIVERY) {
+        throw new BadRequestException('Order cannot be delivered now');
+      }
+
+      const driver = await queryRunner.manager.findOne(User, {
+        where: { id: driverId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      const kitchenOwnerId = txOrder.kitchen?.owner_id;
+      const kitchenOwner = kitchenOwnerId
+        ? await queryRunner.manager.findOne(User, {
+            where: { id: kitchenOwnerId },
+            lock: { mode: 'pessimistic_write' },
+          })
+        : null;
+
+      txOrder.status = OrderStatus.DELIVERED;
+      txOrder.delivered_at = new Date();
+      await queryRunner.manager.save(txOrder);
+
+      // 1. Driver collected cash -> driver owes system total_price
+      //    Driver earned delivery_fees -> system owes driver delivery_fees
+      if (driver) {
+        const costToSystem = Number(txOrder.total_price);
+        const driverEarnings = Number(txOrder.delivery_fees);
+        driver.credits = Number(driver.credits) + driverEarnings - costToSystem;
+        await queryRunner.manager.save(driver);
+
+        const debitTxn = queryRunner.manager.create(Transaction, {
+          short_id: generateShortId(),
+          from_user_id: driver.id,
+          to_user_id: null,
+          amount: costToSystem,
+          type: TransactionType.DEBIT,
+          source: TransactionSource.DELIVERY,
+          description: `Cash collected for order ID ${id.substring(0, 8)}`,
+          reference_id: id,
+        });
+        await queryRunner.manager.save(debitTxn);
+
+        const creditTxn = queryRunner.manager.create(Transaction, {
+          short_id: generateShortId(),
+          from_user_id: null,
+          to_user_id: driver.id,
+          amount: driverEarnings,
+          type: TransactionType.CREDIT,
+          source: TransactionSource.DELIVERY,
+          description: `Delivery payout for order ID ${id.substring(0, 8)}`,
+          reference_id: id,
+        });
+        await queryRunner.manager.save(creditTxn);
+      }
+
+      // 2. Kitchen owner gets item cost minus kitchen commission
+      if (kitchenOwner) {
+        const itemTotal =
+          Number(txOrder.total_price) -
+          Number(txOrder.platform_fees) -
+          Number(txOrder.delivery_fees) -
+          Number(txOrder.tax_fees || 0);
+
+        const kitchenEarnings = itemTotal - Number(txOrder.kitchen_fees);
+
+        kitchenOwner.credits = Number(kitchenOwner.credits) + kitchenEarnings;
+        await queryRunner.manager.save(kitchenOwner);
+
+        const payoutTxn = queryRunner.manager.create(Transaction, {
+          short_id: generateShortId(),
+          from_user_id: null,
+          to_user_id: kitchenOwner.id,
+          amount: kitchenEarnings,
+          type: TransactionType.CREDIT,
+          source: TransactionSource.DELIVERY,
+          description: `Kitchen payout for order ID ${id.substring(0, 8)}`,
+          reference_id: id,
+        });
+        await queryRunner.manager.save(payoutTxn);
+      }
+
+      await queryRunner.commitTransaction();
+
+      // Return the completed order with updated fields
+      return txOrder;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to finish delivery: ' + (error.message || 'Concurrent mod'));
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

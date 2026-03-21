@@ -75,6 +75,9 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   kitchen_fees: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  tax_fees: number;
+
   @Column({ nullable: true })
   accepted_at: Date;
 

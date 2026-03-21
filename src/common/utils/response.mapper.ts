@@ -18,6 +18,7 @@ export class ResponseMapper {
     dto.total_price = Number(order.total_price);
     dto.platform_fees = Number(order.platform_fees);
     dto.delivery_fees = Number(order.delivery_fees);
+    dto.tax_fees = Number(order.tax_fees || 0);
 
     if (order.items) {
       dto.items = order.items.map((item) => {

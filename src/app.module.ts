@@ -20,6 +20,7 @@ import { DeliveriesModule } from './deliveries/deliveries.module';
 import { RedisModule } from './redis/redis.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -95,6 +96,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     RedisModule,
     TransactionsModule,
     ReviewsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

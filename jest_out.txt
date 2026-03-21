@@ -1,0 +1,105 @@
+PASS src/common/s3/s3.service.spec.ts
+PASS src/app.controller.spec.ts
+PASS src/kitchens/kitchens.controller.spec.ts
+PASS src/food-items/food-items.controller.spec.ts
+FAIL src/orders/orders.service.spec.ts (5.231 s)
+  ● OrdersService › should calculate total_price correctly
+
+    TypeError: Cannot read properties of undefined (reading 'connection')
+
+    [0m [90m 53 |[39m     }
+     [90m 54 |[39m
+    [31m[1m>[22m[39m[90m 55 |[39m     [36mconst[39m queryRunner [33m=[39m [36mthis[39m[33m.[39mordersRepo[33m.[39mmanager[33m.[39mconnection[33m.[39mcreateQueryRunner()[33m;[39m
+     [90m    |[39m                                                 [31m[1m^[22m[39m
+     [90m 56 |[39m     [36mawait[39m queryRunner[33m.[39mconnect()[33m;[39m
+     [90m 57 |[39m     [36mawait[39m queryRunner[33m.[39mstartTransaction()[33m;[39m
+     [90m 58 |[39m[0m
+
+      at OrdersService.create (orders/orders.service.ts:55:49)
+      at Object.<anonymous> (orders/orders.service.spec.ts:99:34)
+
+  ● OrdersService › should accept orders for tomorrow (1 day in advance)
+
+    TypeError: Cannot read properties of undefined (reading 'connection')
+
+    [0m [90m 53 |[39m     }
+     [90m 54 |[39m
+    [31m[1m>[22m[39m[90m 55 |[39m     [36mconst[39m queryRunner [33m=[39m [36mthis[39m[33m.[39mordersRepo[33m.[39mmanager[33m.[39mconnection[33m.[39mcreateQueryRunner()[33m;[39m
+     [90m    |[39m                                                 [31m[1m^[22m[39m
+     [90m 56 |[39m     [36mawait[39m queryRunner[33m.[39mconnect()[33m;[39m
+     [90m 57 |[39m     [36mawait[39m queryRunner[33m.[39mstartTransaction()[33m;[39m
+     [90m 58 |[39m[0m
+
+      at OrdersService.create (orders/orders.service.ts:55:49)
+      at Object.<anonymous> (orders/orders.service.spec.ts:126:34)
+
+  ● OrdersService › should accept orders for 3 days in advance
+
+    TypeError: Cannot read properties of undefined (reading 'connection')
+
+    [0m [90m 53 |[39m     }
+     [90m 54 |[39m
+    [31m[1m>[22m[39m[90m 55 |[39m     [36mconst[39m queryRunner [33m=[39m [36mthis[39m[33m.[39mordersRepo[33m.[39mmanager[33m.[39mconnection[33m.[39mcreateQueryRunner()[33m;[39m
+     [90m    |[39m                                                 [31m[1m^[22m[39m
+     [90m 56 |[39m     [36mawait[39m queryRunner[33m.[39mconnect()[33m;[39m
+     [90m 57 |[39m     [36mawait[39m queryRunner[33m.[39mstartTransaction()[33m;[39m
+     [90m 58 |[39m[0m
+
+      at OrdersService.create (orders/orders.service.ts:55:49)
+      at Object.<anonymous> (orders/orders.service.spec.ts:143:34)
+
+PASS src/orders/orders.controller.spec.ts (5.542 s)
+FAIL src/auth/auth.service.spec.ts (5.738 s)
+  ● AuthService › should be defined
+
+    Nest can't resolve dependencies of the AuthService (UsersService, JwtService, ?). Please make sure that the argument RedisService at index [2] is available in the RootTestModule context.
+
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If RedisService is a provider, is it part of the current RootTestModule?
+    - If RedisService is exported from a separate @Module, is that module imported within RootTestModule?
+      @Module({
+        imports: [ /* the Module containing RedisService */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+    [0m [90m  8 |[39m
+     [90m  9 |[39m   beforeEach([36masync[39m () [33m=>[39m {
+    [31m[1m>[22m[39m[90m 10 |[39m     [36mconst[39m module[33m:[39m [33mTestingModule[39m [33m=[39m [36mawait[39m [33mTest[39m[33m.[39mcreateTestingModule({
+     [90m    |[39m                                   [31m[1m^[22m[39m
+     [90m 11 |[39m       providers[33m:[39m [
+     [90m 12 |[39m         [33mAuthService[39m[33m,[39m
+     [90m 13 |[39m         {[0m
+
+      at TestingInjector.lookupComponentInParentModules (../node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (../node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 2)
+      at TestingInjector.resolveConstructorParams (../node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (../node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (../node_modules/@nestjs/core/injector/injector.js:103:9)
+      at ../node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (../node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 1)
+      at TestingInstanceLoader.createInstances (../node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (auth/auth.service.spec.ts:10:35)
+
+PASS src/food-items/food-items.service.spec.ts
+PASS src/kitchens/kitchens.service.spec.ts
+PASS src/jobs/jobs.service.spec.ts
+PASS src/users/users.service.spec.ts
+PASS src/common/utils/serialization.spec.ts
+PASS src/auth/auth.controller.spec.ts
+
+Test Suites: 2 failed, 11 passed, 13 total
+Tests:       4 failed, 22 passed, 26 total
+Snapshots:   0 total
+Time:        8.634 s
+Ran all test suites.

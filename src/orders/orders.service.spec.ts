@@ -6,6 +6,8 @@ import { OrdersService } from './orders.service';
 import { Order, OrderStatus } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { FoodItem } from '../food-items/entities/food-item.entity';
+import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('OrdersService', () => {
   let service: OrdersService;
@@ -22,6 +24,29 @@ describe('OrdersService', () => {
             save: jest.fn(),
             find: jest.fn(),
             findOne: jest.fn(),
+            manager: {
+              connection: {
+                createQueryRunner: jest.fn().mockReturnValue({
+                  connect: jest.fn(),
+                  startTransaction: jest.fn(),
+                  commitTransaction: jest.fn(),
+                  rollbackTransaction: jest.fn(),
+                  release: jest.fn(),
+                  manager: {
+                    findOne: jest.fn(),
+                    createQueryBuilder: jest.fn(() => ({
+                      leftJoin: jest.fn().mockReturnThis(),
+                      where: jest.fn().mockReturnThis(),
+                      andWhere: jest.fn().mockReturnThis(),
+                      select: jest.fn().mockReturnThis(),
+                      getRawOne: jest.fn(),
+                    })),
+                    create: jest.fn((entity, dto) => dto),
+                    save: jest.fn((order) => Promise.resolve({ ...order, id: 'order-1' })),
+                  }
+                })
+              }
+            }
           },
         },
         {
@@ -56,9 +81,22 @@ describe('OrdersService', () => {
                 PLATFORM_FEES: 10,
                 DELIVERY_FEES: 20,
                 KITCHEN_FEES: 15,
+                TAX_PERCENT: 5,
               };
               return config[key] ?? defaultVal;
             }),
+          },
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            findOneById: jest.fn(),
+          },
+        },
+        {
+          provide: NotificationsService,
+          useValue: {
+            sendPushNotification: jest.fn(),
           },
         },
       ],
@@ -90,23 +128,38 @@ describe('OrdersService', () => {
     const mockFoodItemRepo = module.get(getRepositoryToken(FoodItem));
     const mockOrdersQueue = module.get(getQueueToken('orders'));
 
-    mockFoodItemRepo.findOne.mockResolvedValue(foodItem);
-    mockOrdersRepo.create.mockImplementation((dto: any) => dto);
-    mockOrdersRepo.save.mockImplementation((order: any) =>
-      Promise.resolve({ ...order, id: 'order-1' }),
-    );
+    const queryRunner = mockOrdersRepo.manager.connection.createQueryRunner();
+    queryRunner.manager.findOne.mockImplementation((entity: any) => {
+      if (entity && entity.name === 'FoodItem') return Promise.resolve(foodItem);
+      if (entity && entity.name === 'Kitchen') return Promise.resolve({ id: 'kitchen-1', owner_id: 'owner-1' });
+      return Promise.resolve(null);
+    });
+
+    const mockUsersService = module.get<UsersService>(UsersService);
+    const mockNotificationsService = module.get<NotificationsService>(NotificationsService);
+    jest.spyOn(mockUsersService, 'findOneById').mockResolvedValue({ id: 'owner-1', fcm_token: 'valid_fcm_token' } as any);
+    jest.spyOn(mockNotificationsService, 'sendPushNotification').mockResolvedValue(undefined);
 
     const result = await service.create('client-1', createDto as any);
 
-    // total_price = items subtotal (10*2=20) + platform_fees (10) + delivery_fees (20) = 50
-    expect(result.total_price).toBe(50);
-    expect(mockOrdersRepo.save).toHaveBeenCalledWith(
+    // total_price = items subtotal (10*2=20) + platform_fees (10) + delivery_fees (20) + taxes (1) = 51
+    expect(result.total_price).toBe(51);
+    expect(queryRunner.manager.save).toHaveBeenCalledWith(
       expect.objectContaining({
-        total_price: 50,
+        total_price: 51,
         platform_fees: 10,
         delivery_fees: 20,
         kitchen_fees: 3, // 15% of 20 = 3
+        tax_fees: 1, // 5% of 20 = 1
       }),
+    );
+
+    expect(mockUsersService.findOneById).toHaveBeenCalledWith('owner-1');
+    expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+      'valid_fcm_token',
+      'New Order Received!',
+      expect.any(String),
+      expect.objectContaining({ orderId: 'order-1' })
     );
   });
 
@@ -205,12 +258,13 @@ describe('OrdersService', () => {
       availability: [],
     };
     const mockOrdersRepo = module.get(getRepositoryToken(Order));
-    const mockFoodItemRepo = module.get(getRepositoryToken(FoodItem));
-
-    mockFoodItemRepo.findOne.mockResolvedValue(foodItem);
-    mockOrdersRepo.create.mockImplementation((dto: any) => dto);
-    mockOrdersRepo.save.mockImplementation((order: any) =>
-      Promise.resolve({ ...order, id: 'order-1' }),
-    );
+    const queryRunner = mockOrdersRepo.manager.connection.createQueryRunner();
+    queryRunner.manager.findOne.mockImplementation((entity: any) => {
+      if (entity && entity.name === 'FoodItem') return Promise.resolve(foodItem);
+      if (entity && entity.name === 'Kitchen') return Promise.resolve({ id: 'kitchen-1', owner_id: 'owner-1' });
+      return Promise.resolve(null);
+    });
+    const mockUsersService = module.get<UsersService>(UsersService);
+    jest.spyOn(mockUsersService, 'findOneById').mockResolvedValue({ id: 'owner-1', fcm_token: 'token123' } as any);
   }
 });

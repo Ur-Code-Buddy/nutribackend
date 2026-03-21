@@ -68,6 +68,9 @@ export class BaseOrderViewDTO {
   delivery_fees: number;
 
   @Expose()
+  tax_fees: number;
+
+  @Expose()
   @Type(() => OrderItemDTO)
   items: OrderItemDTO[];
 

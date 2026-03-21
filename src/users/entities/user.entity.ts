@@ -44,7 +44,7 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   credits: number;
 
   @Column({ default: true })
@@ -68,6 +68,10 @@ export class User {
 
   @Column({ default: false })
   is_banned: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  @Exclude()
+  fcm_token: string | null;
 
   @CreateDateColumn()
   created_at: Date;

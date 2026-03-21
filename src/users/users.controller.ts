@@ -154,4 +154,12 @@ export class UsersController {
 
     return response;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/fcm-token')
+  async updateFcmToken(@Request() req: any, @Body('fcm_token') token: string) {
+    if (!token) return { success: false, message: 'Token is required' };
+    await this.usersService.updateFcmToken(req.user.userId, token);
+    return { success: true, message: 'FCM token updated successfully' };
+  }
 }

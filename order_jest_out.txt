@@ -1,0 +1,53 @@
+FAIL src/orders/orders.service.spec.ts
+  ● OrdersService › should calculate total_price correctly
+
+    BadRequestException: undefined is unavailable for 2026-03-22.
+
+    [0m [90m 93 |[39m         )[33m;[39m
+     [90m 94 |[39m         [36mif[39m (availability [33m&&[39m [33m![39mavailability[33m.[39mis_available) {
+    [31m[1m>[22m[39m[90m 95 |[39m           [36mthrow[39m [36mnew[39m [33mBadRequestException[39m(
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 96 |[39m             [32m`${foodItem.name} is unavailable for ${dto.scheduled_for}.`[39m[33m,[39m
+     [90m 97 |[39m           )[33m;[39m
+     [90m 98 |[39m         }[0m
+
+      at OrdersService.create (orders/orders.service.ts:95:17)
+      at Object.<anonymous> (orders/orders.service.spec.ts:120:20)
+
+  ● OrdersService › should accept orders for tomorrow (1 day in advance)
+
+    BadRequestException: undefined is unavailable for 2026-03-22.
+
+    [0m [90m 93 |[39m         )[33m;[39m
+     [90m 94 |[39m         [36mif[39m (availability [33m&&[39m [33m![39mavailability[33m.[39mis_available) {
+    [31m[1m>[22m[39m[90m 95 |[39m           [36mthrow[39m [36mnew[39m [33mBadRequestException[39m(
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 96 |[39m             [32m`${foodItem.name} is unavailable for ${dto.scheduled_for}.`[39m[33m,[39m
+     [90m 97 |[39m           )[33m;[39m
+     [90m 98 |[39m         }[0m
+
+      at OrdersService.create (orders/orders.service.ts:95:17)
+      at Object.<anonymous> (orders/orders.service.spec.ts:148:20)
+
+  ● OrdersService › should accept orders for 3 days in advance
+
+    BadRequestException: undefined is unavailable for 2026-03-24.
+
+    [0m [90m 93 |[39m         )[33m;[39m
+     [90m 94 |[39m         [36mif[39m (availability [33m&&[39m [33m![39mavailability[33m.[39mis_available) {
+    [31m[1m>[22m[39m[90m 95 |[39m           [36mthrow[39m [36mnew[39m [33mBadRequestException[39m(
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 96 |[39m             [32m`${foodItem.name} is unavailable for ${dto.scheduled_for}.`[39m[33m,[39m
+     [90m 97 |[39m           )[33m;[39m
+     [90m 98 |[39m         }[0m
+
+      at OrdersService.create (orders/orders.service.ts:95:17)
+      at Object.<anonymous> (orders/orders.service.spec.ts:165:20)
+
+PASS src/orders/orders.controller.spec.ts
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       3 failed, 5 passed, 8 total
+Snapshots:   0 total
+Time:        3.528 s
+Ran all test suites matching src/orders.

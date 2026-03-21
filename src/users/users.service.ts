@@ -206,6 +206,13 @@ export class UsersService {
     return { user: savedUser, phoneChanged, changedFields };
   }
 
+  async updateFcmToken(id: string, token: string): Promise<User> {
+    const user = await this.findOneById(id);
+    if (!user) throw new NotFoundException('User not found');
+    user.fcm_token = token;
+    return this.usersRepository.save(user);
+  }
+
   async deleteAccount(id: string): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const user = await manager.findOne(User, { where: { id } });
