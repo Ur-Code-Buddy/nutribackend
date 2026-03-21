@@ -5,6 +5,8 @@ services:
     build: .
     ports:
       - '3000:3000'
+    volumes:
+      - ./nutritiffinServiceAccountKey.json:/app/nutritiffinServiceAccountKey.json
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}

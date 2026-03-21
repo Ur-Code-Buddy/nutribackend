@@ -28,6 +28,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/nutritiffinServiceAccountKey.json ./
 
 # Expose application port
 EXPOSE 3000
