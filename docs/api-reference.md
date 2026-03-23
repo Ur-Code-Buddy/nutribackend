@@ -34,17 +34,20 @@ New users must complete the following steps before they can log in:
 Creates a new user account.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `username` | string | **Yes** | Unique username. |
-| `name` | string | **Yes** | Full name of the user. |
-| `email` | string | **Yes** | Email address (unique). |
-| `phone_number` | string | **Yes** | Phone number (unique). |
-| `address` | string | **Yes** | Physical address of the user. |
-| `pincode` | string | **Yes** | PIN Code/Postal code. |
-| `password` | string | **Yes** | Password (min 6 characters). |
-| `role` | enum | **Yes** | User role. Values: `CLIENT`, `KITCHEN_OWNER`, `DELIVERY_DRIVER`, `ADMIN`. |
-| `admin_access_pass` | string | No | Required only if `role` is `ADMIN`. |
+
+
+| Field               | Type   | Required | Description                                                               |
+| ------------------- | ------ | -------- | ------------------------------------------------------------------------- |
+| `username`          | string | **Yes**  | Unique username.                                                          |
+| `name`              | string | **Yes**  | Full name of the user.                                                    |
+| `email`             | string | **Yes**  | Email address (unique).                                                   |
+| `phone_number`      | string | **Yes**  | Phone number (unique).                                                    |
+| `address`           | string | **Yes**  | Physical address of the user.                                             |
+| `pincode`           | string | **Yes**  | PIN Code/Postal code.                                                     |
+| `password`          | string | **Yes**  | Password (min 6 characters).                                              |
+| `role`              | enum   | **Yes**  | User role. Values: `CLIENT`, `KITCHEN_OWNER`, `DELIVERY_DRIVER`, `ADMIN`. |
+| `admin_access_pass` | string | No       | Required only if `role` is `ADMIN`.                                       |
+
 
 **Response:** Returns a success message prompting the user to verify their email. A verification email is sent (placeholder for now).
 
@@ -55,10 +58,13 @@ Creates a new user account.
 Authenticates a user and returns a JWT token. **Rejects users who have not verified both their email and phone number.**
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `username` | string | **Yes** | Registered username. |
-| `password` | string | **Yes** | User password. |
+
+
+| Field      | Type   | Required | Description          |
+| ---------- | ------ | -------- | -------------------- |
+| `username` | string | **Yes**  | Registered username. |
+| `password` | string | **Yes**  | User password.       |
+
 
 ### Verify Email
 
@@ -67,9 +73,12 @@ Authenticates a user and returns a JWT token. **Rejects users who have not verif
 Verifies a user's email address using the token sent during registration.
 
 **Query Parameters:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `token` | string | **Yes** | The verification token from the email. |
+
+
+| Field   | Type   | Required | Description                            |
+| ------- | ------ | -------- | -------------------------------------- |
+| `token` | string | **Yes**  | The verification token from the email. |
+
 
 **Behavior:**
 
@@ -86,9 +95,12 @@ Verifies a user's email address using the token sent during registration.
 Regenerates a verification token and resends the verification email.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `email` | string | **Yes** | The email address associated with the account. |
+
+
+| Field   | Type   | Required | Description                                    |
+| ------- | ------ | -------- | ---------------------------------------------- |
+| `email` | string | **Yes**  | The email address associated with the account. |
+
 
 **Behavior:**
 
@@ -103,9 +115,12 @@ Regenerates a verification token and resends the verification email.
 Retries sending the verification email for login. This functions identically to the resend verification endpoint.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `email` | string | **Yes** | The email address associated with the account. |
+
+
+| Field   | Type   | Required | Description                                    |
+| ------- | ------ | -------- | ---------------------------------------------- |
+| `email` | string | **Yes**  | The email address associated with the account. |
+
 
 **Behavior:**
 
@@ -121,9 +136,12 @@ Retries sending the verification email for login. This functions identically to 
 Checks whether the provided email is verified. Has a rate limit: max 1 request every 10 seconds.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `email` | string | **Yes** | The email address to check. |
+
+
+| Field   | Type   | Required | Description                 |
+| ------- | ------ | -------- | --------------------------- |
+| `email` | string | **Yes**  | The email address to check. |
+
 
 **Response:**
 
@@ -149,9 +167,12 @@ Deletes the connected authenticated user account from the system permanently.
 Initiates the password reset flow. Checks if the account exists, generates a 6-digit OTP stored in Redis (10 minutes expiry), and emails the OTP.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `email` | string | **Yes** | The email address associated with the account. |
+
+
+| Field   | Type   | Required | Description                                    |
+| ------- | ------ | -------- | ---------------------------------------------- |
+| `email` | string | **Yes**  | The email address associated with the account. |
+
 
 **Response:** Returns a generic success message to prevent user enumeration.
 
@@ -162,11 +183,14 @@ Initiates the password reset flow. Checks if the account exists, generates a 6-d
 Completes the password reset process by verifying the emailed OTP against Redis and saving the new password hash. Immediately bumps the token version, forcing re-authentication everywhere.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `email` | string | **Yes** | The user's email address. |
-| `otp` | string | **Yes** | The 6-digit OTP from the email. |
-| `new_password` | string | **Yes** | The new password (min 6 characters). |
+
+
+| Field          | Type   | Required | Description                          |
+| -------------- | ------ | -------- | ------------------------------------ |
+| `email`        | string | **Yes**  | The user's email address.            |
+| `otp`          | string | **Yes**  | The 6-digit OTP from the email.      |
+| `new_password` | string | **Yes**  | The new password (min 6 characters). |
+
 
 **Response:** Returns a success message.
 
@@ -179,11 +203,15 @@ Integrates with the **MessageCentral CPaaS API** to send a 4-digit SMS OTP to a 
 > **Note:** This endpoint is also called automatically 10 seconds after successful email verification. Users can call it manually to resend the OTP if needed.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `phone` | string | **Yes** | Target phone number. |
+
+
+| Field   | Type   | Required | Description          |
+| ------- | ------ | -------- | -------------------- |
+| `phone` | string | **Yes**  | Target phone number. |
+
 
 **Response:**
+
 ```json
 {
   "message": "OTP sent successfully"
@@ -197,12 +225,16 @@ Integrates with the **MessageCentral CPaaS API** to send a 4-digit SMS OTP to a 
 Validates the 4-digit SMS OTP against the MessageCentral API using a `GET` request with the stored `verificationId` and the user-provided OTP code. On success, marks the user's account as `phone_verified = true`. This is the final step before the user can log in.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `phone` | string | **Yes** | The phone number being verified. |
-| `otp` | string | **Yes** | The code entered by the user. |
+
+
+| Field   | Type   | Required | Description                      |
+| ------- | ------ | -------- | -------------------------------- |
+| `phone` | string | **Yes**  | The phone number being verified. |
+| `otp`   | string | **Yes**  | The code entered by the user.    |
+
 
 **Response:**
+
 ```json
 {
   "message": "Phone number verified successfully",
@@ -221,13 +253,17 @@ Validates the 4-digit SMS OTP against the MessageCentral API using a `GET` reque
 Checks whether a username is already registered. This is a **public endpoint** (no authentication required) with strict rate limiting.
 
 **Rate Limits:**
+
 - **10 requests per minute**
 - **25 requests per hour**
 
 **Path Parameters:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `username` | string | **Yes** | The username to check. |
+
+
+| Field      | Type   | Required | Description            |
+| ---------- | ------ | -------- | ---------------------- |
+| `username` | string | **Yes**  | The username to check. |
+
 
 **Response:**
 
@@ -252,12 +288,15 @@ Retrieves the profile of the currently logged-in user, including their Rupee `cr
 Updates the authenticated user's profile. Requires the current password for security verification. A notification email is sent to the user after the profile is updated.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `current_password` | string | **Yes** | The user's current password (verified before changes are applied). |
-| `address` | string | No | Updated address. |
-| `phone_number` | string | No | Updated phone number. |
-| `pincode` | string | No | Updated pincode. |
+
+
+| Field              | Type   | Required | Description                                                        |
+| ------------------ | ------ | -------- | ------------------------------------------------------------------ |
+| `current_password` | string | **Yes**  | The user's current password (verified before changes are applied). |
+| `address`          | string | No       | Updated address.                                                   |
+| `phone_number`     | string | No       | Updated phone number.                                              |
+| `pincode`          | string | No       | Updated pincode.                                                   |
+
 
 **Behavior:**
 
@@ -307,6 +346,7 @@ Retrieves a list of all registered users and their credit balances.
 Search users by username, name, or email with a partial match query. Useful when the user table grows too large to list everyone efficiently.
 
 **Response:**
+
 ```json
 [
   {
@@ -326,6 +366,7 @@ Search users by username, name, or email with a partial match query. Useful when
 Look up a specific user's credit balance quickly, including their last transaction date, without fetching the entire user list.
 
 **Response:**
+
 ```json
 {
   "username": "john_doe",
@@ -342,6 +383,7 @@ Look up a specific user's credit balance quickly, including their last transacti
 Return a quick summary/dashboard of the entire platform metrics in one call, reducing the need for multiple expensive queries.
 
 **Response:**
+
 ```json
 {
   "total_users": 142,
@@ -360,13 +402,22 @@ Return a quick summary/dashboard of the entire platform metrics in one call, red
 **POST** `/admin/credits/add`
 **Role Required:** `ADMIN`
 
-Adds integer credits (Rupees) to a specific user's account. **A transaction record is automatically created.**
+Adds integer credits (Rupees) to a specific user's account. **A transaction record is automatically cre**
+
+```markdown
+/is-my-district-available
+```
+
+**ated.**
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `username` | string | **Yes** | Username of the user. |
-| `credits` | number | **Yes** | Integer amount of Rupees to add. |
+
+
+| Field      | Type   | Required | Description                      |
+| ---------- | ------ | -------- | -------------------------------- |
+| `username` | string | **Yes**  | Username of the user.            |
+| `credits`  | number | **Yes**  | Integer amount of Rupees to add. |
+
 
 **Response:**
 
@@ -429,14 +480,17 @@ Reactivates a previously disabled user account.
 Creates a new kitchen profile for the authenticated user.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `name` | string | **Yes** | Name of the kitchen. |
-| `details` | object | No | Additional details (address, phone, description). |
-| `operating_hours` | object | No | Operating hours configuration (Times in **HH:MM**). |
-| `image_url` | string | No | URL to the kitchen's cover image. |
-| `is_active` | boolean | No | Whether the kitchen is active (default: true). |
-| `is_menu_visible` | boolean | No | Whether the menu is visible to users (default: true). |
+
+
+| Field             | Type    | Required | Description                                           |
+| ----------------- | ------- | -------- | ----------------------------------------------------- |
+| `name`            | string  | **Yes**  | Name of the kitchen.                                  |
+| `details`         | object  | No       | Additional details (address, phone, description).     |
+| `operating_hours` | object  | No       | Operating hours configuration (Times in **HH:MM**).   |
+| `image_url`       | string  | No       | URL to the kitchen's cover image.                     |
+| `is_active`       | boolean | No       | Whether the kitchen is active (default: true).        |
+| `is_menu_visible` | boolean | No       | Whether the menu is visible to users (default: true). |
+
 
 ### Get Kitchen Credits
 
@@ -479,14 +533,17 @@ Partial of **Create Kitchen** body.
 Adds a new food item to the user's kitchen menu.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `name` | string | **Yes** | Name of the dish. |
-| `price` | number | **Yes** | Price of the dish. |
-| `description` | string | No | Description of the dish. |
-| `image_url` | string | No | URL to the dish image. |
-| `max_daily_orders` | number | No | Maximum number of orders allowed per day. |
-| `availability_days` | array | No | List of days the item is available (e.g. `["monday", "friday"]`). |
+
+
+| Field               | Type   | Required | Description                                                       |
+| ------------------- | ------ | -------- | ----------------------------------------------------------------- |
+| `name`              | string | **Yes**  | Name of the dish.                                                 |
+| `price`             | number | **Yes**  | Price of the dish.                                                |
+| `description`       | string | No       | Description of the dish.                                          |
+| `image_url`         | string | No       | URL to the dish image.                                            |
+| `max_daily_orders`  | number | No       | Maximum number of orders allowed per day.                         |
+| `availability_days` | array  | No       | List of days the item is available (e.g. `["monday", "friday"]`). |
+
 
 ### Get My Items
 
@@ -525,9 +582,12 @@ Partial of **Create Menu Item** body.
 Sets the availability of a specific item.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `is_available` | boolean | **Yes** | `true` if available, `false` otherwise. |
+
+
+| Field          | Type    | Required | Description                             |
+| -------------- | ------- | -------- | --------------------------------------- |
+| `is_available` | boolean | **Yes**  | `true` if available, `false` otherwise. |
+
 
 ---
 
@@ -540,28 +600,36 @@ Sets the availability of a specific item.
 
 Places a new order **immediately** (saved to the database on success). Does not go through Razorpay.
 
-For **advance payment** before persisting the order, use **`POST /payments/initiate`** then **`POST /payments/confirm`** (see [Payments (`/payments`)](#payments-payments) below).
+For **advance payment** before persisting the order, use `**POST /payments/initiate`** then `**POST /payments/confirm**` (see [Payments (`/payments`)](#payments-payments) below).
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `kitchen_id` | string | **Yes** | ID of the kitchen to order from. |
-| `scheduled_for` | string | **Yes** | Date for the order in `YYYY-MM-DD` format. Must be 1-3 days in advance. |
-| `items` | array | **Yes** | List of items to order. |
+
+
+| Field           | Type   | Required | Description                                                             |
+| --------------- | ------ | -------- | ----------------------------------------------------------------------- |
+| `kitchen_id`    | string | **Yes**  | ID of the kitchen to order from.                                        |
+| `scheduled_for` | string | **Yes**  | Date for the order in `YYYY-MM-DD` format. Must be 1-3 days in advance. |
+| `items`         | array  | **Yes**  | List of items to order.                                                 |
+
 
 **Item Object (in `items` array):**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `food_item_id` | string | **Yes** | ID of the menu item. |
-| `quantity` | number | **Yes** | Quantity to order (min 1). |
+
+
+| Field          | Type   | Required | Description                |
+| -------------- | ------ | -------- | -------------------------- |
+| `food_item_id` | string | **Yes**  | ID of the menu item.       |
+| `quantity`     | number | **Yes**  | Quantity to order (min 1). |
+
 
 **Order payment fields (on saved orders):**
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `paymentStatus` | enum | `PENDING` (e.g. legacy `POST /orders`) or `PAID` (Razorpay confirm path). |
-| `razorpayOrderId` | string \| null | Set when order was created via `/payments/confirm`. |
-| `razorpayPaymentId` | string \| null | Set when order was created via `/payments/confirm`. |
+
+| Field               | Type          | Description                                                               |
+| ------------------- | ------------- | ------------------------------------------------------------------------- |
+| `paymentStatus`     | enum          | `PENDING` (e.g. legacy `POST /orders`) or `PAID` (Razorpay confirm path). |
+| `razorpayOrderId`   | string | null | Set when order was created via `/payments/confirm`.                       |
+| `razorpayPaymentId` | string | null | Set when order was created via `/payments/confirm`.                       |
+
 
 ### Get All Orders
 
@@ -648,10 +716,12 @@ Runs the same validations as **Create Order** (schedule window, item availabilit
 
 **Response:**
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `razorpayOrderId` | string | Razorpay order id (`order_...`) for Checkout. |
-| `publicKey` | string | Key id from `RAZORPAY_API_KEY` (safe for client). |
+
+| Field             | Type   | Description                                       |
+| ----------------- | ------ | ------------------------------------------------- |
+| `razorpayOrderId` | string | Razorpay order id (`order_...`) for Checkout.     |
+| `publicKey`       | string | Key id from `RAZORPAY_API_KEY` (safe for client). |
+
 
 ### Confirm payment (save order)
 
@@ -660,12 +730,14 @@ Runs the same validations as **Create Order** (schedule window, item availabilit
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `razorpayOrderId` | string | **Yes** | Must match the order id from initiate. |
-| `razorpayPaymentId` | string | **Yes** | Razorpay payment id after successful pay. |
-| `razorpaySignature` | string | **Yes** | HMAC SHA256 of `razorpayOrderId|razorpayPaymentId` using `RAZORPAY_KEY_SECRET`. |
-| `originalDto` | object | **Yes** | Same body as **Create Order** (must match what was used for initiate). |
+
+| Field               | Type   | Required | Description                                                            |
+| ------------------- | ------ | -------- | ---------------------------------------------------------------------- |
+| `razorpayOrderId`   | string | **Yes**  | Must match the order id from initiate.                                 |
+| `razorpayPaymentId` | string | **Yes**  | Razorpay payment id after successful pay.                              |
+| `razorpaySignature` | string | **Yes**  | HMAC SHA256 of `razorpayOrderId                                        |
+| `originalDto`       | object | **Yes**  | Same body as **Create Order** (must match what was used for initiate). |
+
 
 **Response:** Created `Order` entity (same as **Create Order**), with `paymentStatus: PAID` and Razorpay ids set.
 
@@ -697,9 +769,12 @@ Uploads an image file to S3 and returns the public URL.
 Checks whether a specific pincode is within the allowed delivery areas. This is a **public endpoint** and is backed by a database.
 
 **Query Parameters:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `pincode` | string | **Yes** | The 6-digit pincode to check. |
+
+
+| Field     | Type   | Required | Description                   |
+| --------- | ------ | -------- | ----------------------------- |
+| `pincode` | string | **Yes**  | The 6-digit pincode to check. |
+
 
 **Response:**
 `true` if the pincode is allowed, `false` otherwise.
@@ -712,9 +787,12 @@ Checks whether a specific pincode is within the allowed delivery areas. This is 
 Adds a new pincode to the list of deliverable areas.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `pincode` | number | **Yes** | The pincode to add. |
+
+
+| Field     | Type   | Required | Description         |
+| --------- | ------ | -------- | ------------------- |
+| `pincode` | number | **Yes**  | The pincode to add. |
+
 
 **Response:**
 Returns the created/updated `AllowedPincode` object.
@@ -727,9 +805,12 @@ Returns the created/updated `AllowedPincode` object.
 Deactivates a pincode from the delivery areas.
 
 **Path Parameters:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `pincode` | number | **Yes** | The pincode to remove. |
+
+
+| Field     | Type   | Required | Description            |
+| --------- | ------ | -------- | ---------------------- |
+| `pincode` | number | **Yes**  | The pincode to remove. |
+
 
 **Response:**
 `{ "success": true }`
@@ -741,6 +822,7 @@ Deactivates a pincode from the delivery areas.
 Returns the current platform-wide charges and fees.
 
 **Response:**
+
 ```json
 {
   "platform_fees": 10,
@@ -774,9 +856,12 @@ Returns a welcome message.
 Resets the database. Requires superadmin access.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `pass` | string | **Yes** | Super admin access password matching the `SUPER_ADMIN_ACCESS_PASS` environment variable. |
+
+
+| Field  | Type   | Required | Description                                                                              |
+| ------ | ------ | -------- | ---------------------------------------------------------------------------------------- |
+| `pass` | string | **Yes**  | Super admin access password matching the `SUPER_ADMIN_ACCESS_PASS` environment variable. |
+
 
 **Response:**
 Returns a success message with the command execution output.
@@ -874,7 +959,6 @@ Retrieves full order details. Depending on the user's role, the shape of the res
 }
 ```
 
-
 ---
 
 ## Reviews (`/reviews`)
@@ -889,12 +973,16 @@ Clients can add reviews for individual `order_items` that belong to an order tha
 Creates a review for a specific ordered item.
 
 **Request Body:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `order_item_id` | string | **Yes** | ID of the specific order item being reviewed. |
-| `is_positive` | boolean | **Yes** | `true` for positive (upvote), `false` for negative (downvote). |
+
+
+| Field           | Type    | Required | Description                                                    |
+| --------------- | ------- | -------- | -------------------------------------------------------------- |
+| `order_item_id` | string  | **Yes**  | ID of the specific order item being reviewed.                  |
+| `is_positive`   | boolean | **Yes**  | `true` for positive (upvote), `false` for negative (downvote). |
+
 
 **Response:**
+
 ```json
 {
   "id": "review-uuid",
@@ -940,12 +1028,14 @@ The transactions system tracks **every credit movement** in the system — admin
 
 Returns a paginated list of all transactions the authenticated user was involved in (as sender or receiver).
 
-
 **Query Parameters:**
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `page` | number | No | Page number (default: 1). |
-| `limit` | number | No | Items per page (default: 20, max: 100). |
+
+
+| Field   | Type   | Required | Description                             |
+| ------- | ------ | -------- | --------------------------------------- |
+| `page`  | number | No       | Page number (default: 1).               |
+| `limit` | number | No       | Items per page (default: 20, max: 100). |
+
 
 **Response:**
 
@@ -1052,21 +1142,26 @@ Get the transaction history for a specific user to easily view their spending pa
 
 #### Transaction Type
 
-| Value | Description |
-| :--- | :--- |
-| `CREDIT` | Credits were added to a user |
-| `DEBIT` | Credits were deducted from a user |
+
+| Value    | Description                       |
+| -------- | --------------------------------- |
+| `CREDIT` | Credits were added to a user      |
+| `DEBIT`  | Credits were deducted from a user |
+
 
 #### Transaction Source
 
-| Value | Description |
-| :--- | :--- |
-| `SUPPORT` | Admin manually added/deducted credits. Shown as "SUPPORT" in `from`/`to` fields. |
+
+| Value      | Description                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| `SUPPORT`  | Admin manually added/deducted credits. Shown as "SUPPORT" in `from`/`to` fields.                   |
 | `DELIVERY` | Payment related to a delivery (kitchen/driver payout). Description mentions the delivery short ID. |
-| `ORDER` | Payment related to order placement or refund. |
+| `ORDER`    | Payment related to order placement or refund.                                                      |
+
 
 ### Transaction `from` / `to` Fields
 
 - When a real user is involved, the field contains: `{ id, name, username, role }`
 - When the system (admin/support) is involved and no user is set, the field shows: `{ "label": "SUPPORT" }`
 - Otherwise: `null`
+
