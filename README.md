@@ -391,6 +391,8 @@ Below is a summary of all available endpoints. For full request/response schemas
 | Method | Endpoint | Auth | Description |
 | :---: | :--- | :---: | :--- |
 | `POST` | `/upload-image` | 🔑 Any | Upload image to S3 |
+| `GET` | `/is_under_maintainance` | — | Maintenance flag (optional `hours` / `time` query) |
+| `POST` | `/is_under_maintainance` | 🛡️ Admin | Set maintenance on/off or for N hours |
 | `GET` | `/health` | — | Health check |
 | `GET` | `/uptime` | — | Version & uptime |
 | `GET` | `/` | — | Welcome message |

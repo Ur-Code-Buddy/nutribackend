@@ -109,6 +109,24 @@ export class AppController {
     return this.appService.getCharges();
   }
 
+  @Get('is_under_maintainance')
+  getIsUnderMaintenance(
+    @Query('hours') hours?: string,
+    @Query('time') time?: string,
+  ) {
+    return this.appService.getIsUnderMaintenance(hours ?? time);
+  }
+
+  @Post('is_under_maintainance')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  setIsUnderMaintenance(
+    @Query('hours') hours?: string,
+    @Query('time') time?: string,
+  ) {
+    return this.appService.setIsUnderMaintenance(hours ?? time);
+  }
+
   @Post('resetdb')
   async resetDb(@Body('pass') pass: string) {
     const superAdminPass = this.configService.get<string>(

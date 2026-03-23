@@ -47,7 +47,10 @@ describe('AppController', () => {
         {
           provide: RedisService,
           useValue: {
-            getClient: jest.fn(),
+            client: {
+              get: jest.fn().mockResolvedValue(null),
+              set: jest.fn().mockResolvedValue('OK'),
+            },
             ping: jest.fn().mockResolvedValue('PONG'),
           },
         },

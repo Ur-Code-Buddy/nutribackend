@@ -831,6 +831,53 @@ Returns the current platform-wide charges and fees.
 }
 ```
 
+### Maintenance mode
+
+**GET** `/is_under_maintainance`
+
+Public. Returns whether the app should treat the platform as under maintenance (for splash screens, read-only banners, etc.). State is stored in Redis under `nutri:maintenance_until`.
+
+**Query parameters (optional):**
+
+
+| Field   | Type   | Required | Description                                                                                                                                 |
+| ------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hours` | number | No       | If **greater than 0**, the response is `true` only when maintenance is on **and** a scheduled end exists with **at least** that many hours remaining. If there is no end time (indefinite on), the flag stays `true`. |
+| `time`  | number | No       | Same meaning as `hours` (use one or the other; `hours` wins if both are sent).                                                            |
+
+
+**Default when Redis has no key:** `is_under_maintainance` is **`true`** until an admin clears or sets state via **POST**.
+
+**Response:**
+
+```json
+{
+  "is_under_maintainance": true,
+  "maintenance_ends_at": "2026-03-24T12:00:00.000Z"
+}
+```
+
+- `maintenance_ends_at` is `null` when maintenance is off or when there is no fixed end (e.g. default/unset behaviour or indefinite mode).
+
+---
+
+**POST** `/is_under_maintainance`
+
+**Role required:** `ADMIN` (JWT `Authorization: Bearer …`).
+
+Sets maintenance mode in Redis.
+
+**Query parameters:**
+
+
+| Field   | Type   | Required | Description                                                                                              |
+| ------- | ------ | -------- | -------------------------------------------------------------------------------------------------------- |
+| `hours` | number | No       | Omit → turn maintenance **on** with a long default end. **`0`** → maintenance **off**. **Positive** → on for that many hours from now. |
+| `time`  | number | No       | Same as `hours` (`hours` wins if both are sent).                                                         |
+
+
+**Response:** Same shape as **GET** (`is_under_maintainance`, `maintenance_ends_at`) reflecting the state after the update.
+
 ### Health Check
 
 **GET** `/health`

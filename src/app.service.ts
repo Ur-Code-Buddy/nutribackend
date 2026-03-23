@@ -3,6 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AllowedPincode } from './common/entities/allowed-pincode.entity';
+import { RedisService } from './redis/redis.service';
+
+/** Redis value: missing = treat as under maintenance; "0" = off; else unix ms until maintenance ends */
+const MAINTENANCE_UNTIL_KEY = 'nutri:maintenance_until';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -10,6 +14,7 @@ export class AppService implements OnModuleInit {
     private readonly configService: ConfigService,
     @InjectRepository(AllowedPincode)
     private readonly pincodeRepo: Repository<AllowedPincode>,
+    private readonly redisService: RedisService,
   ) { }
 
   async onModuleInit() {
@@ -63,5 +68,80 @@ export class AppService implements OnModuleInit {
       kitchen_fees: Number(this.configService.get<number>('KITCHEN_FEES', 15)),
       delivery_fees: Number(this.configService.get<number>('DELIVERY_FEES', 20)),
     };
+  }
+
+  /**
+   * No Redis key → under maintenance (true). Optional `hours` / `time` (> 0): true only if maintenance
+   * stays on for at least that many more hours (ignored when there is no end time — stays true).
+   */
+  async getIsUnderMaintenance(hoursFilter?: string): Promise<{
+    is_under_maintainance: boolean;
+    maintenance_ends_at: string | null;
+  }> {
+    const raw = await this.redisService.client.get(MAINTENANCE_UNTIL_KEY);
+    const endsAt = this.parseMaintenanceEndsAt(raw);
+    let is_under_maintainance = this.computeUnderMaintenance(raw);
+    const h = this.parseHoursQuery(hoursFilter);
+    if (h != null && h > 0 && is_under_maintainance && raw != null && raw !== '0') {
+      const until = parseInt(raw, 10);
+      if (!Number.isNaN(until) && until > Date.now()) {
+        const remainingMs = until - Date.now();
+        is_under_maintainance = remainingMs >= h * 3600000;
+      }
+    }
+    return {
+      is_under_maintainance,
+      maintenance_ends_at: endsAt,
+    };
+  }
+
+  /**
+   * POST: `hours` / `time` omitted → maintenance on with no scheduled end. `0` → off. Positive → on for N hours.
+   */
+  async setIsUnderMaintenance(hoursOrTime?: string): Promise<{
+    is_under_maintainance: boolean;
+    maintenance_ends_at: string | null;
+  }> {
+    const h = this.parseHoursQuery(hoursOrTime);
+    if (h === 0) {
+      await this.redisService.client.set(MAINTENANCE_UNTIL_KEY, '0');
+      return { is_under_maintainance: false, maintenance_ends_at: null };
+    }
+    if (h != null && h > 0) {
+      const until = Date.now() + h * 3600000;
+      await this.redisService.client.set(MAINTENANCE_UNTIL_KEY, String(until));
+      return {
+        is_under_maintainance: true,
+        maintenance_ends_at: new Date(until).toISOString(),
+      };
+    }
+    const far = String(Date.now() + 100 * 365 * 24 * 3600000);
+    await this.redisService.client.set(MAINTENANCE_UNTIL_KEY, far);
+    return {
+      is_under_maintainance: true,
+      maintenance_ends_at: new Date(parseInt(far, 10)).toISOString(),
+    };
+  }
+
+  private parseMaintenanceEndsAt(raw: string | null): string | null {
+    if (raw == null || raw === '0') return null;
+    const until = parseInt(raw, 10);
+    if (Number.isNaN(until)) return null;
+    return new Date(until).toISOString();
+  }
+
+  private computeUnderMaintenance(raw: string | null): boolean {
+    if (raw == null) return true;
+    if (raw === '0') return false;
+    const until = parseInt(raw, 10);
+    if (Number.isNaN(until)) return true;
+    return Date.now() < until;
+  }
+
+  private parseHoursQuery(q?: string): number | null {
+    if (q === undefined || q === null || String(q).trim() === '') return null;
+    const n = parseFloat(String(q));
+    if (Number.isNaN(n) || n < 0) return null;
+    return n;
   }
 }
