@@ -56,10 +56,11 @@ export class Order {
   @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
   paymentStatus: PaymentStatus;
 
-  @Column({ nullable: true })
+  // Explicit DB type required: `string | null` reflects as Object and breaks Postgres metadata
+  @Column({ type: 'varchar', length: 255, nullable: true })
   razorpayOrderId: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   razorpayPaymentId: string | null;
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })

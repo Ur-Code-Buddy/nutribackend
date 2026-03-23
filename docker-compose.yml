@@ -34,6 +34,9 @@ services:
       - PRODUCTION=${PRODUCTION}
       - SMS_API_KEY=${SMS_API_KEY}
       - SMS_CUSTOMER_ID=${SMS_CUSTOMER_ID}
+      # Razorpay (server-side: secret never exposed to clients; key id returned as publicKey from /payments/initiate)
+      - RAZORPAY_API_KEY=${RAZORPAY_API_KEY}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
     depends_on:
       - redis
     networks:
