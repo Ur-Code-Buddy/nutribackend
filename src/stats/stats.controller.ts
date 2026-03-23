@@ -3,7 +3,9 @@ import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ForceThrottle } from '../common/decorators/force-throttle.decorator';
 import { StatsService } from './stats.service';
 
-@Controller('api/v1/stats')
+// `v1/stats` — path after reverse proxies that strip `/api` from the public URL
+// (`https://host/api/v1/stats/public` → upstream GET `/v1/stats/public`)
+@Controller(['api/v1/stats', 'v1/stats'])
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}
 

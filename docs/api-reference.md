@@ -953,9 +953,16 @@ Aggregated counts for marketing or landing pages. **Not real-time:** values are 
 
 **Rate limiting:** **20 requests per minute per IP** on this route (`publicStats` throttler). This limit applies even when `PRODUCTION=false` (unlike most other endpoints).
 
+**Paths:** The handler is registered twice so it works **directly against Nest** and **behind gateways that strip `/api`** before proxying:
+
+| You call (browser / CDN) | Upstream path Nest sees |
+| ------------------------- | ------------------------ |
+| `GET /api/v1/stats/public` | `/api/v1/stats/public` or `/v1/stats/public` (both match) |
+| If your proxy forwards `https://host/api/v1/...` as `GET /v1/...` | Use `/v1/stats/public` — same controller |
+
 ### Get public stats
 
-**GET** `/api/v1/stats/public`
+**GET** `/api/v1/stats/public` **or** **GET** `/v1/stats/public`
 
 **Auth:** None (public).
 
