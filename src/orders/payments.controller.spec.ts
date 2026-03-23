@@ -45,8 +45,14 @@ describe('PaymentsController', () => {
 
     const result = await controller.initiate(mockReq as any, createOrderDto);
 
-    expect(paymentsService.initiate).toHaveBeenCalledWith('client-uuid-1', createOrderDto);
-    expect(result).toEqual({ razorpayOrderId: 'order_123', publicKey: 'rzp_test_xxx' });
+    expect(paymentsService.initiate).toHaveBeenCalledWith(
+      'client-uuid-1',
+      createOrderDto,
+    );
+    expect(result).toEqual({
+      razorpayOrderId: 'order_123',
+      publicKey: 'rzp_test_xxx',
+    });
   });
 
   it('confirm delegates to PaymentsService.confirm with user id and dto', async () => {
@@ -61,7 +67,10 @@ describe('PaymentsController', () => {
 
     const result = await controller.confirm(mockReq as any, confirmDto);
 
-    expect(paymentsService.confirm).toHaveBeenCalledWith('client-uuid-1', confirmDto);
+    expect(paymentsService.confirm).toHaveBeenCalledWith(
+      'client-uuid-1',
+      confirmDto,
+    );
     expect(result).toEqual(savedOrder);
   });
 });

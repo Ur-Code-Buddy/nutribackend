@@ -27,7 +27,7 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly kitchenService: KitchensService,
-  ) { }
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

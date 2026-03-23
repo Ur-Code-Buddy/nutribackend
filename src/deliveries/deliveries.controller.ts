@@ -23,7 +23,7 @@ export class DeliveriesController {
   constructor(
     private readonly deliveriesService: DeliveriesService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   @Get('credits')
   async getCredits(@Request() req: any) {
@@ -74,7 +74,7 @@ export class DeliveriesController {
         user: order.client?.username,
         kitchen: order.kitchen?.name,
         status: order.status,
-        items: order.items?.map(i => `${i.food_item?.name} x${i.quantity}`),
+        items: order.items?.map((i) => `${i.food_item?.name} x${i.quantity}`),
         driver: order.delivery_driver?.name || null,
         destination: order.client?.address,
         estimated_delivery: order.scheduled_for,
@@ -87,7 +87,10 @@ export class DeliveriesController {
       if (order.delivery_driver_id !== null) {
         throw new ForbiddenException('Not assigned to this delivery');
       }
-      if (order.status !== OrderStatus.ACCEPTED && order.status !== OrderStatus.READY) {
+      if (
+        order.status !== OrderStatus.ACCEPTED &&
+        order.status !== OrderStatus.READY
+      ) {
         throw new ForbiddenException('Delivery is not available');
       }
     }

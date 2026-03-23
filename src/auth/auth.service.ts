@@ -30,7 +30,9 @@ async function sendVerificationEmail(
   const verificationLink = `${backendUrl}/auth/verify-email?token=${token}`;
 
   if (process.env.PRODUCTION === 'false') {
-    console.log(`[DEV MODE] Email verification link for ${email}: ${verificationLink}`);
+    console.log(
+      `[DEV MODE] Email verification link for ${email}: ${verificationLink}`,
+    );
     return;
   }
 
@@ -233,7 +235,10 @@ async function sendPasswordResetOtpEmail(
           </body>
         </html>
       `,
-      sender: { name: 'NutriTiffin Security', email: 'nutritiffin.kitchen@gmail.com' },
+      sender: {
+        name: 'NutriTiffin Security',
+        email: 'nutritiffin.kitchen@gmail.com',
+      },
       to: [{ email }],
     });
     console.log(`[EMAIL SENT] Password reset OTP sent to ${email}`);
@@ -252,7 +257,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private redisService: RedisService,
-  ) { }
+  ) {}
 
   /**
    * Generate a secure random hex token and its expiry (24h from now).
@@ -316,7 +321,7 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto): Promise<User> {
-    const allowedDomains = ['gmail.com', 'yopmail.com', "hotmail.com"];
+    const allowedDomains = ['gmail.com', 'yopmail.com', 'hotmail.com'];
     const emailDomain = registerDto.email.split('@')[1]?.toLowerCase();
 
     if (!emailDomain || !allowedDomains.includes(emailDomain)) {
@@ -392,7 +397,9 @@ export class AuthService {
     if (!isDevelopment) {
       await sendVerificationEmail(user.email, token); // TODO: implement with Brevo
     } else {
-      console.log(`[DEV MODE] Auto-verified user ${user.email}. Verification link: ${process.env.BASE_URL || 'http://localhost:3000'}/auth/verify-email?token=${token}`);
+      console.log(
+        `[DEV MODE] Auto-verified user ${user.email}. Verification link: ${process.env.BASE_URL || 'http://localhost:3000'}/auth/verify-email?token=${token}`,
+      );
     }
 
     return user;
@@ -427,13 +434,19 @@ export class AuthService {
       // Wait 10 seconds before sending OTP (fire in background so we don't block the response)
       const phoneNumber = user.phone_number;
       setTimeout(() => {
-        this.resendPhoneOtp({ phone: phoneNumber }).catch(err => {
-          console.error('[SMS ERROR] Failed to send OTP during email verification', err);
+        this.resendPhoneOtp({ phone: phoneNumber }).catch((err) => {
+          console.error(
+            '[SMS ERROR] Failed to send OTP during email verification',
+            err,
+          );
         });
       }, 10000);
     }
 
-    return { message: 'Email verified successfully. An OTP has been sent to your phone to complete verification.' };
+    return {
+      message:
+        'Email verified successfully. An OTP has been sent to your phone to complete verification.',
+    };
   }
 
   async resendVerification(email: string): Promise<{ message: string }> {
@@ -527,14 +540,22 @@ export class AuthService {
     // Clean up OTP
     await this.redisService.client.del(redisKey);
 
-    return { message: 'Password has been changed successfully. You can now log in.' };
+    return {
+      message: 'Password has been changed successfully. You can now log in.',
+    };
   }
 
   async resendPhoneOtp(dto: ResendPhoneOtpDto) {
     if (process.env.PRODUCTION === 'false') {
       const redisKey = `phone_verify_id:${dto.phone}`;
-      await this.redisService.client.setex(redisKey, 300, 'dev-verification-id');
-      console.log(`[DEV MODE] Phone confirm OTP bypass for ${dto.phone}. Use any 4-digit OTP to verify.`);
+      await this.redisService.client.setex(
+        redisKey,
+        300,
+        'dev-verification-id',
+      );
+      console.log(
+        `[DEV MODE] Phone confirm OTP bypass for ${dto.phone}. Use any 4-digit OTP to verify.`,
+      );
       return { message: 'OTP sent successfully (DEV MODE)' };
     }
 
@@ -552,7 +573,7 @@ export class AuthService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'authToken': authToken,
+          authToken: authToken,
         },
       });
 
@@ -562,26 +583,41 @@ export class AuthService {
         try {
           result = JSON.parse(responseText);
         } catch (e) {
-          throw new BadRequestException(`Failed to parse SMS provider response (Status: ${response.status})`);
+          throw new BadRequestException(
+            `Failed to parse SMS provider response (Status: ${response.status})`,
+          );
         }
       }
 
-      if (response.ok && (result?.responseCode === 200 || result?.responseCode === '200')) {
+      if (
+        response.ok &&
+        (result?.responseCode === 200 || result?.responseCode === '200')
+      ) {
         // Store verificationId in Redis temporarily (e.g., 5 mins)
         const redisKey = `phone_verify_id:${dto.phone}`;
-        await this.redisService.client.setex(redisKey, 300, result.data.verificationId);
+        await this.redisService.client.setex(
+          redisKey,
+          300,
+          result.data.verificationId,
+        );
 
         return {
           message: 'OTP sent successfully',
         };
       }
 
-      throw new BadRequestException(result?.message || result?.data?.errorMessage || `Failed to send OTP (Status: ${response.status})`);
+      throw new BadRequestException(
+        result?.message ||
+          result?.data?.errorMessage ||
+          `Failed to send OTP (Status: ${response.status})`,
+      );
     } catch (error: any) {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new BadRequestException('Failed to communicate with SMS provider: ' + error.message);
+      throw new BadRequestException(
+        'Failed to communicate with SMS provider: ' + error.message,
+      );
     }
   }
 
@@ -609,7 +645,9 @@ export class AuthService {
     const verificationId = await this.redisService.client.get(redisKey);
 
     if (!verificationId) {
-      throw new BadRequestException('OTP expired or not requested for this phone number');
+      throw new BadRequestException(
+        'OTP expired or not requested for this phone number',
+      );
     }
 
     const authToken = process.env.SMS_API_KEY;
@@ -624,7 +662,7 @@ export class AuthService {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'authToken': authToken,
+          authToken: authToken,
         },
       });
 
@@ -634,17 +672,26 @@ export class AuthService {
         try {
           result = JSON.parse(responseText);
         } catch (e) {
-          throw new BadRequestException(`Failed to parse SMS provider response (Status: ${response.status})`);
+          throw new BadRequestException(
+            `Failed to parse SMS provider response (Status: ${response.status})`,
+          );
         }
       }
 
-      if (response.ok && (result?.responseCode === 200 || result?.responseCode === '200') && result?.data?.verificationStatus === 'VERIFICATION_COMPLETED') {
+      if (
+        response.ok &&
+        (result?.responseCode === 200 || result?.responseCode === '200') &&
+        result?.data?.verificationStatus === 'VERIFICATION_COMPLETED'
+      ) {
         const mobileNumber = result.data.mobileNumber;
 
         if (mobileNumber) {
-          const user = await this.usersService.findOneByPhoneNumber(mobileNumber);
+          const user =
+            await this.usersService.findOneByPhoneNumber(mobileNumber);
           if (!user) {
-            throw new NotFoundException('User with this phone number not found');
+            throw new NotFoundException(
+              'User with this phone number not found',
+            );
           }
 
           user.phone_verified = true;
@@ -660,12 +707,22 @@ export class AuthService {
         };
       }
 
-      throw new BadRequestException(result?.data?.errorMessage || result?.message || `Invalid or expired OTP (Status: ${response.status})`);
+      throw new BadRequestException(
+        result?.data?.errorMessage ||
+          result?.message ||
+          `Invalid or expired OTP (Status: ${response.status})`,
+      );
     } catch (error: any) {
-      if (error instanceof ConflictException || error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
-      throw new BadRequestException('Failed to communicate with SMS provider: ' + error.message);
+      throw new BadRequestException(
+        'Failed to communicate with SMS provider: ' + error.message,
+      );
     }
   }
 }

@@ -9,7 +9,10 @@ export class NotificationsService implements OnModuleInit {
   onModuleInit() {
     try {
       // Initialize Firebase using the downloaded JSON key
-      const serviceAccountPath = path.join(process.cwd(), 'nutritiffinServiceAccountKey.json');
+      const serviceAccountPath = path.join(
+        process.cwd(),
+        'nutritiffinServiceAccountKey.json',
+      );
       const serviceAccount = require(serviceAccountPath);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
@@ -20,7 +23,12 @@ export class NotificationsService implements OnModuleInit {
     }
   }
 
-  async sendPushNotification(fcmToken: string, title: string, body: string, data?: any) {
+  async sendPushNotification(
+    fcmToken: string,
+    title: string,
+    body: string,
+    data?: any,
+  ) {
     if (!fcmToken) return;
 
     try {
@@ -31,7 +39,9 @@ export class NotificationsService implements OnModuleInit {
       };
 
       const response = await admin.messaging().send(message);
-      this.logger.log(`Successfully sent notification to ${fcmToken.substring(0, 10)}...`);
+      this.logger.log(
+        `Successfully sent notification to ${fcmToken.substring(0, 10)}...`,
+      );
       return response;
     } catch (error) {
       this.logger.error('Error sending push notification', error);

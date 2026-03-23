@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, Request, Inject, forwardRef } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  Request,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
@@ -12,7 +22,9 @@ async function sendProfileUpdateEmail(
   changedFields: string[],
 ): Promise<void> {
   if (process.env.PRODUCTION === 'false') {
-    console.log(`[DEV MODE] Profile update notification for ${email}. Changed fields: ${changedFields.join(', ')}`);
+    console.log(
+      `[DEV MODE] Profile update notification for ${email}. Changed fields: ${changedFields.join(', ')}`,
+    );
     return;
   }
 
@@ -26,9 +38,7 @@ async function sendProfileUpdateEmail(
     phone_number: 'Phone Number',
   };
 
-  const changedList = changedFields
-    .map((f) => fieldLabels[f] || f)
-    .join(', ');
+  const changedList = changedFields.map((f) => fieldLabels[f] || f).join(', ');
 
   try {
     await client.transactionalEmails.sendTransacEmail({
@@ -93,9 +103,12 @@ export class UsersController {
     private readonly usersService: UsersService,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
-  ) { }
+  ) {}
 
-  @Throttle({ default: { limit: 10, ttl: 60000 }, hourly: { limit: 25, ttl: 3600000 } })
+  @Throttle({
+    default: { limit: 10, ttl: 60000 },
+    hourly: { limit: 25, ttl: 3600000 },
+  })
   @Get('check-username/:username')
   async checkUsername(@Param('username') username: string) {
     const user = await this.usersService.findOneByUsername(username);
@@ -118,10 +131,8 @@ export class UsersController {
     @Request() req: any,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    const { user, phoneChanged, changedFields } = await this.usersService.updateProfile(
-      req.user.userId,
-      updateProfileDto,
-    );
+    const { user, phoneChanged, changedFields } =
+      await this.usersService.updateProfile(req.user.userId, updateProfileDto);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash, ...result } = user;
@@ -147,9 +158,14 @@ export class UsersController {
 
     // Send notification email about the profile change (fire in background)
     if (changedFields.length > 0) {
-      sendProfileUpdateEmail(user.email, user.name, changedFields).catch((err) => {
-        console.error('[EMAIL ERROR] Failed to send profile update notification', err);
-      });
+      sendProfileUpdateEmail(user.email, user.name, changedFields).catch(
+        (err) => {
+          console.error(
+            '[EMAIL ERROR] Failed to send profile update notification',
+            err,
+          );
+        },
+      );
     }
 
     return response;
@@ -159,10 +175,16 @@ export class UsersController {
   @Patch('me/fcm-token')
   async updateFcmToken(@Request() req: any, @Body() body: any) {
     const token = body.fcm_token || body.fcmToken;
-    console.log(`[FCM-TOKEN] Received FCM token for user ${req.user.userId}:`, token);
+    console.log(
+      `[FCM-TOKEN] Received FCM token for user ${req.user.userId}:`,
+      token,
+    );
     if (!token) {
-        console.log(`[FCM-TOKEN] User ${req.user.userId} sent empty token request. Body:`, body);
-        return { success: false, message: 'Token is required' };
+      console.log(
+        `[FCM-TOKEN] User ${req.user.userId} sent empty token request. Body:`,
+        body,
+      );
+      return { success: false, message: 'Token is required' };
     }
     await this.usersService.updateFcmToken(req.user.userId, token);
     console.log(`[FCM-TOKEN] Token saved for user ${req.user.userId}`);

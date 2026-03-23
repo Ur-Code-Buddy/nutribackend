@@ -21,6 +21,7 @@ import { RedisModule } from './redis/redis.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { StatsModule } from './stats/stats.module';
 import { AllowedPincode } from './common/entities/allowed-pincode.entity';
 
 @Module({
@@ -82,6 +83,11 @@ import { AllowedPincode } from './common/entities/allowed-pincode.entity';
             ttl: 3600000,
             limit: isProd ? 100 : 1000000,
           },
+          {
+            name: 'publicStats',
+            ttl: 60000,
+            limit: 20,
+          },
         ];
       },
     }),
@@ -98,6 +104,7 @@ import { AllowedPincode } from './common/entities/allowed-pincode.entity';
     TransactionsModule,
     ReviewsModule,
     NotificationsModule,
+    StatsModule,
     TypeOrmModule.forFeature([AllowedPincode]),
   ],
   controllers: [AppController],
@@ -109,4 +116,4 @@ import { AllowedPincode } from './common/entities/allowed-pincode.entity';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

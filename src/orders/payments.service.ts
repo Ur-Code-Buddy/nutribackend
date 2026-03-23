@@ -13,7 +13,7 @@ export class PaymentsService {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   private getRazorpayClient() {
     const publicKey = this.configService.get<string>('RAZORPAY_API_KEY');
@@ -44,7 +44,10 @@ export class PaymentsService {
       .digest('hex');
   }
 
-  async initiate(clientId: string, dto: CreateOrderDto): Promise<{ razorpayOrderId: string; publicKey: string }> {
+  async initiate(
+    clientId: string,
+    dto: CreateOrderDto,
+  ): Promise<{ razorpayOrderId: string; publicKey: string }> {
     // clientId currently only used for receipt metadata (no auth role logic here).
     void clientId;
 
@@ -60,12 +63,12 @@ export class PaymentsService {
 
     const receipt = `ORD-${dto.kitchen_id.substring(0, 6)}-${Date.now()}`;
 
-    const zpOrder = await razorpay.orders.create({
+    const zpOrder = (await razorpay.orders.create({
       amount: amountInPaise,
       currency: 'INR',
       receipt,
       payment_capture: true,
-    }) as any;
+    })) as any;
 
     if (!zpOrder?.id) {
       throw new BadRequestException('Failed to create Razorpay order');
@@ -99,7 +102,9 @@ export class PaymentsService {
     const payment = await razorpay.payments.fetch(dto.razorpayPaymentId);
 
     if (!payment || payment.order_id !== dto.razorpayOrderId) {
-      throw new BadRequestException('Razorpay payment does not match the order');
+      throw new BadRequestException(
+        'Razorpay payment does not match the order',
+      );
     }
 
     if (payment.status !== 'captured') {
@@ -122,7 +127,11 @@ export class PaymentsService {
     };
 
     try {
-      return await this.ordersService.create(clientId, dto.originalDto, paymentMeta);
+      return await this.ordersService.create(
+        clientId,
+        dto.originalDto,
+        paymentMeta,
+      );
     } catch (err: any) {
       // Avoid leaking Razorpay internals; surface order validation issues as BadRequest.
       this.logger.error('Failed to create paid order', err?.message ?? err);
@@ -130,4 +139,3 @@ export class PaymentsService {
     }
   }
 }
-

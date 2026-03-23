@@ -47,7 +47,7 @@ export class OrdersService {
     private configService: ConfigService,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   private readonly logger = new Logger(OrdersService.name);
 
@@ -73,13 +73,18 @@ export class OrdersService {
     }
   }
 
-  private async buildOrderQuote(dto: CreateOrderDto, queryRunner: QueryRunner): Promise<OrderQuote> {
+  private async buildOrderQuote(
+    dto: CreateOrderDto,
+    queryRunner: QueryRunner,
+  ): Promise<OrderQuote> {
     // 2. Validate Items & Availability + build order line snapshots
     const orderItems: OrderItem[] = [];
     let totalPrice = 0;
 
     // To avoid deadlocks, sort items by food_item_id
-    const sortedItems = [...dto.items].sort((a, b) => a.food_item_id.localeCompare(b.food_item_id));
+    const sortedItems = [...dto.items].sort((a, b) =>
+      a.food_item_id.localeCompare(b.food_item_id),
+    );
 
     for (const itemDto of sortedItems) {
       // Use pessimistic write lock on the food item row only
@@ -140,14 +145,24 @@ export class OrdersService {
     }
 
     // 3. Calculate Fees
-    const platformFees = Number(this.configService.get<number>('PLATFORM_FEES', 10));
-    const deliveryFees = Number(this.configService.get<number>('DELIVERY_FEES', 20));
-    const kitchenFeesPercent = Number(this.configService.get<number>('KITCHEN_FEES', 15));
+    const platformFees = Number(
+      this.configService.get<number>('PLATFORM_FEES', 10),
+    );
+    const deliveryFees = Number(
+      this.configService.get<number>('DELIVERY_FEES', 20),
+    );
+    const kitchenFeesPercent = Number(
+      this.configService.get<number>('KITCHEN_FEES', 15),
+    );
     const taxPercent = Number(this.configService.get<number>('TAX_PERCENT', 5));
 
-    const kitchenFees = parseFloat(((kitchenFeesPercent / 100) * totalPrice).toFixed(2));
+    const kitchenFees = parseFloat(
+      ((kitchenFeesPercent / 100) * totalPrice).toFixed(2),
+    );
     const taxFees = parseFloat(((taxPercent / 100) * totalPrice).toFixed(2));
-    const grandTotal = parseFloat((totalPrice + platformFees + deliveryFees + taxFees).toFixed(2));
+    const grandTotal = parseFloat(
+      (totalPrice + platformFees + deliveryFees + taxFees).toFixed(2),
+    );
 
     return {
       orderItems,
@@ -183,7 +198,11 @@ export class OrdersService {
     }
   }
 
-  async create(clientId: string, dto: CreateOrderDto, paymentMeta?: RazorpayPaymentMeta) {
+  async create(
+    clientId: string,
+    dto: CreateOrderDto,
+    paymentMeta?: RazorpayPaymentMeta,
+  ) {
     this.validateScheduledFor(dto.scheduled_for);
 
     const queryRunner = this.ordersRepo.manager.connection.createQueryRunner();
@@ -228,15 +247,19 @@ export class OrdersService {
 
       // Send Firebase Notification to Kitchen Owner
       try {
-        const kitchen = await queryRunner.manager.findOne(Kitchen, { where: { id: dto.kitchen_id } });
+        const kitchen = await queryRunner.manager.findOne(Kitchen, {
+          where: { id: dto.kitchen_id },
+        });
         if (kitchen) {
-          const kitchenOwner = await this.usersService.findOneById(kitchen.owner_id);
+          const kitchenOwner = await this.usersService.findOneById(
+            kitchen.owner_id,
+          );
           if (kitchenOwner && kitchenOwner.fcm_token) {
             this.notificationsService.sendPushNotification(
               kitchenOwner.fcm_token,
               'New Order Received!',
               `A new order was placed. Please check your dashboard.`,
-              { orderId: savedOrder.id }
+              { orderId: savedOrder.id },
             );
           }
         }
@@ -295,11 +318,15 @@ export class OrdersService {
 
     if (status === OrderStatus.ACCEPTED || status === OrderStatus.REJECTED) {
       if (order.status !== OrderStatus.PENDING) {
-        throw new BadRequestException('Order status cannot be conditionally changed unless PENDING.');
+        throw new BadRequestException(
+          'Order status cannot be conditionally changed unless PENDING.',
+        );
       }
     } else if (status === OrderStatus.READY) {
       if (order.status !== OrderStatus.ACCEPTED) {
-        throw new BadRequestException('Order must be ACCEPTED before it can be marked as READY.');
+        throw new BadRequestException(
+          'Order must be ACCEPTED before it can be marked as READY.',
+        );
       }
     }
 
@@ -334,7 +361,7 @@ export class OrdersService {
             client.fcm_token,
             title,
             body,
-            { orderId: savedOrder.id }
+            { orderId: savedOrder.id },
           );
         }
       }

@@ -42,11 +42,13 @@ describe('OrdersService', () => {
                       getRawOne: jest.fn(),
                     })),
                     create: jest.fn((entity, dto) => dto),
-                    save: jest.fn((order) => Promise.resolve({ ...order, id: 'order-1' })),
-                  }
-                })
-              }
-            }
+                    save: jest.fn((order) =>
+                      Promise.resolve({ ...order, id: 'order-1' }),
+                    ),
+                  },
+                }),
+              },
+            },
           },
         },
         {
@@ -130,15 +132,23 @@ describe('OrdersService', () => {
 
     const queryRunner = mockOrdersRepo.manager.connection.createQueryRunner();
     queryRunner.manager.findOne.mockImplementation((entity: any) => {
-      if (entity && entity.name === 'FoodItem') return Promise.resolve(foodItem);
-      if (entity && entity.name === 'Kitchen') return Promise.resolve({ id: 'kitchen-1', owner_id: 'owner-1' });
+      if (entity && entity.name === 'FoodItem')
+        return Promise.resolve(foodItem);
+      if (entity && entity.name === 'Kitchen')
+        return Promise.resolve({ id: 'kitchen-1', owner_id: 'owner-1' });
       return Promise.resolve(null);
     });
 
     const mockUsersService = module.get<UsersService>(UsersService);
-    const mockNotificationsService = module.get<NotificationsService>(NotificationsService);
-    jest.spyOn(mockUsersService, 'findOneById').mockResolvedValue({ id: 'owner-1', fcm_token: 'valid_fcm_token' } as any);
-    jest.spyOn(mockNotificationsService, 'sendPushNotification').mockResolvedValue(undefined);
+    const mockNotificationsService =
+      module.get<NotificationsService>(NotificationsService);
+    jest.spyOn(mockUsersService, 'findOneById').mockResolvedValue({
+      id: 'owner-1',
+      fcm_token: 'valid_fcm_token',
+    } as any);
+    jest
+      .spyOn(mockNotificationsService, 'sendPushNotification')
+      .mockResolvedValue(undefined);
 
     const result = await service.create('client-1', createDto as any);
 
@@ -159,7 +169,7 @@ describe('OrdersService', () => {
       'valid_fcm_token',
       'New Order Received!',
       expect.any(String),
-      expect.objectContaining({ orderId: 'order-1' })
+      expect.objectContaining({ orderId: 'order-1' }),
     );
   });
 
@@ -260,11 +270,15 @@ describe('OrdersService', () => {
     const mockOrdersRepo = module.get(getRepositoryToken(Order));
     const queryRunner = mockOrdersRepo.manager.connection.createQueryRunner();
     queryRunner.manager.findOne.mockImplementation((entity: any) => {
-      if (entity && entity.name === 'FoodItem') return Promise.resolve(foodItem);
-      if (entity && entity.name === 'Kitchen') return Promise.resolve({ id: 'kitchen-1', owner_id: 'owner-1' });
+      if (entity && entity.name === 'FoodItem')
+        return Promise.resolve(foodItem);
+      if (entity && entity.name === 'Kitchen')
+        return Promise.resolve({ id: 'kitchen-1', owner_id: 'owner-1' });
       return Promise.resolve(null);
     });
     const mockUsersService = module.get<UsersService>(UsersService);
-    jest.spyOn(mockUsersService, 'findOneById').mockResolvedValue({ id: 'owner-1', fcm_token: 'token123' } as any);
+    jest
+      .spyOn(mockUsersService, 'findOneById')
+      .mockResolvedValue({ id: 'owner-1', fcm_token: 'token123' } as any);
   }
 });

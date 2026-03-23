@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Request, Query, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  Query,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -69,7 +79,10 @@ async function sendBanNotificationEmail(
           </body>
         </html>
       `,
-      sender: { name: 'NutriTiffin Security', email: 'nutritiffin.kitchen@gmail.com' },
+      sender: {
+        name: 'NutriTiffin Security',
+        email: 'nutritiffin.kitchen@gmail.com',
+      },
       to: [{ email }],
     });
     console.log(`[EMAIL SENT] Ban notification sent to ${email}`);
@@ -156,7 +169,7 @@ export class AdminController {
   constructor(
     private readonly usersService: UsersService,
     private readonly txnService: TransactionsService,
-  ) { }
+  ) {}
 
   @Get('users')
   async getAllUsers() {
@@ -169,11 +182,15 @@ export class AdminController {
       return [];
     }
     const users = await this.usersService.searchUsers(q);
-    return users.map(user => ({
+    return users.map((user) => ({
       id: user.id,
       username: user.username,
       credits: user.credits,
-      status: user.is_banned ? 'banned' : (user.is_active ? 'active' : 'disabled'),
+      status: user.is_banned
+        ? 'banned'
+        : user.is_active
+          ? 'active'
+          : 'disabled',
     }));
   }
 
@@ -184,7 +201,8 @@ export class AdminController {
       throw new NotFoundException(`User with username '${username}' not found`);
     }
     const txns = await this.txnService.findByUser(user.id, 1, 1);
-    const last_transaction = txns.data.length > 0 ? txns.data[0].created_at : null;
+    const last_transaction =
+      txns.data.length > 0 ? txns.data[0].created_at : null;
 
     return {
       username: user.username,
@@ -205,7 +223,7 @@ export class AdminController {
       throw new NotFoundException(`User with username '${username}' not found`);
     }
     const txns = await this.txnService.findByUser(user.id, 1, 50);
-    return txns.data.map(txn => ({
+    return txns.data.map((txn) => ({
       id: txn.short_id || txn.id,
       type: txn.type.toLowerCase(),
       credits: txn.amount,

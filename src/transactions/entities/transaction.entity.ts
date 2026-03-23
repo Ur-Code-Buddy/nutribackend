@@ -1,10 +1,10 @@
 import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    ManyToOne,
-    JoinColumn,
-    CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -14,8 +14,8 @@ import { User } from '../../users/entities/user.entity';
  *  DEBIT   = credits were deducted from `from_user`
  */
 export enum TransactionType {
-    CREDIT = 'CREDIT',
-    DEBIT = 'DEBIT',
+  CREDIT = 'CREDIT',
+  DEBIT = 'DEBIT',
 }
 
 /**
@@ -25,60 +25,60 @@ export enum TransactionType {
  *  ORDER     = Payment related to order placement / refund
  */
 export enum TransactionSource {
-    SUPPORT = 'SUPPORT',
-    DELIVERY = 'DELIVERY',
-    ORDER = 'ORDER',
+  SUPPORT = 'SUPPORT',
+  DELIVERY = 'DELIVERY',
+  ORDER = 'ORDER',
 }
 
 @Entity('transactions')
 export class Transaction {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    /**
-     * Human-readable short ID, e.g. "TXN-A1B2C3".
-     * Useful for display in lists & receipts.
-     */
-    @Column({ unique: true })
-    short_id: string;
+  /**
+   * Human-readable short ID, e.g. "TXN-A1B2C3".
+   * Useful for display in lists & receipts.
+   */
+  @Column({ unique: true })
+  short_id: string;
 
-    // ── Parties ──────────────────────────────────────────────
+  // ── Parties ──────────────────────────────────────────────
 
-    /** The user who sent / lost credits (null when SUPPORT adds credits) */
-    @Column({ type: 'uuid', nullable: true })
-    from_user_id: string | null;
+  /** The user who sent / lost credits (null when SUPPORT adds credits) */
+  @Column({ type: 'uuid', nullable: true })
+  from_user_id: string | null;
 
-    @ManyToOne(() => User, { nullable: true, eager: false })
-    @JoinColumn({ name: 'from_user_id' })
-    from_user: User | null;
+  @ManyToOne(() => User, { nullable: true, eager: false })
+  @JoinColumn({ name: 'from_user_id' })
+  from_user: User | null;
 
-    /** The user who received credits (null when SUPPORT deducts credits) */
-    @Column({ type: 'uuid', nullable: true })
-    to_user_id: string | null;
+  /** The user who received credits (null when SUPPORT deducts credits) */
+  @Column({ type: 'uuid', nullable: true })
+  to_user_id: string | null;
 
-    @ManyToOne(() => User, { nullable: true, eager: false })
-    @JoinColumn({ name: 'to_user_id' })
-    to_user: User | null;
+  @ManyToOne(() => User, { nullable: true, eager: false })
+  @JoinColumn({ name: 'to_user_id' })
+  to_user: User | null;
 
-    // ── Amount & meta ────────────────────────────────────────
+  // ── Amount & meta ────────────────────────────────────────
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    amount: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  amount: number;
 
-    @Column({ type: 'enum', enum: TransactionType })
-    type: TransactionType;
+  @Column({ type: 'enum', enum: TransactionType })
+  type: TransactionType;
 
-    @Column({ type: 'enum', enum: TransactionSource })
-    source: TransactionSource;
+  @Column({ type: 'enum', enum: TransactionSource })
+  source: TransactionSource;
 
-    /** Short human-readable description, e.g. "Credits added by SUPPORT" or "Kitchen payout for DEL-X9K2" */
-    @Column({ type: 'text' })
-    description: string;
+  /** Short human-readable description, e.g. "Credits added by SUPPORT" or "Kitchen payout for DEL-X9K2" */
+  @Column({ type: 'text' })
+  description: string;
 
-    /** Optional reference to a related order id */
-    @Column({ type: 'uuid', nullable: true })
-    reference_id: string | null;
+  /** Optional reference to a related order id */
+  @Column({ type: 'uuid', nullable: true })
+  reference_id: string | null;
 
-    @CreateDateColumn()
-    created_at: Date;
+  @CreateDateColumn()
+  created_at: Date;
 }

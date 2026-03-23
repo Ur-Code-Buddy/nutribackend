@@ -20,7 +20,7 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private dataSource: DataSource,
-  ) { }
+  ) {}
 
   async create(
     username: string,
@@ -167,7 +167,10 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
 
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(dto.current_password, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(
+      dto.current_password,
+      user.password_hash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
@@ -185,11 +188,16 @@ export class UsersService {
       changedFields.push('pincode');
     }
 
-    if (dto.phone_number !== undefined && dto.phone_number !== user.phone_number) {
+    if (
+      dto.phone_number !== undefined &&
+      dto.phone_number !== user.phone_number
+    ) {
       // Check if the new phone number is already taken by another user
       const existingUser = await this.findOneByPhoneNumber(dto.phone_number);
       if (existingUser && existingUser.id !== id) {
-        throw new ConflictException('Phone number already in use by another account');
+        throw new ConflictException(
+          'Phone number already in use by another account',
+        );
       }
 
       user.phone_number = dto.phone_number;
@@ -227,7 +235,9 @@ export class UsersService {
 
       // If owner is a kitchen owner, soft delete their kitchen and food items
       if (user.role === UserRole.KITCHEN_OWNER) {
-        const kitchen = await manager.findOne(Kitchen, { where: { owner_id: id } });
+        const kitchen = await manager.findOne(Kitchen, {
+          where: { owner_id: id },
+        });
         if (kitchen) {
           await manager.softRemove(kitchen);
           await manager.softDelete(FoodItem, { kitchen_id: kitchen.id });
@@ -263,13 +273,34 @@ export class UsersService {
       transactions_today,
     ] = await Promise.all([
       this.dataSource.manager.count('User'),
-      this.dataSource.manager.count('User', { where: { is_active: true, is_banned: false } }),
-      this.dataSource.manager.count('User', { where: [{ is_active: false }, { is_banned: true }] }),
-      this.dataSource.manager.createQueryBuilder('User', 'user').select('SUM(user.credits)', 'total').getRawOne(),
+      this.dataSource.manager.count('User', {
+        where: { is_active: true, is_banned: false },
+      }),
+      this.dataSource.manager.count('User', {
+        where: [{ is_active: false }, { is_banned: true }],
+      }),
+      this.dataSource.manager
+        .createQueryBuilder('User', 'user')
+        .select('SUM(user.credits)', 'total')
+        .getRawOne(),
       this.dataSource.manager.count('Kitchen', { where: { is_active: true } }),
-      this.dataSource.manager.count('Order', { where: { status: In(['PENDING', 'ACCEPTED', 'READY', 'PICKED_UP', 'OUT_FOR_DELIVERY']) } }),
-      this.dataSource.manager.count('Order', { where: { status: 'DELIVERED', delivered_at: MoreThanOrEqual(today) } }),
-      this.dataSource.manager.count('Transaction', { where: { created_at: MoreThanOrEqual(today) } }),
+      this.dataSource.manager.count('Order', {
+        where: {
+          status: In([
+            'PENDING',
+            'ACCEPTED',
+            'READY',
+            'PICKED_UP',
+            'OUT_FOR_DELIVERY',
+          ]),
+        },
+      }),
+      this.dataSource.manager.count('Order', {
+        where: { status: 'DELIVERED', delivered_at: MoreThanOrEqual(today) },
+      }),
+      this.dataSource.manager.count('Transaction', {
+        where: { created_at: MoreThanOrEqual(today) },
+      }),
     ]);
 
     return {

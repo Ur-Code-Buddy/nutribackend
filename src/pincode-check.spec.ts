@@ -17,13 +17,17 @@ describe('AppController (Pincode Check)', () => {
   beforeEach(async () => {
     pincodeRepo = {
       count: jest.fn().mockResolvedValue(1),
-      findOne: jest.fn().mockImplementation((opts: { where: { pincode: number; is_active?: boolean } }) => {
-        const pin = opts?.where?.pincode;
-        if (pin === 605003 || pin === 605001) {
-          return Promise.resolve({ pincode: pin, is_active: true });
-        }
-        return Promise.resolve(null);
-      }),
+      findOne: jest
+        .fn()
+        .mockImplementation(
+          (opts: { where: { pincode: number; is_active?: boolean } }) => {
+            const pin = opts?.where?.pincode;
+            if (pin === 605003 || pin === 605001) {
+              return Promise.resolve({ pincode: pin, is_active: true });
+            }
+            return Promise.resolve(null);
+          },
+        ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -60,19 +64,33 @@ describe('AppController (Pincode Check)', () => {
 
   describe('isMyDistrictAvailable', () => {
     it('should return true for allowed pincodes (string)', async () => {
-      await expect(appController.isMyDistrictAvailable('605003')).resolves.toBe(true);
-      await expect(appController.isMyDistrictAvailable('605001')).resolves.toBe(true);
+      await expect(appController.isMyDistrictAvailable('605003')).resolves.toBe(
+        true,
+      );
+      await expect(appController.isMyDistrictAvailable('605001')).resolves.toBe(
+        true,
+      );
     });
 
     it('should return false for disallowed pincodes (string)', async () => {
-      await expect(appController.isMyDistrictAvailable('605002')).resolves.toBe(false);
-      await expect(appController.isMyDistrictAvailable('110001')).resolves.toBe(false);
+      await expect(appController.isMyDistrictAvailable('605002')).resolves.toBe(
+        false,
+      );
+      await expect(appController.isMyDistrictAvailable('110001')).resolves.toBe(
+        false,
+      );
     });
 
     it('should return false for invalid input', async () => {
-      await expect(appController.isMyDistrictAvailable(undefined as any)).resolves.toBe(false);
-      await expect(appController.isMyDistrictAvailable('')).resolves.toBe(false);
-      await expect(appController.isMyDistrictAvailable('abc')).resolves.toBe(false);
+      await expect(
+        appController.isMyDistrictAvailable(undefined as any),
+      ).resolves.toBe(false);
+      await expect(appController.isMyDistrictAvailable('')).resolves.toBe(
+        false,
+      );
+      await expect(appController.isMyDistrictAvailable('abc')).resolves.toBe(
+        false,
+      );
     });
   });
 });

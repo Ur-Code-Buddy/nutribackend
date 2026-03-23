@@ -19,4 +19,3 @@ export class ConfirmPaymentDto {
   @Type(() => CreateOrderDto)
   originalDto: CreateOrderDto;
 }
-

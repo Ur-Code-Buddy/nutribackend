@@ -947,6 +947,49 @@ Returns a success message with the command execution output.
 
 ---
 
+## Public statistics (`/api/v1/stats`)
+
+Aggregated counts for marketing or landing pages. **Not real-time:** values are served from **Redis** (refreshed about every **15 minutes** and on a cache miss with single-flight locking). The database is not queried on every request.
+
+**Rate limiting:** **20 requests per minute per IP** on this route (`publicStats` throttler). This limit applies even when `PRODUCTION=false` (unlike most other endpoints).
+
+### Get public stats
+
+**GET** `/api/v1/stats/public`
+
+**Auth:** None (public).
+
+**Response:**
+
+```json
+{
+  "number_of_active_clients": 1204,
+  "number_of_active_kitchens": 87,
+  "number_of_active_delivery_partners": 340,
+  "number_of_orders_fulfilled": 52891,
+  "as_of": "2026-03-23T10:00:00.000Z"
+}
+```
+
+**Fields:**
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `number_of_active_clients` | number | Users with role `CLIENT`, `is_active: true`, `is_banned: false` (soft-deleted users excluded). |
+| `number_of_active_kitchens` | number | Kitchens with `is_active: true` (soft-deleted kitchens excluded). |
+| `number_of_active_delivery_partners` | number | Users with role `DELIVERY_DRIVER`, `is_active: true`, `is_banned: false`. |
+| `number_of_orders_fulfilled` | number | Orders with `status: DELIVERED`. |
+| `as_of` | string | ISO 8601 timestamp when the counts were computed (when the cached payload was built). |
+
+**Implementation notes:**
+
+- Redis key: `stats:public:v1`, TTL **900 seconds** (15 minutes).
+- A background refresh runs on an interval of the same length; startup also warms the cache once.
+- If Redis is unavailable, the API may compute counts directly from the database for that request (logged as a warning).
+
+---
+
 ## Deliveries (`/deliveries`)
 
 ### Get Driver Credits

@@ -11,7 +11,7 @@ import { PaymentsService } from './payments.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.CLIENT)
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) { }
+  constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('initiate')
   initiate(@Request() req: any, @Body() createOrderDto: CreateOrderDto) {
@@ -23,4 +23,3 @@ export class PaymentsController {
     return this.paymentsService.confirm(req.user.userId, confirmDto);
   }
 }
-

@@ -15,14 +15,16 @@ export class AppService implements OnModuleInit {
     @InjectRepository(AllowedPincode)
     private readonly pincodeRepo: Repository<AllowedPincode>,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     // Seed default pincodes if none exist
     const count = await this.pincodeRepo.count();
     if (count === 0) {
       const defaults = [605001, 605002, 605003];
-      const entities = defaults.map(p => this.pincodeRepo.create({ pincode: p }));
+      const entities = defaults.map((p) =>
+        this.pincodeRepo.create({ pincode: p }),
+      );
       await this.pincodeRepo.save(entities);
     }
   }
@@ -36,7 +38,7 @@ export class AppService implements OnModuleInit {
     const pin = parseInt(pincode, 10);
     if (isNaN(pin)) return false;
     const result = await this.pincodeRepo.findOne({
-      where: { pincode: pin, is_active: true }
+      where: { pincode: pin, is_active: true },
     });
     return !!result;
   }
@@ -64,9 +66,13 @@ export class AppService implements OnModuleInit {
 
   getCharges() {
     return {
-      platform_fees: Number(this.configService.get<number>('PLATFORM_FEES', 10)),
+      platform_fees: Number(
+        this.configService.get<number>('PLATFORM_FEES', 10),
+      ),
       kitchen_fees: Number(this.configService.get<number>('KITCHEN_FEES', 15)),
-      delivery_fees: Number(this.configService.get<number>('DELIVERY_FEES', 20)),
+      delivery_fees: Number(
+        this.configService.get<number>('DELIVERY_FEES', 20),
+      ),
     };
   }
 
@@ -82,7 +88,13 @@ export class AppService implements OnModuleInit {
     const endsAt = this.parseMaintenanceEndsAt(raw);
     let is_under_maintainance = this.computeUnderMaintenance(raw);
     const h = this.parseHoursQuery(hoursFilter);
-    if (h != null && h > 0 && is_under_maintainance && raw != null && raw !== '0') {
+    if (
+      h != null &&
+      h > 0 &&
+      is_under_maintainance &&
+      raw != null &&
+      raw !== '0'
+    ) {
       const until = parseInt(raw, 10);
       if (!Number.isNaN(until) && until > Date.now()) {
         const remainingMs = until - Date.now();
@@ -128,10 +140,7 @@ export class AppService implements OnModuleInit {
     };
   }
 
-  private resolveBodyHours(
-    hours?: number,
-    time?: number,
-  ): number | null {
+  private resolveBodyHours(hours?: number, time?: number): number | null {
     const raw = hours ?? time;
     if (raw === undefined || raw === null || Number.isNaN(raw)) return null;
     return raw;

@@ -8,7 +8,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, In } from 'typeorm';
 import { Order, OrderStatus } from '../orders/entities/order.entity';
 import { User } from '../users/entities/user.entity';
-import { Transaction, TransactionType, TransactionSource } from '../transactions/entities/transaction.entity';
+import {
+  Transaction,
+  TransactionType,
+  TransactionSource,
+} from '../transactions/entities/transaction.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
@@ -21,7 +25,7 @@ export class DeliveriesService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   async findAllAvailable() {
     const orders = await this.ordersRepository.find({
@@ -67,7 +71,13 @@ export class DeliveriesService {
   async findOne(id: string) {
     const order = await this.ordersRepository.findOne({
       where: { id },
-      relations: ['kitchen', 'client', 'items', 'items.food_item', 'delivery_driver'],
+      relations: [
+        'kitchen',
+        'client',
+        'items',
+        'items.food_item',
+        'delivery_driver',
+      ],
     });
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} not found`);
@@ -76,7 +86,8 @@ export class DeliveriesService {
   }
 
   async acceptDelivery(id: string, driverId: string) {
-    const queryRunner = this.ordersRepository.manager.connection.createQueryRunner();
+    const queryRunner =
+      this.ordersRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -91,12 +102,17 @@ export class DeliveriesService {
         throw new NotFoundException(`Order with ID ${id} not found`);
       }
 
-      if (order.status !== OrderStatus.ACCEPTED && order.status !== OrderStatus.READY) {
+      if (
+        order.status !== OrderStatus.ACCEPTED &&
+        order.status !== OrderStatus.READY
+      ) {
         throw new BadRequestException('Order is not available for pickup');
       }
 
       if (order.delivery_driver_id) {
-        throw new BadRequestException('Order already accepted by another driver');
+        throw new BadRequestException(
+          'Order already accepted by another driver',
+        );
       }
 
       order.delivery_driver_id = driverId;
@@ -105,10 +121,15 @@ export class DeliveriesService {
       return savedOrder;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
-      throw new BadRequestException('Failed to accept delivery: ' + (error.message || 'Concurrent mod'));
+      throw new BadRequestException(
+        'Failed to accept delivery: ' + (error.message || 'Concurrent mod'),
+      );
     } finally {
       await queryRunner.release();
     }
@@ -131,12 +152,14 @@ export class DeliveriesService {
     const savedOrder = await this.ordersRepository.save(order);
 
     if (order.client && order.client.fcm_token) {
-      this.notificationsService.sendPushNotification(
-        order.client.fcm_token,
-        'Order Picked Up!',
-        'Your order has been picked up and is on its way.',
-        { orderId: order.id }
-      ).catch(err => this.logger.error('Push notification failed', err));
+      this.notificationsService
+        .sendPushNotification(
+          order.client.fcm_token,
+          'Order Picked Up!',
+          'Your order has been picked up and is on its way.',
+          { orderId: order.id },
+        )
+        .catch((err) => this.logger.error('Push notification failed', err));
     }
 
     return savedOrder;
@@ -150,7 +173,9 @@ export class DeliveriesService {
     }
 
     if (order.status !== OrderStatus.PICKED_UP) {
-      throw new BadRequestException('Order must be PICKED_UP before going out for delivery');
+      throw new BadRequestException(
+        'Order must be PICKED_UP before going out for delivery',
+      );
     }
 
     order.status = OrderStatus.OUT_FOR_DELIVERY;
@@ -158,12 +183,14 @@ export class DeliveriesService {
     const savedOrder = await this.ordersRepository.save(order);
 
     if (order.client && order.client.fcm_token) {
-      this.notificationsService.sendPushNotification(
-        order.client.fcm_token,
-        'Order Out for Delivery!',
-        'Your driver is out for delivery with your order.',
-        { orderId: order.id }
-      ).catch(err => this.logger.error('Push notification failed', err));
+      this.notificationsService
+        .sendPushNotification(
+          order.client.fcm_token,
+          'Order Out for Delivery!',
+          'Your driver is out for delivery with your order.',
+          { orderId: order.id },
+        )
+        .catch((err) => this.logger.error('Push notification failed', err));
     }
 
     return savedOrder;
@@ -180,7 +207,8 @@ export class DeliveriesService {
       throw new BadRequestException('Order is not out for delivery');
     }
 
-    const queryRunner = this.ordersRepository.manager.connection.createQueryRunner();
+    const queryRunner =
+      this.ordersRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -269,22 +297,29 @@ export class DeliveriesService {
       await queryRunner.commitTransaction();
 
       if (txOrder.client && txOrder.client.fcm_token) {
-        this.notificationsService.sendPushNotification(
-          txOrder.client.fcm_token,
-          'Order Delivered!',
-          'Your order has been delivered successfully. Enjoy your meal!',
-          { orderId: txOrder.id }
-        ).catch(err => this.logger.error('Push notification failed', err));
+        this.notificationsService
+          .sendPushNotification(
+            txOrder.client.fcm_token,
+            'Order Delivered!',
+            'Your order has been delivered successfully. Enjoy your meal!',
+            { orderId: txOrder.id },
+          )
+          .catch((err) => this.logger.error('Push notification failed', err));
       }
 
       // Return the completed order with updated fields
       return txOrder;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
-      throw new BadRequestException('Failed to finish delivery: ' + (error.message || 'Concurrent mod'));
+      throw new BadRequestException(
+        'Failed to finish delivery: ' + (error.message || 'Concurrent mod'),
+      );
     } finally {
       await queryRunner.release();
     }

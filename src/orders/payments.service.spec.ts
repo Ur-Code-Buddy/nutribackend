@@ -31,7 +31,9 @@ describe('PaymentsService (Razorpay)', () => {
   const baseDto: CreateOrderDto = {
     kitchen_id: 'c282d569-e3a9-4820-ad35-d4093a8b96d8',
     scheduled_for: '2026-02-16',
-    items: [{ food_item_id: 'aebf865c-ab8e-405b-9e5b-ab4fce869084', quantity: 2 }],
+    items: [
+      { food_item_id: 'aebf865c-ab8e-405b-9e5b-ab4fce869084', quantity: 2 },
+    ],
   };
 
   const buildSignature = (razorpayOrderId: string, razorpayPaymentId: string) =>
@@ -73,7 +75,7 @@ describe('PaymentsService (Razorpay)', () => {
       grandTotal: 51,
     });
 
-    (ordersCreateMock as jest.Mock).mockResolvedValue({ id: 'order_zp_123' });
+    ordersCreateMock.mockResolvedValue({ id: 'order_zp_123' });
 
     const res = await paymentsService.initiate('client-1', baseDto);
 
@@ -115,7 +117,7 @@ describe('PaymentsService (Razorpay)', () => {
       grandTotal: 51,
     });
 
-    (paymentsFetchMock as jest.Mock).mockResolvedValue({
+    paymentsFetchMock.mockResolvedValue({
       order_id: razorpayOrderId,
       status: 'failed',
       amount: '5100',
@@ -142,7 +144,7 @@ describe('PaymentsService (Razorpay)', () => {
       grandTotal: 51,
     });
 
-    (paymentsFetchMock as jest.Mock).mockResolvedValue({
+    paymentsFetchMock.mockResolvedValue({
       order_id: razorpayOrderId,
       status: 'captured',
       amount: '5090',
@@ -161,4 +163,3 @@ describe('PaymentsService (Razorpay)', () => {
     expect(ordersService.create).not.toHaveBeenCalled();
   });
 });
-
