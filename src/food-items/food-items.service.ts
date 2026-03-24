@@ -18,13 +18,29 @@ export class FoodItemsService {
     return this.foodItemRepo.save(item);
   }
 
+  /** All items for a kitchen (kitchen owner / admin). */
   findAllByKitchen(kitchenId: string) {
     return this.foodItemRepo.find({ where: { kitchen_id: kitchenId } });
+  }
+
+  /** Client-facing menu: only items marked available in the kitchen panel. */
+  findAvailableByKitchen(kitchenId: string) {
+    return this.foodItemRepo.find({
+      where: { kitchen_id: kitchenId, is_available: true },
+    });
   }
 
   async findOne(id: string) {
     const item = await this.foodItemRepo.findOne({
       where: { id },
+    });
+    if (!item) throw new NotFoundException('Food item not found');
+    return item;
+  }
+
+  async findOnePublic(id: string) {
+    const item = await this.foodItemRepo.findOne({
+      where: { id, is_available: true },
     });
     if (!item) throw new NotFoundException('Food item not found');
     return item;

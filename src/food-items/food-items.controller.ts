@@ -57,12 +57,12 @@ export class FoodItemsController {
 
   @Get('kitchen/:kitchenId')
   findAllByKitchen(@Param('kitchenId') kitchenId: string) {
-    return this.foodItemsService.findAllByKitchen(kitchenId);
+    return this.foodItemsService.findAvailableByKitchen(kitchenId);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.foodItemsService.findOne(id);
+    return this.foodItemsService.findOnePublic(id);
   }
 
   @Patch(':id')
