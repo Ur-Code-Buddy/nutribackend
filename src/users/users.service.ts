@@ -77,6 +77,7 @@ export class UsersService {
         'name',
         'email',
         'phone_number',
+        'profile_picture_url',
         'role',
         'credits',
         'is_active',
@@ -204,6 +205,16 @@ export class UsersService {
       user.phone_verified = false;
       phoneChanged = true;
       changedFields.push('phone_number');
+    }
+
+    if (dto.profile_picture_url !== undefined) {
+      const next =
+        dto.profile_picture_url === null ? null : dto.profile_picture_url;
+      const prev = user.profile_picture_url ?? null;
+      if (next !== prev) {
+        user.profile_picture_url = next;
+        changedFields.push('profile_picture_url');
+      }
     }
 
     if (changedFields.length === 0) {

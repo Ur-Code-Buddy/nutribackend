@@ -280,6 +280,8 @@ Checks whether a username is already registered. This is a **public endpoint** (
 
 Retrieves the profile of the currently logged-in user, including their Rupee `credits` balance.
 
+Response includes `profile_picture_url` (`string` or `null`) — a full **https** (or **http**) URL to the user’s avatar image (for example after upload via **`POST /upload-image`**).
+
 ### Update Profile
 
 **PATCH** `/users/me`
@@ -290,12 +292,13 @@ Updates the authenticated user's profile. Requires the current password for secu
 **Request Body:**
 
 
-| Field              | Type   | Required | Description                                                        |
-| ------------------ | ------ | -------- | ------------------------------------------------------------------ |
-| `current_password` | string | **Yes**  | The user's current password (verified before changes are applied). |
-| `address`          | string | No       | Updated address.                                                   |
-| `phone_number`     | string | No       | Updated phone number.                                              |
-| `pincode`          | string | No       | Updated pincode.                                                   |
+| Field                   | Type           | Required | Description                                                                 |
+| ----------------------- | -------------- | -------- | --------------------------------------------------------------------------- |
+| `current_password`      | string         | **Yes**  | The user's current password (verified before changes are applied).          |
+| `address`               | string         | No       | Updated address.                                                            |
+| `phone_number`          | string         | No       | Updated phone number.                                                       |
+| `pincode`               | string         | No       | Updated pincode.                                                            |
+| `profile_picture_url`   | string \| null | No       | Full **http** or **https** URL (max 2048 chars). Send **`null`** to remove. |
 
 
 **Behavior:**
@@ -307,8 +310,9 @@ Updates the authenticated user's profile. Requires the current password for secu
   - Resets `phone_verified` to `false`.
   - Automatically sends a 4-digit SMS OTP to the new phone number.
   - The user must verify the new phone number via `POST /auth/verify-phone` before logging in again.
-- A notification email is sent to the user listing the fields that were changed.
+- A notification email is sent to the user listing the fields that were changed (including **Profile picture** when `profile_picture_url` changes).
 - If no fields differ, the profile is returned unchanged (no email is sent).
+- Invalid `profile_picture_url` values return **`400 Bad Request`** (must be a valid http(s) URL when not `null`).
 
 **Response:**
 
@@ -324,12 +328,15 @@ Updates the authenticated user's profile. Requires the current password for secu
     "phone_number": "9876543210",
     "address": "New Address",
     "pincode": "400001",
+    "profile_picture_url": "https://bucket.s3.region.amazonaws.com/uploads/abc.jpg",
     "role": "CLIENT",
     "credits": 500,
     "phone_verified": false
   }
 }
 ```
+
+Order and delivery API responses that embed **`client`** or **`delivery_driver`** user summaries also include `profile_picture_url` when present.
 
 ### Get All Users
 

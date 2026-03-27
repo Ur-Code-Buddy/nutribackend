@@ -12,6 +12,9 @@ export class UserSummaryDTO {
 
   @Expose()
   address: string;
+
+  @Expose()
+  profile_picture_url: string | null;
 }
 
 export class KitchenSummaryDTO {

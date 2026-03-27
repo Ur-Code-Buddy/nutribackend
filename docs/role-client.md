@@ -155,6 +155,8 @@ Returns the authenticated user's profile and current credit balance.
   "email": "rahul.sharma01@example.com",
   "phone_number": "+919876543210",
   "address": "123 MG Road, Pondicherry, Puducherry, India",
+  "pincode": "605001",
+  "profile_picture_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/photo.jpg",
   "role": "CLIENT",
   "credits": 50,
   "is_active": true,
@@ -162,6 +164,8 @@ Returns the authenticated user's profile and current credit balance.
   "updated_at": "2026-02-15T06:10:16.854Z"
 }
 ```
+
+`profile_picture_url` is `null` until set via **`PATCH /users/me`** (typically after **`POST /upload-image`**).
 
 ---
 
@@ -218,17 +222,21 @@ Requires: `Authorization: Bearer <JWT>`
   "current_password": "client123",
   "address": "456 New Street, Bangalore, Karnataka",
   "phone_number": "9998887770",
-  "pincode": "560001"
+  "pincode": "560001",
+  "profile_picture_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/new-avatar.jpg"
 }
 ```
 
 All fields except `current_password` are optional — include only what you want to change.
+
+To **remove** the profile picture, send `"profile_picture_url": null`.
 
 **Business Rules:**
 - `current_password` is **required** and verified before applying any changes
 - If `phone_number` changes, `phone_verified` is reset to `false` and a 4-digit SMS OTP is sent automatically
 - Returns `401` if password is incorrect
 - Returns `409` if the new phone number is already taken
+- `profile_picture_url` must be a valid **http** or **https** URL (max 2048 characters), or **`null`** to clear
 - A **notification email** is sent listing the changed fields
 
 **Success Response (with phone change):**
@@ -244,6 +252,7 @@ All fields except `current_password` are optional — include only what you want
     "phone_number": "9998887770",
     "address": "456 New Street, Bangalore, Karnataka",
     "pincode": "560001",
+    "profile_picture_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/new-avatar.jpg",
     "role": "CLIENT",
     "credits": 50,
     "phone_verified": false,

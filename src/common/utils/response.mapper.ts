@@ -54,6 +54,9 @@ export class ResponseMapper {
       driverDto.id = order.delivery_driver.id;
       driverDto.name = order.delivery_driver.name;
       driverDto.phone_number = order.delivery_driver.phone_number;
+      driverDto.address = order.delivery_driver.address;
+      driverDto.profile_picture_url =
+        order.delivery_driver.profile_picture_url ?? null;
       dto.delivery_driver = driverDto;
     }
 
@@ -72,6 +75,7 @@ export class ResponseMapper {
       clientDto.name = order.client.name;
       clientDto.phone_number = order.client.phone_number;
       clientDto.address = order.client.address;
+      clientDto.profile_picture_url = order.client.profile_picture_url ?? null;
       dto.client = clientDto;
     }
 
@@ -92,6 +96,7 @@ export class ResponseMapper {
       clientDto.name = order.client.name;
       clientDto.phone_number = order.client.phone_number;
       clientDto.address = order.client.address;
+      clientDto.profile_picture_url = order.client.profile_picture_url ?? null;
       dto.client = clientDto;
     }
 

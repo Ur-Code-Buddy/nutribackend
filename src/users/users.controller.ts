@@ -36,6 +36,7 @@ async function sendProfileUpdateEmail(
     address: 'Address',
     pincode: 'Pincode',
     phone_number: 'Phone Number',
+    profile_picture_url: 'Profile picture',
   };
 
   const changedList = changedFields.map((f) => fieldLabels[f] || f).join(', ');

@@ -33,6 +33,9 @@ export class User {
   @Column()
   pincode: string;
 
+  @Column({ type: 'varchar', length: 2048, nullable: true })
+  profile_picture_url: string | null;
+
   @Column()
   @Exclude()
   password_hash: string;

@@ -59,6 +59,8 @@ Step-by-Step Implementation:
 3. Backend returns `{ "image_url": "https://..." }`.
 4. Frontend takes this `image_url` and sends it in the `create` or `update` request (e.g., as `image_url` field in `POST /kitchens` or `POST /menu-items`).
 
+**Profile photo:** Use the same upload flow, then **`PATCH /users/me`** with `current_password`, `profile_picture_url` set to the returned URL. **`GET /users/me`** returns `profile_picture_url` (`null` if unset). Send `profile_picture_url: null` to remove.
+
 5. Public Listing (For Clients)
 
 ---
