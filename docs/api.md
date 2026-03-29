@@ -1,6 +1,6 @@
 # API Endpoints
 
-Concise reference for **Razorpay advance payment** order placement. For the full API surface, see [`api-reference.md`](./api-reference.md). For **live delivery maps** (tracking endpoints, polling, credentials, polylines), see **[`Maps.md`](./Maps.md)**.
+Concise reference for **Razorpay advance payment** order placement. For the full API surface, see [`api-reference.md`](./api-reference.md) (including **kitchen owner** bank details and **POST /api/kitchen/withdraw**). For **live delivery maps** (tracking endpoints, polling, credentials, polylines), see **[`Maps.md`](./Maps.md)**.
 
 **Base URL (local):** `http://localhost:3000`
 

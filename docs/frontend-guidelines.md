@@ -48,6 +48,10 @@ This document outlines how to integrate with the NutriTiffin backend, focusing o
   - Kitchen-owner only; resolves the kitchen from the JWT (one kitchen per owner).
   - When enabled, order flows (`POST /payments/confirm` or legacy `POST /orders`) return orders already **ACCEPTED**; the kitchen app can skip accept/reject for those and go straight to prep / **PATCH /orders/:id/ready** when appropriate.
 
+- **Payout bank details (kitchen owner):** **GET** `/api/kitchen/bank-details` (returns saved row or `null`). **PATCH** `/api/kitchen/bank-details` — upsert `account_holder_name`, `account_number`, `ifsc_code`, `bank_name`; optional `upi_id`.
+
+- **Withdrawal request (manual payout):** **POST** `/api/kitchen/withdraw` with `{ "amount": <INR>, "note": "optional" }`. Amount must be ≥ server **`MIN_KITCHEN_WITHDRAWAL_INR`** and ≤ **`GET /kitchens/credits`**. Bank details must exist first. Returns **200** with a success message; does **not** deduct wallet balance automatically. See **[`api-reference.md`](./api-reference.md)** § Kitchen payouts & withdrawals.
+
 3. Image Upload Flow
 
 ---

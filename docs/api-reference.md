@@ -553,6 +553,79 @@ Sets **`auto_accept_orders`** for the authenticated owner’s kitchen (one kitch
 
 ---
 
+## Kitchen payouts & withdrawals (`/api/kitchen`)
+
+Kitchen owners save **bank / UPI details** for manual payouts and submit **withdrawal requests** by email to operations. There is **no** automatic balance deduction and **no** RazorpayX integration; credits stay on the owner’s account until support processes the payout.
+
+**Server environment:** `MIN_KITCHEN_WITHDRAWAL_INR` (required for withdrawals) must be set to a **positive** number (rupees). Invalid or missing values cause **`500`** when a withdrawal is attempted. `BREVO_API_KEY` is required in production (`PRODUCTION` not `false`) so the notification email can be sent.
+
+**Balance source:** Withdrawals are validated against the same **`users.credits`** balance as **GET** `/kitchens/credits` (the kitchen owner’s wallet).
+
+### Get saved bank details
+
+**GET** `/api/kitchen/bank-details`  
+**Role Required:** `KITCHEN_OWNER`
+
+Returns the row from **`kitchen_bank_details`** for the authenticated owner’s kitchen, or **`null`** if none exists.
+
+**Success (`200`):** Full bank-details object (see **PATCH** body fields) including `id`, `kitchen_id`, `created_at`, `updated_at`, or `null`.
+
+### Create or update bank details (upsert)
+
+**PATCH** `/api/kitchen/bank-details`  
+**Role Required:** `KITCHEN_OWNER`
+
+Creates or updates the single bank-details record for the owner’s kitchen (unique on `kitchen_id`).
+
+**Request Body:**
+
+
+| Field                  | Type   | Required | Description                    |
+| ---------------------- | ------ | -------- | ------------------------------ |
+| `account_holder_name`  | string | **Yes**  | Name on the bank account.      |
+| `account_number`       | string | **Yes**  | Bank account number.           |
+| `ifsc_code`            | string | **Yes**  | IFSC code.                     |
+| `bank_name`            | string | **Yes**  | Bank name.                     |
+| `upi_id`               | string | No       | UPI ID; omit or empty to clear |
+
+**Success (`200`):** Saved **`kitchen_bank_details`** entity.
+
+**Errors:** `404` if the user has no kitchen.
+
+### Request withdrawal (manual payout)
+
+**POST** `/api/kitchen/withdraw`  
+**Role Required:** `KITCHEN_OWNER`  
+**Success:** **`200`** (not `201`)
+
+**Request Body:**
+
+
+| Field    | Type   | Required | Description                                      |
+| -------- | ------ | -------- | ------------------------------------------------ |
+| `amount` | number | **Yes**  | Amount in INR; must be ≥ `MIN_KITCHEN_WITHDRAWAL_INR` and ≤ owner `credits`. |
+| `note`   | string | No       | Optional message included in the ops email.    |
+
+**Success (`200`):**
+
+```json
+{
+  "message": "Withdrawal request submitted. Our team will process the payout manually."
+}
+```
+
+**Behaviour:** Sends a transactional email via **Brevo** to **`payouts@nutritiffin.com`** with subject **`Withdrawal Request – [Kitchen Name]`**, including kitchen name, owner name, registered email and phone, amount (INR), and saved bank details (including UPI if set). In development (`PRODUCTION=false`), the email is logged to the console instead.
+
+**Errors:**
+
+| Status | When |
+| ------ | ---- |
+| `400`  | Amount below minimum, no bank details saved, or **insufficient** `credits`. |
+| `404`  | No kitchen for this account, or user record missing. |
+| `500`  | `MIN_KITCHEN_WITHDRAWAL_INR` misconfigured, Brevo failure, or other server error submitting the request. |
+
+---
+
 ## Menu Items (`/menu-items`)
 
 ### Create Menu Item

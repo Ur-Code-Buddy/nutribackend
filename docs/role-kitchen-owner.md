@@ -350,7 +350,52 @@ Returns the current credit balance of the authenticated kitchen owner.
 
 ---
 
-# 7. Transaction History
+# 7. Bank details (payout account)
+
+Endpoints:
+
+- **GET** `/api/kitchen/bank-details`
+- **PATCH** `/api/kitchen/bank-details`
+
+Role Required:
+KITCHEN_OWNER
+
+Headers:
+Authorization: Bearer <JWT_TOKEN>
+
+**GET** returns saved payout banking information for your kitchen, or `null` if you have not saved any yet.
+
+**PATCH** creates or updates a single record per kitchen (upsert by `kitchen_id`). Body fields: `account_holder_name`, `account_number`, `ifsc_code`, `bank_name` (all required strings); `upi_id` optional (send empty to clear).
+
+---
+
+# 8. Request withdrawal (manual payout)
+
+Endpoint:
+POST /api/kitchen/withdraw
+
+Role Required:
+KITCHEN_OWNER
+
+Headers:
+Authorization: Bearer <JWT_TOKEN>
+
+Body (JSON):
+
+| Field    | Type   | Required | Description |
+| -------- | ------ | -------- | ----------- |
+| `amount` | number | **Yes**  | INR amount; must be at least **`MIN_KITCHEN_WITHDRAWAL_INR`** (server env) and not more than your **`credits`** (same balance as **GET /kitchens/credits**). |
+| `note`   | string | No       | Optional note; included in the email to operations. |
+
+**Rules:** You must have saved bank details (**PATCH** `/api/kitchen/bank-details`) first. The API does **not** deduct credits; operations processes the payout manually after receiving the email.
+
+**Success (`200`):** `{ "message": "Withdrawal request submitted. Our team will process the payout manually." }`
+
+**Typical errors:** `400` if amount is too low, balance is insufficient, or bank details are missing; `500` if email/config fails.
+
+---
+
+# 9. Transaction History
 
 Endpoint:
 GET /transactions/my
@@ -444,7 +489,8 @@ Error Responses:
 4. Inactive kitchens may be hidden from public listing.
 5. Each kitchen is linked to exactly one owner.
 6. **Auto-accept** affects only **new** orders created after the flag is on; existing **PENDING** orders are unchanged.
-7. All IDs are UUID format.
+7. **Withdrawals** do not change `credits` automatically; use **POST /api/kitchen/withdraw** only after saving bank details; minimum amount is enforced via **`MIN_KITCHEN_WITHDRAWAL_INR`**.
+8. All IDs are UUID format.
 
 ---
 
@@ -469,5 +515,6 @@ Error Responses:
 - Attempt update as non owner
 - Attempt update without token
 - Toggle auto-accept: PATCH /kitchens/me/auto-accept-orders with `{ "enabled": true }` then place a test order and confirm status is ACCEPTED without calling accept
+- PATCH /api/kitchen/bank-details then GET /api/kitchen/bank-details; POST /api/kitchen/withdraw with a valid amount (≥ env minimum and ≤ credits) and confirm success message / dev log for payout email
 
 All endpoints have been tested and verified.
