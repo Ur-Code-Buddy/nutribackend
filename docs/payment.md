@@ -34,7 +34,7 @@ All routes under `/payments` require:
 
 Creates a **Razorpay Order** after running the same validations as order creation (schedule window, item availability, sold-out checks, fees). **No `Order` row is saved** until confirm succeeds.
 
-**Request body:** Same as **Create Order** — `kitchen_id`, `scheduled_for` (`YYYY-MM-DD` date string), `items[]` with `food_item_id` and `quantity`.
+**Request body:** Same as **Create Order** — `kitchen_id`, `scheduled_for` (`YYYY-MM-DD` date string), `items[]` with `food_item_id` and `quantity`, and optional **`notes`** (kitchen instructions from the customer; max 2000 chars, trimmed — see [`api-reference.md`](./api-reference.md) § Orders → **Order notes**).
 
 **Success response:**
 
@@ -63,7 +63,7 @@ Only after these checks does the backend **create and persist** the `Order` with
 | `razorpayOrderId`   | string | Yes      | From initiate / Checkout (`order_...`).                                     |
 | `razorpayPaymentId` | string | Yes      | From successful payment (`pay_...`).                                        |
 | `razorpaySignature` | string | Yes      | From Checkout / client SDK.                                                 |
-| `originalDto`       | object | Yes      | **Same** body as used for `POST /payments/initiate` (kitchen, date, items). |
+| `originalDto`       | object | Yes      | **Same** body as used for `POST /payments/initiate` (kitchen, date, items, and optional **`notes`** if used in step 1). |
 
 **Success response:** The saved **Order** entity (same general shape as `POST /orders`), including:
 
@@ -82,10 +82,11 @@ Only after these checks does the backend **create and persist** the `Order` with
 
 Payment state and refunds are exposed on **order** responses (e.g. `GET /orders`, `GET /orders/:id`), not on separate payment URLs after confirm.
 
-### Payment and refund fields (on `Order`)
+### Fields on `Order` responses (payment, refunds, notes)
 
 | Field                 | Type           | Description |
 | --------------------- | -------------- | ----------- |
+| `notes`               | string \| null | Optional customer text for the kitchen at checkout; see **Order notes** in [`api-reference.md`](./api-reference.md) § Orders. |
 | `paymentStatus`       | enum           | `PENDING` (e.g. legacy `POST /orders` without Razorpay) or `PAID` (confirm path). |
 | `razorpayOrderId`     | string \| null | Set when paid via Razorpay. |
 | `razorpayPaymentId`   | string \| null | Set when paid via Razorpay. |

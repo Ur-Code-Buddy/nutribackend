@@ -21,6 +21,8 @@ As a Delivery Partner, the standard lifecycle on an order flows like this:
 4. **Out for Delivery:** Driver begins driving to the client via `PATCH /deliveries/:id/out-for-delivery`. Status becomes `OUT_FOR_DELIVERY`. The backend stores a **4-digit** handoff code in Redis for the customer’s app.
 5. **Finish Delivery:** At the door, the **customer** shows the **4-digit** code from **`GET /orders/:id/delivery-handoff-otp`** in their app. The driver submits it in the body of **`PATCH /deliveries/:id/finish`** as `{ "otp": "1234" }`. Status becomes `DELIVERED`. (Orders are prepaid; there is no driver cash-collection balance.)
 
+**Customer notes:** Order payloads from **`GET /deliveries/available`**, **`GET /deliveries/my-orders`**, **`GET /deliveries/:id`**, and **`GET /orders/:id`** (driver) include **`notes`** when the customer entered kitchen instructions at checkout (`null` otherwise). You may surface this in the driver UI if helpful (e.g. handling cues); preparation remains the kitchen’s responsibility.
+
 ---
 
 ## Live GPS and map tracking

@@ -94,14 +94,14 @@ Step-by-Step Implementation:
 
 **Recommended (Razorpay advance payment — order saved only after successful pay):**
 
-1. `POST /payments/initiate` — Same JSON as create order: `kitchen_id`, `scheduled_for` (`YYYY-MM-DD`, 1–3 days ahead), `items[]` (`food_item_id`, `quantity`). Returns `razorpayOrderId` + `publicKey` (use with Razorpay Checkout).
-2. After the user pays, call `POST /payments/confirm` with `razorpayOrderId`, `razorpayPaymentId`, `razorpaySignature`, and `originalDto` (must match step 1). Response is the created order (`paymentStatus: PAID`).
+1. `POST /payments/initiate` — Same JSON as create order: `kitchen_id`, `scheduled_for` (`YYYY-MM-DD`, 1–3 days ahead), `items[]` (`food_item_id`, `quantity`), and optional **`notes`** (special instructions for the kitchen — same rules as `POST /orders`). Returns `razorpayOrderId` + `publicKey` (use with Razorpay Checkout).
+2. After the user pays, call `POST /payments/confirm` with `razorpayOrderId`, `razorpayPaymentId`, `razorpaySignature`, and `originalDto` (**must** match step 1, including `notes` if the user entered any). Response is the created order (`paymentStatus: PAID`).
 
 **Legacy (immediate create, no Razorpay):**
 
 - `POST /orders` — Same body; order is persisted immediately (`paymentStatus` typically `PENDING`, no Razorpay ids).
 
-**Order payloads:** **`GET /orders`** and **`GET /orders/:id`** include nested **`kitchen`** with **`is_veg`** (alongside `id`, `name`, `phone`, `address`).
+**Order payloads:** **`GET /orders`** and **`GET /orders/:id`** include **`notes`** (`string` or `null`) and nested **`kitchen`** with **`is_veg`** (alongside `id`, `name`, `phone`, `address`).
 
 **Tracking:**
 

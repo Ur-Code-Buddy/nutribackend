@@ -344,7 +344,7 @@ All order endpoints require: `Authorization: Bearer <CLIENT_JWT>`
 
 Use this flow when the client must pay before the order is stored.
 
-1. **`POST /payments/initiate`** — Same JSON body as create order (see § 4.1). Response: `{ "razorpayOrderId", "publicKey" }`. No `Order` row is created yet.
+1. **`POST /payments/initiate`** — Same JSON body as create order (see § 4.1), including optional **`notes`** for the kitchen. Response: `{ "razorpayOrderId", "publicKey" }`. No `Order` row is created yet.
 2. Complete payment with Razorpay (Checkout / Standard) using that order id and key.
 3. **`POST /payments/confirm`** — Body:
 
@@ -353,11 +353,11 @@ Use this flow when the client must pay before the order is stored.
   "razorpayOrderId": "order_...",
   "razorpayPaymentId": "pay_...",
   "razorpaySignature": "...",
-  "originalDto": { "kitchen_id": "...", "scheduled_for": "YYYY-MM-DD", "items": [ ... ] }
+  "originalDto": { "kitchen_id": "...", "scheduled_for": "YYYY-MM-DD", "items": [ ... ], "notes": "Optional text for the kitchen" }
 }
 ```
 
-The `originalDto` must match the payload used in step 1. On success, the backend saves the order with `paymentStatus: PAID` and Razorpay ids set.
+The `originalDto` must match the payload used in step 1 (**including `notes`**, if you sent it in step 1 — omit the key or use the same value). On success, the backend saves the order with `paymentStatus: PAID` and Razorpay ids set.
 
 Errors return `400` for bad signature, uncaptured payment, amount mismatch, or validation failures.
 
@@ -372,6 +372,7 @@ Errors return `400` for bad signature, uncaptured payment, amount mismatch, or v
 {
   "kitchen_id": "c282d569-e3a9-4820-ad35-d4093a8b96d8",
   "scheduled_for": "2026-02-16",
+  "notes": "Less oil; no dairy (optional)",
   "items": [
     {
       "food_item_id": "aebf865c-abf8-405b-9e5b-ab4fce869084",
@@ -385,6 +386,8 @@ Errors return `400` for bad signature, uncaptured payment, amount mismatch, or v
 }
 ```
 
+Omit **`notes`** or leave it empty if the customer has no special instructions. Max length **2000** characters; the server trims whitespace.
+
 **Business Rules:**
 - `scheduled_for` must be **1–3 days in advance** (date-only `YYYY-MM-DD`)
 - `items` array cannot be empty
@@ -394,6 +397,7 @@ Errors return `400` for bad signature, uncaptured payment, amount mismatch, or v
 - backend calculates `total_price`
 - order status starts as `PENDING`
 - `paymentStatus` is `PENDING` for this path; `razorpayOrderId` / `razorpayPaymentId` are null unless you used § 4.0
+- **`notes`** cannot be changed after the order is created
 
 **Success Response:**
 ```json
@@ -406,6 +410,7 @@ Errors return `400` for bad signature, uncaptured payment, amount mismatch, or v
   "razorpayOrderId": null,
   "razorpayPaymentId": null,
   "scheduled_for": "2026-02-16",
+  "notes": null,
   "total_price": 280.00,
   "platform_fees": 10.00,
   "delivery_fees": 20.00,
@@ -445,6 +450,7 @@ Returns all orders created by authenticated client.
     "id": "d0b9fa9b-66c2-4c9b-9647-91c0019fdc1f",
     "status": "ACCEPTED",
     "scheduled_for": "2026-02-16",
+    "notes": null,
     "total_price": 280.00,
     "platform_fees": 10.00,
     "delivery_fees": 20.00,
@@ -496,6 +502,7 @@ Example:
   "id": "d0b9fa9b-66c2-4c9b-9647-91c0019fdc1f",
   "status": "ACCEPTED",
   "scheduled_for": "2026-02-16",
+  "notes": null,
   "total_price": 280.00,
   "platform_fees": 10.00,
   "delivery_fees": 20.00,

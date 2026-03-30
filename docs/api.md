@@ -37,11 +37,14 @@ It does NOT save an `Order` in the database.
 {
   "kitchen_id": "c282d569-e3a9-4820-ad35-d4093a8b96d8",
   "scheduled_for": "2026-02-16",
+  "notes": "Optional: instructions for the kitchen",
   "items": [
     { "food_item_id": "aebf865c-ab8e-405b-9e5b-ab4fce869084", "quantity": 2 }
   ]
 }
 ```
+
+Omit `notes` if empty. Details: [`api-reference.md`](./api-reference.md) § Orders → **Order notes (`notes`)**.
 
 **Success Response**:
 
@@ -72,6 +75,7 @@ Only after verification does the backend create and save the `Order` (and marks 
   "originalDto": {
     "kitchen_id": "c282d569-e3a9-4820-ad35-d4093a8b96d8",
     "scheduled_for": "2026-02-16",
+    "notes": "Same as initiate body if used",
     "items": [
       { "food_item_id": "aebf865c-ab8e-405b-9e5b-ab4fce869084", "quantity": 2 }
     ]

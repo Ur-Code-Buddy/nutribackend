@@ -718,6 +718,7 @@ If the target kitchen has **`auto_accept_orders: true`**, the saved order is **`
 | --------------- | ------ | -------- | ----------------------------------------------------------------------- |
 | `kitchen_id`    | string | **Yes**  | ID of the kitchen to order from.                                        |
 | `scheduled_for` | string | **Yes**  | Date for the order in `YYYY-MM-DD` format. Must be 1-3 days in advance. |
+| `notes`         | string | No       | Optional instructions for the kitchen (customization, spice level, allergies, etc.). Max **2000** characters; leading/trailing whitespace trimmed; omit or send empty for none. |
 | `items`         | array  | **Yes**  | List of items to order.                                                 |
 
 
@@ -729,6 +730,13 @@ If the target kitchen has **`auto_accept_orders: true`**, the saved order is **`
 | `food_item_id` | string | **Yes**  | ID of the menu item.       |
 | `quantity`     | number | **Yes**  | Quantity to order (min 1). |
 
+
+### Order notes (`notes`)
+
+- **Set by:** `CLIENT` only, at **order creation** (`POST /orders`, or the same fields inside `POST /payments/initiate` / `originalDto` on `POST /payments/confirm`).
+- **Stored** on the `orders` row and returned on **`GET /orders`** and **`GET /orders/:id`** for **client**, **kitchen owner**, and **delivery driver** mapped views (`notes` is `string` or **`null`**).
+- **Kitchen push:** When `notes` is non-empty, the new-order FCM payload includes **`hasNotes`: `"1"`** (otherwise **`"0"`**), and the notification body mentions that the customer left preparation notes.
+- **Not editable** after create (no PATCH for notes); clients should treat checkout as the only chance to add or change text.
 
 **Order payment fields (on saved orders):**
 
@@ -749,7 +757,7 @@ If the target kitchen has **`auto_accept_orders: true`**, the saved order is **`
 **GET** `/orders`
 **Role Required:** Authenticated User
 
-Retrieves all orders for the authenticated user (Client or Kitchen Owner) with role-specific details. For **clients**, each order’s **`kitchen`** includes **`is_veg`**. For **kitchen owners**, the same **`kitchen`** shape applies, and the payload also includes **`client`** and **`kitchen_fees`**.
+Retrieves all orders for the authenticated user (Client or Kitchen Owner) with role-specific details. For **clients**, each order’s **`kitchen`** includes **`is_veg`**. For **kitchen owners**, the same **`kitchen`** shape applies, and the payload also includes **`client`** and **`kitchen_fees`**. Every mapped order includes **`notes`** (`string` or `null`) when present at creation.
 
 ### Get Order by ID
 
@@ -765,6 +773,7 @@ Retrieves details of a specific order.
   "id": "order-uuid",
   "status": "ACCEPTED",
   "scheduled_for": "2026-02-16",
+  "notes": "Less oil; no dairy",
   "total_price": 250.0,
   "kitchen": {
     "id": "kitchen-id",
@@ -931,7 +940,7 @@ Razorpay **advance payment** flow: validates the cart like order creation, creat
 
 Runs the same validations as **Create Order** (schedule window, item availability, sold-out checks, fees) but **does not** insert an `Order` row.
 
-**Request Body:** Same as **Create Order** (`kitchen_id`, `scheduled_for`, `items[]`).
+**Request Body:** Same as **Create Order** (`kitchen_id`, `scheduled_for`, `items[]`, optional `notes`).
 
 **Response:**
 
@@ -955,7 +964,7 @@ Runs the same validations as **Create Order** (schedule window, item availabilit
 | `razorpayOrderId`   | string | **Yes**  | Must match the order id from initiate.                                 |
 | `razorpayPaymentId` | string | **Yes**  | Razorpay payment id after successful pay.                              |
 | `razorpaySignature` | string | **Yes**  | HMAC SHA256 of `razorpayOrderId                                        |
-| `originalDto`       | object | **Yes**  | Same body as **Create Order** (must match what was used for initiate). |
+| `originalDto`       | object | **Yes**  | Same body as **Create Order** (must match what was used for initiate), including optional **`notes`** if the client entered preparation instructions. |
 
 
 **Response:** Created `Order` entity (same as **Create Order**), with `paymentStatus: PAID` and Razorpay ids set.
@@ -1316,12 +1325,14 @@ Retrieves full order details. Depending on the user's role, the shape of the res
 
 **Response for Delivery Driver:**
 
-Uses the same order view as **`GET /orders/:id`** for drivers: nested **`kitchen`** includes **`id`**, **`name`**, **`phone`**, **`address`**, and **`is_veg`** (veg / non-veg tag).
+Uses the same order view as **`GET /orders/:id`** for drivers: nested **`kitchen`** includes **`id`**, **`name`**, **`phone`**, **`address`**, and **`is_veg`** (veg / non-veg tag). The payload includes **`notes`** (`string` \| `null`) when the customer left kitchen instructions at checkout.
 
 ```json
 {
   "id": "order-uuid",
   "status": "OUT_FOR_DELIVERY",
+  "scheduled_for": "2026-03-06",
+  "notes": null,
   "total_price": 250.00,
   "kitchen": {
     "id": "kitchen-id",
@@ -1350,7 +1361,8 @@ Uses the same order view as **`GET /orders/:id`** for drivers: nested **`kitchen
   "items": ["Paneer Tiffin x1", "Extra Roti x2"],
   "driver": "Ravi",
   "destination": "Andheri West, Mumbai",
-  "estimated_delivery": "2026-03-06T13:00:00Z",
+  "estimated_delivery": "2026-03-06",
+  "notes": "Extra roti; mild spice",
   "created_at": "2026-03-06T11:30:00Z"
 }
 ```

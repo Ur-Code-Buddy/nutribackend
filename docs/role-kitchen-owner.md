@@ -336,7 +336,25 @@ Returns the full kitchen object (same shape as **Get Kitchen By ID**), including
 
 ---
 
-# 6. Get Kitchen Credits
+# 6. Customer preparation notes on orders
+
+Customers can attach a single optional text field **`notes`** when placing an order (checkout). That text is meant for **your kitchen** (e.g. less oil, spice level, allergies, no onion).
+
+**Where you see it**
+
+- **`GET /orders`** — each order in the list includes **`notes`**: a non-empty `string`, or **`null`** if the customer left none.
+- **`GET /orders/:id`** — same field on the order detail (owner-scoped: only orders for your kitchen).
+
+**Behaviour**
+
+- Notes are **set only at order creation** (`POST /orders`, or the Razorpay flow with the same body in `POST /payments/initiate` and `originalDto` on `POST /payments/confirm`). There is **no** API to edit notes after the order exists.
+- When a new order includes notes, the **“New Order Received!”** push mentions that the customer added preparation notes, and the FCM **data** map includes **`hasNotes`: `"1"`** (otherwise **`"0"`**). Use this to badge the order in your app if you want.
+
+Full field rules (length, trimming) are in [`api-reference.md`](./api-reference.md) § Orders → **Create Order** / **Order notes (`notes`)**.
+
+---
+
+# 7. Get Kitchen Credits
 
 Endpoint:
 GET /kitchens/credits
@@ -361,7 +379,7 @@ Returns the current credit balance of the authenticated kitchen owner.
 
 ---
 
-# 7. Bank details (payout account)
+# 8. Bank details (payout account)
 
 Endpoints:
 
@@ -380,7 +398,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-# 8. Request withdrawal (manual payout)
+# 9. Request withdrawal (manual payout)
 
 Endpoint:
 POST /api/kitchen/withdraw
@@ -406,7 +424,7 @@ Body (JSON):
 
 ---
 
-# 9. Transaction History
+# 10. Transaction History
 
 Endpoint:
 GET /transactions/my
@@ -526,6 +544,7 @@ Error Responses:
 - Attempt update as non owner
 - Attempt update without token
 - Toggle auto-accept: PATCH /kitchens/me/auto-accept-orders with `{ "enabled": true }` then place a test order and confirm status is ACCEPTED without calling accept
+- Place an order with `notes` set; GET /orders and GET /orders/:id and confirm `notes` matches; repeat with no `notes` and expect `null`
 - PATCH /api/kitchen/bank-details then GET /api/kitchen/bank-details; POST /api/kitchen/withdraw with a valid amount (≥ env minimum and ≤ credits) and confirm success message / dev log for payout email
 
 All endpoints have been tested and verified.
