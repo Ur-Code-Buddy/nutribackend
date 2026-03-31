@@ -4,6 +4,8 @@
 
 All endpoints are relative to the base URL: `http://localhost:3000` (for local development).
 
+**Companion docs:** **[`ratings.md`](./ratings.md)** (star ratings, `GET /reviews/*` shapes, restaurant stats narrative), **[`Maps.md`](./Maps.md)** (live tracking), **[`api.md`](./api.md)** (Razorpay initiate/confirm quick path), per-role flows in **`role-*.md`**.
+
 ---
 
 ## Authentication (`/auth`)
@@ -1438,26 +1440,50 @@ Returns aggregated metrics for the kitchen/restaurant. **No auth.** Rate limited
 
 ## Reviews (`/reviews`)
 
-Star ratings (**1–5**) are stored per **`order_item`** (see **`POST /orders/:orderId/items/:itemId/rating`**). Listing endpoints below return each review’s **`stars`** field.
+Star ratings (**1–5**) are stored per **`order_item`** (see **`POST /orders/:orderId/items/:itemId/rating`**). Listing endpoints return each review’s **`stars`** (and related ids/timestamps) unless noted otherwise.
+
+**Cross-reference:** Narrative flow and examples — **`docs/ratings.md`**. Client journey — **`docs/role-client.md`** § Reviews & ratings.
 
 ### Get My Reviews
 
 **GET** `/reviews/my`
 **Role Required:** `CLIENT`
 
-Retrieves all reviews made by the authenticated client.
+Returns a **JSON array** of reviews for the authenticated client, with the **`food_item`** relation loaded.
 
 ### Get Reviews by Food Item
 
 **GET** `/reviews/food-item/:foodItemId`
 
-Retrieves all reviews associated with a specific food item.
+Returns reviews for the food item plus order volume: **`total_orders`** (distinct orders containing the item, excluding rejected orders) and **`total_quantity_ordered`** (sum of line quantities).
+
+**Response:**
+
+```json
+{
+  "reviews": [
+    {
+      "id": "review-uuid",
+      "client_id": "client-uuid",
+      "kitchen_id": "kitchen-uuid",
+      "food_item_id": "food-item-uuid",
+      "order_id": "order-uuid",
+      "order_item_id": "order-item-uuid",
+      "stars": 5,
+      "created_at": "2026-03-15T12:00:00.000Z",
+      "updated_at": "2026-03-15T12:00:00.000Z"
+    }
+  ],
+  "total_orders": 128,
+  "total_quantity_ordered": 142
+}
+```
 
 ### Get Reviews by Kitchen
 
 **GET** `/reviews/kitchen/:kitchenId`
 
-Retrieves all reviews associated with a specific kitchen.
+Returns a **JSON array** of reviews for that kitchen, **`created_at`** descending (newest first).
 
 ---
 

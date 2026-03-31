@@ -1,6 +1,6 @@
 # Payments (Razorpay)
 
-This document describes **payment-related HTTP endpoints** and how **paid orders**, **refunds**, and **order API responses** fit together. For the full API surface, see [`api-reference.md`](./api-reference.md).
+This document describes **payment-related HTTP endpoints** and how **paid orders**, **refunds**, and **order API responses** fit together. For the full API surface, see [`api-reference.md`](./api-reference.md). After orders reach **`DELIVERED`**, clients rate lines via **`POST /orders/:orderId/items/:itemId/rating`** — see [`ratings.md`](./ratings.md).
 
 **Base URL (local):** `http://localhost:3000`
 

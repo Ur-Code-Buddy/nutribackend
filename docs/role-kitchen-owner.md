@@ -1,5 +1,7 @@
 # Kitchens API Documentation
 
+**Related:** Full endpoint catalog — **[`api-reference.md`](./api-reference.md)**. Ratings, public review listings, and restaurant stats — **[`ratings.md`](./ratings.md)**.
+
 ## Base URL
 
 Production:
@@ -505,6 +507,20 @@ Returns a single transaction. Kitchen owners can only view transactions they are
 Error Responses:
 - 403 Forbidden: Transaction doesn't involve you.
 - 404 Not Found: Invalid transaction ID.
+
+---
+
+# Ratings & review data (public APIs, reference)
+
+Customers submit **1–5 star** ratings per **order line** after delivery. Owner flows do not use a separate “owner reviews” API; the same **public** endpoints power client apps and any dashboard you build:
+
+| Endpoint | Purpose |
+| :--- | :--- |
+| **`GET /reviews/kitchen/:kitchenId`** | Array of review rows for your kitchen (**`stars`**, timestamps), newest first. |
+| **`GET /reviews/food-item/:foodItemId`** | Object: **`reviews`** array plus **`total_orders`** (distinct non-rejected orders that included that item) and **`total_quantity_ordered`** (sum of line quantities). |
+| **`GET /restaurants/:kitchenId/stats`** | Kitchen-level aggregates (**`average_rating`**, **`weighted_average_rating`**, **`total_ratings`**, **`rating_distribution`**, **`top_items`**, etc.). **`kitchenId`** is your kitchen’s UUID. |
+
+No kitchen JWT is required for these calls. Full rules and payloads: **[`ratings.md`](./ratings.md)** and **[`api-reference.md`](./api-reference.md)** § Reviews.
 
 ---
 

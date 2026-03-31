@@ -14,7 +14,7 @@ describe('ReviewsService', () => {
     create: jest.Mock;
     save: jest.Mock;
   };
-  let orderItemRepo: { findOne: jest.Mock };
+  let orderItemRepo: { findOne: jest.Mock; createQueryBuilder: jest.Mock };
   let ordersRepo: { findOne: jest.Mock };
 
   beforeEach(async () => {
@@ -24,7 +24,7 @@ describe('ReviewsService', () => {
       create: jest.fn((x) => x),
       save: jest.fn((x) => Promise.resolve(x)),
     };
-    orderItemRepo = { findOne: jest.fn() };
+    orderItemRepo = { findOne: jest.fn(), createQueryBuilder: jest.fn() };
     ordersRepo = { findOne: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -135,6 +135,33 @@ describe('ReviewsService', () => {
       expect(reviewsRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'r1', stars: 5 }),
       );
+    });
+  });
+
+  describe('findByFoodItem', () => {
+    it('returns reviews with total_orders and total_quantity_ordered', async () => {
+      const qb = {
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        getRawOne: jest.fn().mockResolvedValue({
+          total_orders: '10',
+          total_quantity_ordered: '15',
+        }),
+      };
+      orderItemRepo.createQueryBuilder.mockReturnValue(qb);
+      reviewsRepo.find.mockResolvedValue([{ id: 'r1', stars: 5 }]);
+
+      const result = await service.findByFoodItem('fi1');
+
+      expect(result).toEqual({
+        reviews: [{ id: 'r1', stars: 5 }],
+        total_orders: 10,
+        total_quantity_ordered: 15,
+      });
+      expect(orderItemRepo.createQueryBuilder).toHaveBeenCalledWith('oi');
     });
   });
 });

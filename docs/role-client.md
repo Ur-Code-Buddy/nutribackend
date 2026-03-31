@@ -1,5 +1,7 @@
 # NutriTiffin Client API Documentation
 
+**Related:** Machine-readable endpoint reference — **[`api-reference.md`](./api-reference.md)**. Star ratings and review payloads — **[`ratings.md`](./ratings.md)**.
+
 **Production Base URL:** `https://backend.v1.nutritiffin.com`
 
 - All IDs are UUID strings.
@@ -573,6 +575,8 @@ Full integration notes (maps SDK keys, decoding polylines, `route_error`, profil
 
 ## 5. REVIEWS & RATINGS
 
+Canonical field rules and **`GET /reviews/food-item/:foodItemId`** example JSON: **[`ratings.md`](./ratings.md)**.
+
 Clients give **1–5 star** ratings per **order line** (`order_item_id`). The order must be **`DELIVERED`**. There is **no deadline** after delivery; submitting again for the same line **updates** the stars.
 
 **`GET /orders`** and **`GET /orders/:id`** (client) include each line’s **`order_item_id`**, **`is_rated`**, and **`rating`** (`null` or `{ "stars": <1–5> }`).
@@ -608,19 +612,19 @@ Requires: `Authorization: Bearer <CLIENT_JWT>`
 
 Requires: `Authorization: Bearer <CLIENT_JWT>`
 
-Returns a list of all your created reviews.
+Returns a **JSON array** of your reviews, with the **`food_item`** relation loaded on each row (for menu name/image in “my reviews” UIs).
 
 ### 5.3 Get Reviews For a Food Item
 
 **`GET /reviews/food-item/:foodItemId`**
 
-Returns all reviews for a specific food item, ordered by creation date (descending). Each entry includes **`stars`**.
+Public. JSON object: **`reviews`** (newest first; each entry includes **`stars`**), **`total_orders`** (how many distinct non-rejected orders included this item), and **`total_quantity_ordered`** (sum of units across those lines). See **`docs/ratings.md`** for a full example payload.
 
 ### 5.4 Get Reviews For a Kitchen
 
 **`GET /reviews/kitchen/:kitchenId`**
 
-Returns all reviews for a specific kitchen.
+Public. **JSON array** of reviews for that kitchen, newest first (**`created_at`** descending). Same per-row fields as other listing endpoints (**`stars`**, ids, timestamps). For full field lists see **`docs/ratings.md`** / **`docs/api-reference.md`** § Reviews.
 
 ### 5.5 Restaurant / kitchen stats (public)
 

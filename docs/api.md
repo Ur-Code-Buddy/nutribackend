@@ -1,6 +1,6 @@
 # API Endpoints
 
-Concise reference for **Razorpay advance payment** order placement. For the full API surface, see [`api-reference.md`](./api-reference.md) (including **kitchen owner** bank details and **POST /api/kitchen/withdraw**). For **live delivery maps** (tracking endpoints, polling, credentials, polylines), see **[`Maps.md`](./Maps.md)**.
+Concise reference for **Razorpay advance payment** order placement. For the full API surface, see [`api-reference.md`](./api-reference.md) (including **kitchen owner** bank details and **POST /api/kitchen/withdraw**). For **live delivery maps** (tracking endpoints, polling, credentials, polylines), see **[`Maps.md`](./Maps.md)**. For **ratings and review listings** (including **`GET /reviews/food-item/:foodItemId`** with order counts), see **[`ratings.md`](./ratings.md)**.
 
 **Base URL (local):** `http://localhost:3000`
 
@@ -100,4 +100,10 @@ Only after verification does the backend create and save the `Order` (and marks 
 2. Complete payment in the Razorpay UI (amount must match the backend-computed total for that cart).
 3. `POST /payments/confirm` with Razorpay's `razorpay_order_id`, `razorpay_payment_id`, `razorpay_signature`, and the **same** `originalDto` as step 1.
 4. Use `GET /orders` / `GET /orders/:id` as before to track status.
+
+---
+
+## See also
+
+- **[`ratings.md`](./ratings.md)** — `POST /orders/:orderId/items/:itemId/rating`, `GET /reviews/*`, `GET /restaurants/:id/stats`.
 

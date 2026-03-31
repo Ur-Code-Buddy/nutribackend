@@ -2,6 +2,8 @@
 
 This guide provides instructions for running and managing the NutriTiffin backend using Docker.
 
+**API documentation** for the running server lives in **`docs/`** — see **`api-reference.md`**, **`ratings.md`**, and role-specific **`role-*.md`** files.
+
 ## Quick Start
 
 1. **Build and Run:**

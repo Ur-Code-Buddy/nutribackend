@@ -2,7 +2,7 @@
 
 Base URL: https://backend.v1.nutritiffin.com
 
-This document outlines how to integrate with the NutriTiffin backend, focusing on authentication, kitchen management, and image handling.
+This document outlines how to integrate with the NutriTiffin backend, focusing on authentication, kitchen management, and image handling. **Ratings and review endpoints** (including food-item order counts) are summarized below and detailed in **[`ratings.md`](./ratings.md)** / **[`api-reference.md`](./api-reference.md)** § Reviews.
 
 **Live delivery maps (customer + driver apps):** see **[`Maps.md`](./Maps.md)** for `GET /orders/:id/tracking`, `PATCH /deliveries/:id/location`, polling, and Google keys.
 
@@ -110,6 +110,17 @@ Step-by-Step Implementation:
 Some kitchens use **auto-accept** (`auto_accept_orders` on `GET /kitchens/:id` or owner toggle). For those, the created order may already be **`ACCEPTED`** with **`accepted_at`** set; the client should not assume every new order starts as **PENDING**.
 
 See also `docs/api.md` and `docs/api-reference.md` § Payments.
+
+## Ratings & reviews (client)
+
+- **Submit or update stars:** `POST /orders/:orderId/items/:itemId/rating` with `{ "stars": <1–5> }`. **`:itemId`** must be **`order_item_id`** from **`GET /orders`** / **`GET /orders/:id`**. Order must be **`DELIVERED`**.
+- **Per-line state:** Client order payloads include **`is_rated`** and **`rating`** (`null` or `{ "stars" }`) on each line.
+- **My reviews:** `GET /reviews/my` (JWT, **CLIENT**) — **array** of reviews with **`food_item`** loaded.
+- **Reviews for a menu item (public):** `GET /reviews/food-item/:foodItemId` — **object** `{ "reviews", "total_orders", "total_quantity_ordered" }`. Counts exclude **`REJECTED`** orders; **`total_quantity_ordered`** is the sum of **`order_items.quantity`** for matching lines. Use **`response.reviews`** for the list (not a top-level array).
+- **Reviews for a kitchen (public):** `GET /reviews/kitchen/:kitchenId` — **array**, newest first.
+- **Kitchen stats card (public):** `GET /restaurants/:kitchenId/stats` — averages, distribution, **`top_items`**, etc. (**`kitchenId`** = kitchen UUID).
+
+Full contract and examples: **[`ratings.md`](./ratings.md)** and **[`api-reference.md`](./api-reference.md)** § Reviews.
 
 ## Notes
 

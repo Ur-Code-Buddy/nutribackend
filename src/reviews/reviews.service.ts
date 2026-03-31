@@ -89,10 +89,29 @@ export class ReviewsService {
   }
 
   async findByFoodItem(foodItemId: string) {
-    return this.reviewsRepo.find({
-      where: { food_item_id: foodItemId },
-      order: { created_at: 'DESC' },
-    });
+    const [reviews, raw] = await Promise.all([
+      this.reviewsRepo.find({
+        where: { food_item_id: foodItemId },
+        order: { created_at: 'DESC' },
+      }),
+      this.orderItemRepo
+        .createQueryBuilder('oi')
+        .innerJoin('oi.order', 'o')
+        .where('oi.food_item_id = :foodItemId', { foodItemId })
+        .andWhere('o.status != :rejected', { rejected: OrderStatus.REJECTED })
+        .select('COUNT(DISTINCT o.id)', 'total_orders')
+        .addSelect('COALESCE(SUM(oi.quantity), 0)', 'total_quantity_ordered')
+        .getRawOne<{
+          total_orders: string;
+          total_quantity_ordered: string;
+        }>(),
+    ]);
+
+    return {
+      reviews,
+      total_orders: Number(raw?.total_orders ?? 0),
+      total_quantity_ordered: Number(raw?.total_quantity_ordered ?? 0),
+    };
   }
 
   async findByKitchen(kitchenId: string) {

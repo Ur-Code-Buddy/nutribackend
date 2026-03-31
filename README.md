@@ -70,7 +70,7 @@ High-level **capabilities** recruiters can map to “real product” scope:
 - **Deliveries** — Driver assignment, state transitions, **OTP-style handoff** between driver and customer for completion.
 - **Live tracking** — Driver location in **Redis**, **Google Routes** for ETA / polyline; throttled **map snapshot** endpoints for clients and drivers.
 - **Money in-app** — **Credit wallet** with **transactional ledger**, pessimistic locking on balance changes, admin credit/debit, readable transaction references.
-- **Social proof** — **1–5 star** ratings per **order line**; public **`GET /restaurants/:id/stats`** for kitchen-level aggregates (no stored average on the kitchen row); scoped review listing APIs.
+- **Social proof** — **1–5 star** ratings per **order line**; public **`GET /restaurants/:id/stats`** for kitchen-level aggregates (no stored average on the kitchen row); **`GET /reviews/food-item/:foodItemId`** returns **`reviews`** plus **`total_orders`** and **`total_quantity_ordered`** (non-rejected orders); other review listing routes in **`docs/ratings.md`**.
 - **Media** — Image uploads to **AWS S3** (avatars, food photos).
 - **Engagement** — **Firebase Cloud Messaging** for push when configured (e.g. new order, status changes).
 - **Operations** — Admin user/credit/maintenance controls, **public stats** with strict rate limits, health/uptime endpoints.
@@ -277,7 +277,7 @@ Authoritative request/response detail lives in **[`docs/api-reference.md`](docs/
 | **Deliveries** | Available jobs, accept, pickup, out for delivery, finish, **GPS pings** (`PATCH /deliveries/:id/location`) |
 | **Live tracking** | Customer/driver **map snapshot** (`GET /orders/:id/tracking`) — see [`docs/Maps.md`](docs/Maps.md) |
 | **Transactions** | Paginated history (user/admin) |
-| **Reviews / ratings** | `POST /orders/:orderId/items/:itemId/rating` (client upsert), list by item/kitchen, “my reviews”; **`GET /restaurants/:id/stats`** (public aggregates) |
+| **Reviews / ratings** | `POST /orders/:orderId/items/:itemId/rating` (client upsert); **`GET /reviews/my`**; **`GET /reviews/kitchen/:kitchenId`**; **`GET /reviews/food-item/:foodItemId`** → `{ reviews, total_orders, total_quantity_ordered }`; **`GET /restaurants/:id/stats`** (public aggregates). Details: **`docs/ratings.md`**. |
 | **Upload** | Image upload to S3 |
 | **Ops** | `GET /health`, `GET /uptime`, maintenance flag endpoints |
 
@@ -288,8 +288,9 @@ Authoritative request/response detail lives in **[`docs/api-reference.md`](docs/
 | Document | Purpose |
 | :--- | :--- |
 | [`docs/api-reference.md`](docs/api-reference.md) | Endpoint reference and auth pipeline |
+| [`docs/ratings.md`](docs/ratings.md) | Star ratings: order-line upsert, review listings, food-item order counts, restaurant stats |
 | [`docs/Maps.md`](docs/Maps.md) | Live delivery tracking: client/driver implementation, endpoints, Google keys |
-| [`docs/api.md`](docs/api.md) | Additional API notes (if present) |
+| [`docs/api.md`](docs/api.md) | Razorpay initiate/confirm flow (see also api-reference) |
 | [`docs/role-client.md`](docs/role-client.md) | Client journeys |
 | [`docs/role-kitchen-owner.md`](docs/role-kitchen-owner.md) | Kitchen owner flows |
 | [`docs/role-delivery-driver.md`](docs/role-delivery-driver.md) | Driver flows |
