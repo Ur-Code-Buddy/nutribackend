@@ -5,7 +5,7 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  Query,
   UseGuards,
   Request,
   BadRequestException,
@@ -56,13 +56,22 @@ export class FoodItemsController {
   }
 
   @Get('kitchen/:kitchenId')
-  findAllByKitchen(@Param('kitchenId') kitchenId: string) {
-    return this.foodItemsService.findAvailableByKitchen(kitchenId);
+  findAllByKitchen(
+    @Param('kitchenId') kitchenId: string,
+    @Query('scheduled_for') scheduledFor?: string,
+  ) {
+    return this.foodItemsService.findAvailableByKitchen(
+      kitchenId,
+      scheduledFor,
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.foodItemsService.findOnePublic(id);
+  findOne(
+    @Param('id') id: string,
+    @Query('scheduled_for') scheduledFor?: string,
+  ) {
+    return this.foodItemsService.findOnePublic(id, scheduledFor);
   }
 
   @Patch(':id')

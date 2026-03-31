@@ -665,13 +665,37 @@ Retrieves all menu items for the authenticated kitchen owner.
 
 **GET** `/menu-items/kitchen/:kitchenId`
 
-Retrieves all menu items for a specific kitchen.
+Retrieves all menu items for a specific kitchen (only items with **`is_available: true`**).
+
+**Query parameters:**
+
+
+| Parameter        | Type   | Required | Description |
+| ---------------- | ------ | -------- | ----------- |
+| `scheduled_for`  | string | No       | Delivery date in **`YYYY-MM-DD`**. When set, each item in the response includes **`remaining_daily_orders`**: how many more portions can still be ordered for that date before hitting **`max_daily_orders`**. Must be the **same 1–3 days in advance** window as [Create Order](#create-order) (otherwise **`400`**). Omit this parameter if you do not need per-date capacity (response shape matches the historical payload without **`remaining_daily_orders`**). |
+
+**Response fields (when `scheduled_for` is provided):**
+
+In addition to the usual food item columns, each object includes:
+
+| Field                     | Type   | Description |
+| ------------------------- | ------ | ----------- |
+| `remaining_daily_orders`  | number | Non-negative. **`max_daily_orders`** minus total quantity already ordered for this item on **`scheduled_for`**, counting all non-**`REJECTED`** orders. **`0`** if a **`food_item_availability`** row exists for that date with **`is_available: false`**. |
 
 ### Get Menu Item by ID
 
 **GET** `/menu-items/:id`
 
-Retrieves details of a specific menu item.
+Retrieves details of a specific menu item (only if **`is_available: true`**).
+
+**Query parameters:** Same optional **`scheduled_for`** as [Get Menu Items by Kitchen](#get-menu-items-by-kitchen). When present, the single object includes **`remaining_daily_orders`** with the same meaning as above.
+
+**Errors:**
+
+| Status | When |
+| ------ | ---- |
+| `400`  | `scheduled_for` is not a valid date in the allowed advance window. |
+| `404`  | Item missing or not publicly available. |
 
 ### Update Menu Item
 

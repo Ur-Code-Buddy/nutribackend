@@ -26,6 +26,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { Kitchen } from '../kitchens/entities/kitchen.entity';
 import { PaymentsService } from './payments.service';
 import { addBusinessDays, toDateOnlyString } from '../common/utils/business-days';
+import { assertValidOrderScheduledFor } from '../common/utils/order-schedule';
 
 export interface RazorpayPaymentMeta {
   razorpayOrderId: string;
@@ -61,28 +62,6 @@ export class OrdersService {
   ) {}
 
   private readonly logger = new Logger(OrdersService.name);
-
-  private validateScheduledFor(scheduledFor: string) {
-    // 1. Validate "1-3 Days in Advance"
-    const now = new Date();
-    const minDate = new Date(now);
-    minDate.setDate(minDate.getDate() + 1);
-    minDate.setHours(0, 0, 0, 0); // Start of tomorrow
-
-    const maxDate = new Date(now);
-    maxDate.setDate(maxDate.getDate() + 3);
-    maxDate.setHours(23, 59, 59, 999); // End of 3rd day
-
-    const scheduledDate = new Date(scheduledFor);
-    const comparisonDate = new Date(scheduledDate);
-    comparisonDate.setHours(0, 0, 0, 0);
-
-    if (comparisonDate < minDate || comparisonDate > maxDate) {
-      throw new BadRequestException(
-        'Orders must be placed for 1 to 3 days in advance.',
-      );
-    }
-  }
 
   private async buildOrderQuote(
     dto: CreateOrderDto,
@@ -191,7 +170,7 @@ export class OrdersService {
    * but WITHOUT saving an Order row.
    */
   async calculateOrderQuote(dto: CreateOrderDto): Promise<OrderQuote> {
-    this.validateScheduledFor(dto.scheduled_for);
+    assertValidOrderScheduledFor(dto.scheduled_for);
 
     const queryRunner = this.ordersRepo.manager.connection.createQueryRunner();
     await queryRunner.connect();
@@ -214,7 +193,7 @@ export class OrdersService {
     dto: CreateOrderDto,
     paymentMeta?: RazorpayPaymentMeta,
   ) {
-    this.validateScheduledFor(dto.scheduled_for);
+    assertValidOrderScheduledFor(dto.scheduled_for);
 
     const queryRunner = this.ordersRepo.manager.connection.createQueryRunner();
     await queryRunner.connect();

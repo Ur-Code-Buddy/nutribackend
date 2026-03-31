@@ -6,9 +6,18 @@ import { FoodItem } from './entities/food-item.entity';
 import { FoodItemAvailability } from './entities/food-item-availability.entity';
 import { KitchensModule } from '../kitchens/kitchens.module';
 import { CommonModule } from '../common/common.module';
+import { OrderItem } from '../orders/entities/order-item.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([FoodItem]), KitchensModule, CommonModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      FoodItem,
+      FoodItemAvailability,
+      OrderItem,
+    ]),
+    KitchensModule,
+    CommonModule,
+  ],
   controllers: [FoodItemsController],
   providers: [FoodItemsService],
 })

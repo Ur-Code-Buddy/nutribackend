@@ -308,10 +308,14 @@ Each kitchen includes **`is_veg`**: **`true`** = veg tag, **`false`** = non-veg.
 
 **`GET /menu-items/kitchen/:kitchenId`**
 
-Example:
-`GET /menu-items/kitchen/c282d569-e3a9-4820-ad35-d4093a8b96d8`
+Optional query: **`scheduled_for=YYYY-MM-DD`** (the same delivery date you will send on create order). Must fall in the **1–3 days in advance** window; invalid values return **`400`**.
 
-**Success Response:**
+Examples:
+
+- `GET /menu-items/kitchen/c282d569-e3a9-4820-ad35-d4093a8b96d8`
+- `GET /menu-items/kitchen/c282d569-e3a9-4820-ad35-d4093a8b96d8?scheduled_for=2026-02-16`
+
+**Success Response (without `scheduled_for`):**
 ```json
 [
   {
@@ -329,10 +333,37 @@ Example:
 ]
 ```
 
+**Success Response (with `scheduled_for`):** same fields as above, plus **`remaining_daily_orders`** — how many more can be ordered for that date (capped by **`max_daily_orders`** minus quantities already on orders for that date, excluding **`REJECTED`**). If the kitchen marked the item unavailable for that specific date, **`remaining_daily_orders`** is **`0`**.
+
+```json
+[
+  {
+    "id": "aebf865c-abf8-405b-9e5b-ab4fce869084",
+    "kitchen_id": "c282d569-e3a9-4820-ad35-d4093a8b96d8",
+    "name": "Pizza",
+    "description": "wood fired",
+    "price": "100.00",
+    "image_url": "https://nutri.s3.ap-south-1.amazonaws.com/uploads/e41b0fd1.jpg",
+    "max_daily_orders": 5,
+    "remaining_daily_orders": 3,
+    "is_available": true,
+    "created_at": "2026-02-15T06:37:20.398Z",
+    "updated_at": "2026-02-15T06:37:20.398Z"
+  }
+]
+```
+
 **Business Rules:**
 - Only return items where `is_available = true`
 - Kitchen must be active
 - Kitchen menu must be visible
+- Use **`scheduled_for`** on this call when you need to cap quantities or show “X left” for the chosen delivery day
+
+### 3.2 Get Menu Item by ID
+
+**`GET /menu-items/:id`**
+
+Same optional **`scheduled_for`** query as § 3.1. Use it when opening a single item (e.g. detail screen) and you need **`remaining_daily_orders`** for the selected date.
 
 ---
 
