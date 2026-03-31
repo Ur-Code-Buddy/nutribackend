@@ -1410,6 +1410,7 @@ Returns aggregated metrics for the kitchen/restaurant. **No auth.** Rate limited
   "total_orders": 42,
   "total_customers": 18,
   "average_rating": 4.25,
+  "weighted_average_rating": 4.22,
   "total_ratings": 120,
   "rating_distribution": { "1": 2, "2": 4, "3": 15, "4": 40, "5": 59 },
   "top_items": [
@@ -1427,7 +1428,8 @@ Returns aggregated metrics for the kitchen/restaurant. **No auth.** Rate limited
 | ---------------------- | ------ | ----------- |
 | `total_orders`         | number | Count of **`DELIVERED`** orders for this kitchen. |
 | `total_customers`      | number | Distinct clients among those delivered orders. |
-| `average_rating`       | number \| null | Mean of all **`reviews.stars`** for items in this kitchen; **two decimal places**; **`null`** if no ratings. |
+| `average_rating`       | number \| null | Plain arithmetic mean of **`reviews.stars`** for this kitchen (**two decimals**); **`null`** if no ratings. |
+| `weighted_average_rating` | number \| null | **Use for sorting / “best kitchen” lists.** Bayesian blend: \((v/(v+m))·R + (m/(v+m))·C\) where \(R\) = `average_rating`, \(v\) = `total_ratings`, \(C\) = platform-wide mean of all item ratings (or fallback **3.5** if none), \(m\) = **`RATING_BAYESIAN_MIN_REVIEWS`** (default **10**). Few ratings pull toward \(C\); many ratings stay close to \(R\). **`null`** if this kitchen has no ratings. |
 | `total_ratings`        | number | Count of review rows contributing to item ratings for this kitchen. |
 | `rating_distribution`  | object | Counts of ratings by star value **`"1"`…`"5"`**. |
 | `top_items`            | array  | Up to **5** menu items with **≥ 3** ratings, ordered by average stars (desc). |

@@ -626,7 +626,7 @@ Returns all reviews for a specific kitchen.
 
 **`GET /restaurants/:kitchenId/stats`**
 
-No auth. Returns **`total_orders`** (delivered), **`total_customers`**, **`average_rating`**, **`total_ratings`**, **`rating_distribution`**, and **`top_items`** (items with at least three ratings). See **`docs/api-reference.md`**.
+No auth. Returns **`total_orders`** (delivered), **`total_customers`**, **`average_rating`** (raw mean), **`weighted_average_rating`** (better for comparing kitchens with different volumes), **`total_ratings`**, **`rating_distribution`**, and **`top_items`** (items with at least three ratings). See **`docs/api-reference.md`**.
 
 ---
 
